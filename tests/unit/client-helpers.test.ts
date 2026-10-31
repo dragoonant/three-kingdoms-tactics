@@ -153,3 +153,12 @@ describe('C-SEED and briefing text', () => {
     expect(briefingKicker(def)).toBe('184 · Daxing Hill, Youzhou')
   })
 })
+
+import { surname } from '../../src/client/names'
+describe('portrait seal initial', () => {
+  it('uses the family name: first word of a Chinese name, last word of a titled invented name', () => {
+    expect(surname('Liu Bei')).toBe('L')
+    expect(surname('Zhuge Liang')).toBe('Z')
+    expect(surname('Rebel Captain Gao*')).toBe('G')
+  })
+})

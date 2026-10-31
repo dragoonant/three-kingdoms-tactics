@@ -31,8 +31,12 @@ export function phaseLabel(state: BattleState, side: Side): string {
   return /army$/i.test(n) ? n : `${n}s`
 }
 
+const TITLES = new Set(['Rebel', 'Captain', 'Commander', 'Lieutenant', 'Admiral', 'General', 'Marshal'])
+
 export function surname(name: string): string {
-  const n = shortName(name.replace(/\*$/, ''))
-  const last = n.split(' ').filter(Boolean)
-  return (last[last.length - 1] ?? n).charAt(0).toUpperCase()
+  // Chinese names put the family name first (Liu Bei -> L, Zhuge Liang -> Z). Titled invented names put it last
+  // (Rebel Captain Gao -> G).
+  const words = name.replace(/\*$/, '').split(' ').filter(Boolean)
+  const pick = words.length >= 3 || (words.length === 2 && TITLES.has(words[0]!)) ? words[words.length - 1] : words[0]
+  return (pick ?? name).charAt(0).toUpperCase()
 }
