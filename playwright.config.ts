@@ -13,7 +13,11 @@ const executablePath = existsSync(FALLBACK_CHROMIUM) ? FALLBACK_CHROMIUM : undef
 export default defineConfig({
   testDir: './tests/e2e',
   outputDir: 'test-results',
-  fullyParallel: true,
+  // The board renders in software GL under headless Chromium, so run one test at a time.
+  fullyParallel: false,
+  workers: 1,
+  timeout: 240_000,
+  expect: { timeout: 15_000 },
   retries: 0,
   reporter: 'list',
   use: {

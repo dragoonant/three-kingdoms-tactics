@@ -1,0 +1,21 @@
+/* War-council sand table: tokens come straight from docs/spec/50-presentation.md */
+:root {
+  --night: #14100d;
+  --lacquer: #3a1410;
+  --silk: #efe6d2;
+  --ink: #1b1a17;
+  --bamboo: #c9b27c;
+  --bronze: #a07a3a;
+  --lantern: #f2b45a;
+  --cinnabar: #c8372d;
+  --han: #2f6b5e;
+  --yellow: #d4a72c;
+  --font-display: 'Ma Shan Zheng', 'STKaiti', 'KaiTi', 'Kaiti SC', 'Noto Serif CJK SC', 'Songti SC', Georgia, serif;
+  --font-body: 'Alegreya Sans', 'Gill Sans', 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
+  --bamboo-hi: #e0cd9a;
+  --bamboo-lo: #a38c57;
+  --silk-edge: #cdbf9c;
+  --ink-soft: #4a4338;
+  --shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}
