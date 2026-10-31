@@ -1,15 +1,18 @@
 {
-  "stub": true,
   "pre": [
-    {
-      "speaker": "narrator",
-      "text": "[stub] Scene text for hulao-gate will be written by a content builder."
-    }
+    {"speaker": "narrator", "text": "The lords of the coalition have been sworn to one oath for a month and have kept to one habit: each waits for another to ride first. Below Hulao Pass the wall of Dong Zhuo's army runs from cliff to cliff, and behind it sits Lu Bu."},
+    {"speaker": "gongsun-zan", "text": "Two days that wall has stood against better-fed men than us. Go and look, Liu Bei, but do not go close. I mean it. I have already been close."},
+    {"speaker": "zhang-fei", "text": "Look at it? I'll look at it from the other side of the gate, brother, with a spear in my hand."},
+    {"speaker": "guan-yu", "text": "A wall is a man's patience. Lu Bu will leave it when he sees something worth the ride, and not before."},
+    {"speaker": "liu-bei", "text": "Then we give him nothing to ride at until we stand where the bowmen cannot reach. And whoever he strikes first, the other two are already there. That is the whole plan."},
+    {"speaker": "jian-yong", "text": "The wind runs east until the afternoon, and the stubble between us and the gate is as dry as a drum. The sappers say the gate-bar will not last past the fifth night. I would not like to be Dong Zhuo's gatekeeper."},
+    {"speaker": "narrator", "text": "Along the rampart, small figures with bows are turning to face the plain."}
   ],
   "post": [
-    {
-      "speaker": "narrator",
-      "text": "[stub] Closing scene for hulao-gate."
-    }
+    {"speaker": "narrator", "text": "Lu Bu is not killed. When the third brother's blade comes round he wheels the red horse in a single stroke, holds the halberd high, and is gone through the gate before the dust has settled."},
+    {"speaker": "zhang-fei", "text": "Running! The great Lu Bu, running! Let me after him, brother, I'll have him back by the ear!"},
+    {"speaker": "guan-yu", "text": "Let him run. He will remember which three held him."},
+    {"speaker": "liu-bei", "text": "He is the finest rider I have ever seen, and there were three of us. I would not care to meet him with only two."},
+    {"speaker": "gongsun-zan", "text": "I rode at him first, and I am not proud of how fast I turned my horse. But it was your three who made him blink. I will say so at the council, whether the lords like it or not."}
   ]
 }

@@ -2,47 +2,90 @@
   "id": "hulao-gate",
   "name": "Hulao Gate",
   "year": 190,
-  "stub": true,
-  "title": "Hulao Gate",
-  "place": "Hulao Pass",
+  "title": "The Gate of Hulao",
+  "place": "Hulao Pass, Sishui",
   "blurb": [
-    "[stub] Placeholder battle. A content builder will replace this file with the full design for Hulao Gate."
+    "Eighteen lords have sworn to pull down Dong Zhuo, and the road to Luoyang runs through one narrow pass. Across it stands a long wall with a single double gate, and behind the wall waits Lu Bu, the best rider in the empire. Gongsun Zan has brought Liu Bei and his brothers to the front, and he rides with them.",
+    "The wall is the enemy's, and so is the gate: no coalition soldier can pass it while it is barred. Archers on the ramparts rake the whole approach, and a man in the stubble field is a man under the bows. Lu Bu will not come out for the weak. He comes out for a worthwhile target, and he is only ever driven off, never stopped: when half of his men have fallen he turns his horse for the gate, and that is what you came to see.",
+    "Stay out of the bowshot, bring him down onto open ground, and let three brothers who trust each other do what no single warrior can."
   ],
   "map": [
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    ".........."
+    "TTTThh...#TT....",
+    "TTT.hh.h.#.T....",
+    "TT..ff.hh#r.....",
+    "T...fff..#r..ff.",
+    "v...fff..#r.fff.",
+    "=========G......",
+    "=========G......",
+    "v...fff..#r.fff.",
+    "T..fffh..#r..ff.",
+    "TT.fff...#r.....",
+    "TTT..hh..#.T....",
+    "TTTTh....#TT...."
   ],
-  "legend": {".": "plain"},
+  "legend": {".": "plain", "f": "farm", "T": "forest", "h": "hill", "v": "village", "=": "road", "#": "wall", "r": "rampart", "G": "gate"},
   "bridges": [],
   "turnLimit": 12,
   "onTimeout": "dong",
   "sideOrder": ["han", "dong"],
-  "sides": [{"id": "han", "name": "Han", "colourToken": "han"}, {"id": "dong", "name": "Dong Zhuo's army", "colourToken": "dong"}],
+  "sides": [{"id": "han", "name": "Coalition", "colourToken": "han"}, {"id": "dong", "name": "Dong Zhuo's army", "colourToken": "dong"}],
+  "gateOwner": "dong",
   "wind": [
-    {"round": 1, "dir": null, "strength": "calm"}
+    {"round": 1, "dir": "E", "strength": "breeze"},
+    {"round": 5, "dir": null, "strength": "calm"},
+    {"round": 8, "dir": "W", "strength": "breeze"}
   ],
   "units": [
-    {"id": "li-jue", "officer": "li-jue", "side": "dong", "type": "cavalry", "x": 8, "y": 3, "facing": "W", "troops": 2600, "commander": true},
-    {"id": "lu-bu", "officer": "lu-bu", "side": "dong", "type": "cavalry", "x": 8, "y": 4, "facing": "W", "troops": 3000, "commander": false, "retreatAt": 0.5},
-    {"id": "zhang-liao", "officer": "zhang-liao", "side": "dong", "type": "cavalry", "x": 7, "y": 2, "facing": "W", "troops": 2200, "commander": false}
+    {"id": "lu-bu", "officer": "lu-bu", "side": "dong", "type": "cavalry", "x": 11, "y": 5, "facing": "W", "troops": 3200, "commander": false, "retreatAt": 0.5},
+    {"id": "li-jue", "officer": "li-jue", "side": "dong", "type": "cavalry", "x": 13, "y": 6, "facing": "W", "troops": 2000, "commander": true},
+    {"id": "guo-si", "officer": "guo-si", "side": "dong", "type": "cavalry", "x": 11, "y": 6, "facing": "W", "troops": 1800, "commander": false},
+    {"id": "zhang-liao", "officer": "zhang-liao", "side": "dong", "type": "cavalry", "x": 7, "y": 3, "facing": "W", "troops": 2200, "commander": false},
+    {"id": "hulao-gate-guard", "officer": "hulao-gate-guard", "side": "dong", "type": "infantry", "x": 8, "y": 5, "facing": "W", "troops": 1600, "commander": false},
+    {"id": "hulao-gate-archer-n", "officer": "hulao-gate-archer", "side": "dong", "type": "archers", "x": 10, "y": 3, "facing": "W", "troops": 1200, "commander": false},
+    {"id": "hulao-gate-firebow", "officer": "hulao-gate-firebow", "side": "dong", "type": "archers", "x": 10, "y": 7, "facing": "W", "troops": 1200, "commander": false},
+    {"id": "hulao-gate-archer-s", "officer": "hulao-gate-archer", "side": "dong", "type": "archers", "x": 10, "y": 9, "facing": "W", "troops": 1200, "commander": false}
+  ],
+  "guests": [
+    {"id": "gongsun-zan", "officer": "gongsun-zan", "side": "han", "type": "cavalry", "x": 3, "y": 5, "facing": "E", "troops": 2400, "commander": false}
   ],
   "playerStarts": [
-    {"x": 1, "y": 3, "facing": "E"},
-    {"x": 1, "y": 4, "facing": "E"},
-    {"x": 1, "y": 2, "facing": "E"},
     {"x": 1, "y": 5, "facing": "E"},
-    {"x": 0, "y": 3, "facing": "E"}
+    {"x": 2, "y": 4, "facing": "E"},
+    {"x": 2, "y": 6, "facing": "E"},
+    {"x": 1, "y": 6, "facing": "E"},
+    {"x": 1, "y": 4, "facing": "E"}
   ],
   "deploySlots": 5,
-  "required": ["liu-bei"],
+  "required": ["liu-bei", "guan-yu", "zhang-fei"],
   "defaultDeploy": ["liu-bei", "guan-yu", "zhang-fei", "jian-yong"],
   "par": 10,
-  "objectives": {"win": [{"type": "routUnits", "units": ["lu-bu"]}], "lose": [{"type": "commanderLost"}, {"type": "timeout", "round": 12}]},
-  "enemyBehaviour": {}
+  "objectives": {
+    "win": [{"type": "routUnits", "units": ["lu-bu"], "label": "Drive Lu Bu off the field (he retreats at half strength)"}],
+    "lose": [{"type": "commanderLost"}, {"type": "timeout", "round": 12}]
+  },
+  "reinforcements": [],
+  "timeline": [
+    {"round": 1, "phase": "start", "kind": "message", "text": "Hulao Pass. The gate is barred, the ramparts are manned, and Lu Bu waits behind them."},
+    {"round": 5, "phase": "end", "kind": "message", "text": "The coalition's battering ram reaches the gate. The bar will not last the night."},
+    {"round": 6, "phase": "start", "kind": "terrain", "tiles": [[9, 5], [9, 6]], "to": "road"},
+    {"round": 6, "phase": "start", "kind": "message", "text": "The bar splits. Hulao's gate stands open to any man who dares the pass."}
+  ],
+  "enemyBehaviour": {
+    "lu-bu": "ambush:7",
+    "li-jue": "hold",
+    "guo-si": "guard:lu-bu",
+    "zhang-liao": "ambush:3",
+    "hulao-gate-guard": "hold",
+    "hulao-gate-archer-n": "hold",
+    "hulao-gate-firebow": "hold",
+    "hulao-gate-archer-s": "hold"
+  },
+  "joins": [],
+  "departs": [],
+  "officers": [
+    {"id": "hulao-gate-archer", "name": "Rampart Archer", "war": 52, "int": 40, "lead": 45, "cha": 30, "loyalty": 50, "bonds": [], "stratagems": ["massed-arrows"], "source": "invented", "type": "archers", "invented": true},
+    {"id": "hulao-gate-firebow", "name": "Fire-Arrow Captain", "war": 48, "int": 58, "lead": 42, "cha": 32, "loyalty": 55, "bonds": [], "stratagems": ["massed-arrows", "fire-attack"], "source": "invented", "type": "archers", "invented": true},
+    {"id": "hulao-gate-guard", "name": "Gate Spearman", "war": 60, "int": 30, "lead": 55, "cha": 30, "loyalty": 45, "bonds": [], "stratagems": ["mob-rush"], "source": "invented", "type": "infantry", "invented": true}
+  ],
+  "stratagems": []
 }

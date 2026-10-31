@@ -160,7 +160,7 @@ describe('R2-DATA-4 validator catches content mistakes', () => {
   })
   it('objectives must reference existing units', () => {
     expect(mutated('qingzhou', (b) => { b.objectives!.win = [{ type: 'routUnits', units: ['nobody'] }] }).some((e) => /unknown unit nobody/.test(e))).toBe(true)
-    expect(mutated('xuzhou', (b) => { b.objectives!.lose.push({ type: 'unitLost', unit: 'tao-qian' }) }).some((e) => /unknown unit tao-qian/.test(e))).toBe(true)
+    expect(mutated('xuzhou', (b) => { b.objectives!.lose.push({ type: 'unitLost', unit: 'nobody' }) }).some((e) => /unknown unit nobody/.test(e))).toBe(true)
   })
   it('required officers must be deployable at that point of the arc, and playerStarts must cover deploySlots', () => {
     expect(mutated('qingzhou', (b) => { b.required!.push('zhuge-liang') }).some((e) => /zhuge-liang is not on the roster/.test(e))).toBe(true)
