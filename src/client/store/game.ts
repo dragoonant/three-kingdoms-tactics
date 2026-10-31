@@ -1,6 +1,6 @@
 // The ONLY caller of step(). Holds the live state, the action log, the presented scene and the UI selection.
 import { create } from 'zustand'
-import { greedyAction } from '../../ai/greedy'
+import { createBotClient } from '../../ai/workerClient'
 import { createBattle, legalActions, query, step, type Action, type BattleState, type Facing, type GameEvent, type Side } from '../../engine'
 import { linesFor, type LedgerEntry } from '../ledger'
 import { introBeats, planBeats, type Beat, type Speed } from '../presentation/beats'
@@ -10,6 +10,8 @@ import { canControl, EMPTY_UI, isBotSide, PLAYER_SIDE, type Mode, type UiState }
 
 export type Screen = 'title' | 'howto' | 'briefing' | 'battle' | 'end'
 export const BATTLE_ID = 'daxing-hill'
+/** Which AI tier plays the enemy (random, easy or normal). */
+const BOT_TIER = 'normal' as const
 
 export interface Floater {
   id: number
@@ -93,6 +95,8 @@ export const useGame = create<GameStore>((set, get) => {
   let ledgerSeq = 1
   let pendingBefore: BattleState = state0
   let botTimer: ReturnType<typeof setTimeout> | null = null
+  let botBusy = false
+  const bot = createBotClient()
   let sealClear: ReturnType<typeof setTimeout> | null = null
 
   const director = new Director({
@@ -155,21 +159,29 @@ export const useGame = create<GameStore>((set, get) => {
     if (botTimer) clearTimeout(botTimer)
     botTimer = null
     const st = get()
-    if (st.screen !== 'battle' || st.state.result || !isBotSide(st.state.side) || st.playing) return
+    if (st.screen !== 'battle' || st.state.result || !isBotSide(st.state.side) || st.playing || botBusy) return
     const delay = st.speed === 'full' ? 750 : st.speed === 'quick' ? 220 : 0
     botTimer = setTimeout(() => {
       botTimer = null
       const cur = get()
-      if (cur.screen !== 'battle' || cur.state.result || !isBotSide(cur.state.side) || cur.playing) return
-      let a: Action
-      try {
-        a = greedyAction(cur.state)
-      } catch {
-        a = { type: 'endPhase' }
-      }
-      let r = cur.act(a)
-      // Watchdog: a rejected bot action must never stall the phase.
-      if (!r.ok) r = get().act({ type: 'endPhase' })
+      if (cur.screen !== 'battle' || cur.state.result || !isBotSide(cur.state.side) || cur.playing || botBusy) return
+      botBusy = true
+      // The utility AI runs in a worker (greedy fallback after 2 s); the answer is applied only if the game has not moved on.
+      void bot
+        .decide(cur.state, { tier: BOT_TIER, seed: cur.seed })
+        .then((d) => d.action)
+        .catch((): Action => ({ type: 'endPhase' }))
+        .then((a) => {
+          botBusy = false
+          const now = get()
+          if (now.state !== cur.state || now.screen !== 'battle' || now.playing) {
+            scheduleBot()
+            return
+          }
+          let r = now.act(a)
+          // Watchdog: a rejected bot action must never stall the phase.
+          if (!r.ok) r = get().act({ type: 'endPhase' })
+        })
     }, delay)
   }
 
