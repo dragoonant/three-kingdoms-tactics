@@ -1,5 +1,6 @@
 // [R-SWAY-1..3]
-import { getUnit, officerOf, statOf } from './board'
+import { canStandOn, getUnit, officerOf, statOf } from './board'
+import { nearestFreeTile } from './terrain'
 import { manhattan } from './geometry'
 import type { Roller } from './rng'
 import type { BattleState, GameEvent, SwayPreview, Unit } from './types'
@@ -48,6 +49,17 @@ export function resolveSway(w: BattleState, ev: GameEvent[], roller: Roller, cas
     target.done = true
     target.undo = null
     ev.push({ kind: 'swayed', unit: caster.id, target: target.id, chance, side: caster.side })
+    // RULING R-SWAY-3: a unit swayed while standing where its new side may not stand (e.g. its old side's gate)
+    // steps to the nearest free tile it can stand on, like a terrain change (R2-TIME-1).
+    if (!canStandOn(w, target.x, target.y, target.side, target.type)) {
+      const dest = nearestFreeTile(w, target, target)
+      if (dest) {
+        const from = { x: target.x, y: target.y }
+        target.x = dest.x
+        target.y = dest.y
+        ev.push({ kind: 'moved', unit: target.id, from, to: dest, path: [{ ...dest }], cost: 0, facing: target.facing })
+      }
+    }
   } else {
     ev.push({ kind: 'swayFailed', unit: caster.id, target: target.id, chance })
   }
