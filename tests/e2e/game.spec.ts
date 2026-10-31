@@ -204,7 +204,8 @@ test('a whole battle through window.__game at instant speed reaches the end scre
 })
 
 test('a linked stratagem stamps a seal per link and counts the chain', async ({ page }) => {
-  const errors = await boot(page, 'seed=3&speed=instant')
+  // Seed 31: against the M4 utility bot the greedy side reaches a real 3-link chain (checked headlessly).
+  const errors = await boot(page, 'seed=31&speed=instant')
   await toBattle(page)
   await waitIdle(page)
   // Let the greedy side play until the next action would open a chain of 3 or more links.
