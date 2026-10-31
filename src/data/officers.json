@@ -1,0 +1,14 @@
+[
+  { "id": "liu-bei", "name": "Liu Bei", "war": 72, "int": 74, "lead": 78, "cha": 98, "loyalty": null, "bonds": ["guan-yu", "zhang-fei"], "stratagems": ["twin-blades", "rally"], "source": "Romance ch.1" },
+  { "id": "guan-yu", "name": "Guan Yu", "war": 97, "int": 75, "lead": 95, "cha": 85, "loyalty": null, "bonds": ["liu-bei", "zhang-fei"], "stratagems": ["crescent-sweep", "thundering-charge"], "source": "Romance ch.1" },
+  { "id": "zhang-fei", "name": "Zhang Fei", "war": 98, "int": 30, "lead": 85, "cha": 45, "loyalty": null, "bonds": ["liu-bei", "guan-yu"], "stratagems": ["serpent-thrust", "thunder-roar"], "source": "Romance ch.1" },
+  { "id": "zou-jing", "name": "Zou Jing", "war": 55, "int": 60, "lead": 70, "cha": 60, "loyalty": null, "bonds": [], "stratagems": ["arrow-rain"], "source": "Romance ch.1" },
+  { "id": "jian-yong", "name": "Jian Yong", "war": 40, "int": 72, "lead": 50, "cha": 80, "loyalty": null, "bonds": [], "stratagems": ["fire-attack", "sow-discord"], "source": "Romance ch.1", "note": "Cast liberty: Liu Bei's boyhood friend, placed here as the party's strategist." },
+  { "id": "cheng-yuanzhi", "name": "Cheng Yuanzhi", "war": 70, "int": 40, "lead": 65, "cha": 50, "loyalty": null, "bonds": [], "stratagems": ["mob-rush"], "source": "Romance ch.1" },
+  { "id": "deng-mao", "name": "Deng Mao", "war": 68, "int": 35, "lead": 55, "cha": 30, "loyalty": null, "bonds": [], "stratagems": ["mob-rush", "rebel-war-cry"], "source": "Romance ch.1" },
+  { "id": "captain-gao", "name": "Rebel Captain Gao", "war": 50, "int": 30, "lead": 45, "cha": 25, "loyalty": 40, "bonds": [], "stratagems": ["mob-rush"], "source": "invented", "invented": true },
+  { "id": "captain-sun", "name": "Rebel Captain Sun", "war": 48, "int": 35, "lead": 42, "cha": 30, "loyalty": 45, "bonds": [], "stratagems": ["mob-rush"], "source": "invented", "invented": true },
+  { "id": "captain-ma", "name": "Rebel Captain Ma", "war": 55, "int": 25, "lead": 40, "cha": 20, "loyalty": 35, "bonds": [], "stratagems": ["torch-raid"], "source": "invented", "invented": true },
+  { "id": "captain-wu", "name": "Rebel Captain Wu", "war": 45, "int": 40, "lead": 42, "cha": 30, "loyalty": 50, "bonds": [], "stratagems": ["massed-arrows"], "source": "invented", "invented": true },
+  { "id": "taiping-adept", "name": "Taiping Adept", "war": 30, "int": 68, "lead": 40, "cha": 55, "loyalty": 55, "bonds": [], "stratagems": ["yellow-sky-hex"], "source": "invented", "invented": true }
+]

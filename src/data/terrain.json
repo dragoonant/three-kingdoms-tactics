@@ -1,0 +1,11 @@
+{
+  "plain":   { "id": "plain",   "name": "Plain",   "move": { "infantry": 1, "cavalry": 1, "archers": 1 }, "def": 1.0,  "elev": 0, "flammability": 0.5, "notes": "Grassland." },
+  "farm":    { "id": "farm",    "name": "Farm",    "move": { "infantry": 1, "cavalry": 1, "archers": 1 }, "def": 1.0,  "elev": 0, "flammability": 1.0, "notes": "Ripe millet." },
+  "forest":  { "id": "forest",  "name": "Forest",  "move": { "infantry": 2, "cavalry": 3, "archers": 2 }, "def": 0.8,  "elev": 0, "flammability": 1.0, "notes": "Charge cannot end in or pass through." },
+  "hill":    { "id": "hill",    "name": "Hill",    "move": { "infantry": 2, "cavalry": 2, "archers": 2 }, "def": 0.9,  "elev": 1, "flammability": 0.5, "notes": "Archers on a hill get +1 max range." },
+  "village": { "id": "village", "name": "Village", "move": { "infantry": 1, "cavalry": 1, "archers": 1 }, "def": 0.85, "elev": 0, "flammability": 0,   "notes": "Heals 5% max troops at the start of the occupant's phase." },
+  "road":    { "id": "road",    "name": "Road",    "move": { "infantry": 1, "cavalry": 1, "archers": 1 }, "def": 1.0,  "elev": 0, "flammability": 0,   "notes": "" },
+  "ford":    { "id": "ford",    "name": "Ford",    "move": { "infantry": 2, "cavalry": 3, "archers": 2 }, "def": 1.2,  "elev": 0, "flammability": 0,   "notes": "A shallow crossing." },
+  "river":   { "id": "river",   "name": "River",   "move": null,                                          "def": 1.0,  "elev": 0, "flammability": 0,   "notes": "Impassable." },
+  "ash":     { "id": "ash",     "name": "Ash",     "move": { "infantry": 1, "cavalry": 1, "archers": 1 }, "def": 1.0,  "elev": 0, "flammability": 0,   "notes": "What burnt tiles become." }
+}

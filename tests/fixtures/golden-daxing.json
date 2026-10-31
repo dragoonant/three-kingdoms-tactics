@@ -1,0 +1,1454 @@
+{
+ "battle": "daxing-hill",
+ "seed": 29,
+ "actions": [
+  {
+   "type": "wait",
+   "unit": "jian-yong",
+   "facing": "N"
+  },
+  {
+   "type": "wait",
+   "unit": "liu-bei",
+   "facing": "N"
+  },
+  {
+   "type": "move",
+   "unit": "guan-yu",
+   "x": 3,
+   "y": 0
+  },
+  {
+   "type": "move",
+   "unit": "zou-jing",
+   "x": 2,
+   "y": 8
+  },
+  {
+   "type": "move",
+   "unit": "zhang-fei",
+   "x": 5,
+   "y": 8
+  },
+  {
+   "type": "wait",
+   "unit": "zou-jing",
+   "facing": "E"
+  },
+  {
+   "type": "wait",
+   "unit": "zhang-fei",
+   "facing": "N"
+  },
+  {
+   "type": "wait",
+   "unit": "guan-yu",
+   "facing": "N"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "move",
+   "unit": "captain-gao",
+   "x": 10,
+   "y": 5
+  },
+  {
+   "type": "move",
+   "unit": "captain-sun",
+   "x": 9,
+   "y": 6
+  },
+  {
+   "type": "undoMove",
+   "unit": "captain-sun"
+  },
+  {
+   "type": "undoMove",
+   "unit": "captain-gao"
+  },
+  {
+   "type": "move",
+   "unit": "captain-ma",
+   "x": 10,
+   "y": 3
+  },
+  {
+   "type": "wait",
+   "unit": "cheng-yuanzhi",
+   "facing": "W"
+  },
+  {
+   "type": "move",
+   "unit": "taiping-adept",
+   "x": 11,
+   "y": 6
+  },
+  {
+   "type": "move",
+   "unit": "captain-sun",
+   "x": 8,
+   "y": 10
+  },
+  {
+   "type": "move",
+   "unit": "deng-mao",
+   "x": 11,
+   "y": 9
+  },
+  {
+   "type": "move",
+   "unit": "captain-gao",
+   "x": 7,
+   "y": 3
+  },
+  {
+   "type": "move",
+   "unit": "captain-wu",
+   "x": 11,
+   "y": 2
+  },
+  {
+   "type": "wait",
+   "unit": "captain-ma",
+   "facing": "E"
+  },
+  {
+   "type": "wait",
+   "unit": "taiping-adept",
+   "facing": "N"
+  },
+  {
+   "type": "wait",
+   "unit": "deng-mao",
+   "facing": "W"
+  },
+  {
+   "type": "wait",
+   "unit": "captain-wu",
+   "facing": "W"
+  },
+  {
+   "type": "wait",
+   "unit": "captain-gao",
+   "facing": "N"
+  },
+  {
+   "type": "wait",
+   "unit": "captain-sun",
+   "facing": "S"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "move",
+   "unit": "liu-bei",
+   "x": 2,
+   "y": 4
+  },
+  {
+   "type": "wait",
+   "unit": "liu-bei",
+   "facing": "N"
+  },
+  {
+   "type": "wait",
+   "unit": "zou-jing",
+   "facing": "E"
+  },
+  {
+   "type": "move",
+   "unit": "guan-yu",
+   "x": 4,
+   "y": 4
+  },
+  {
+   "type": "move",
+   "unit": "zhang-fei",
+   "x": 6,
+   "y": 11
+  },
+  {
+   "type": "wait",
+   "unit": "guan-yu",
+   "facing": "N"
+  },
+  {
+   "type": "move",
+   "unit": "jian-yong",
+   "x": 3,
+   "y": 5
+  },
+  {
+   "type": "wait",
+   "unit": "zhang-fei",
+   "facing": "W"
+  },
+  {
+   "type": "wait",
+   "unit": "jian-yong",
+   "facing": "S"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "move",
+   "unit": "deng-mao",
+   "x": 10,
+   "y": 11
+  },
+  {
+   "type": "move",
+   "unit": "captain-ma",
+   "x": 12,
+   "y": 6
+  },
+  {
+   "type": "wait",
+   "unit": "captain-wu",
+   "facing": "N"
+  },
+  {
+   "type": "wait",
+   "unit": "deng-mao",
+   "facing": "E"
+  },
+  {
+   "type": "move",
+   "unit": "captain-gao",
+   "x": 4,
+   "y": 2
+  },
+  {
+   "type": "move",
+   "unit": "taiping-adept",
+   "x": 11,
+   "y": 8
+  },
+  {
+   "type": "move",
+   "unit": "cheng-yuanzhi",
+   "x": 11,
+   "y": 6
+  },
+  {
+   "type": "move",
+   "unit": "captain-sun",
+   "x": 9,
+   "y": 10
+  },
+  {
+   "type": "wait",
+   "unit": "captain-ma",
+   "facing": "W"
+  },
+  {
+   "type": "wait",
+   "unit": "cheng-yuanzhi",
+   "facing": "W"
+  },
+  {
+   "type": "undoMove",
+   "unit": "captain-sun"
+  },
+  {
+   "type": "move",
+   "unit": "captain-sun",
+   "x": 10,
+   "y": 10
+  },
+  {
+   "type": "wait",
+   "unit": "captain-gao",
+   "facing": "W"
+  },
+  {
+   "type": "wait",
+   "unit": "captain-sun",
+   "facing": "E"
+  },
+  {
+   "type": "wait",
+   "unit": "taiping-adept",
+   "facing": "W"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "stratagem",
+   "unit": "jian-yong",
+   "strat": "fire-attack",
+   "x": 5,
+   "y": 5,
+   "excludeFromChain": []
+  },
+  {
+   "type": "stratagem",
+   "unit": "guan-yu",
+   "strat": "thundering-charge",
+   "x": 4,
+   "y": 2,
+   "excludeFromChain": []
+  },
+  {
+   "type": "wait",
+   "unit": "zhang-fei",
+   "facing": "S"
+  },
+  {
+   "type": "move",
+   "unit": "liu-bei",
+   "x": 3,
+   "y": 2
+  },
+  {
+   "type": "attack",
+   "unit": "liu-bei",
+   "target": "captain-gao"
+  },
+  {
+   "type": "wait",
+   "unit": "zou-jing",
+   "facing": "N"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "wait",
+   "unit": "captain-ma",
+   "facing": "N"
+  },
+  {
+   "type": "attack",
+   "unit": "captain-gao",
+   "target": "liu-bei"
+  },
+  {
+   "type": "wait",
+   "unit": "deng-mao",
+   "facing": "E"
+  },
+  {
+   "type": "move",
+   "unit": "cheng-yuanzhi",
+   "x": 12,
+   "y": 5
+  },
+  {
+   "type": "move",
+   "unit": "captain-sun",
+   "x": 11,
+   "y": 11
+  },
+  {
+   "type": "wait",
+   "unit": "captain-wu",
+   "facing": "W"
+  },
+  {
+   "type": "wait",
+   "unit": "cheng-yuanzhi",
+   "facing": "N"
+  },
+  {
+   "type": "move",
+   "unit": "taiping-adept",
+   "x": 9,
+   "y": 8
+  },
+  {
+   "type": "wait",
+   "unit": "captain-sun",
+   "facing": "E"
+  },
+  {
+   "type": "wait",
+   "unit": "taiping-adept",
+   "facing": "N"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "stratagem",
+   "unit": "liu-bei",
+   "strat": "rally",
+   "x": 3,
+   "y": 2,
+   "excludeFromChain": []
+  },
+  {
+   "type": "attack",
+   "unit": "guan-yu",
+   "target": "captain-gao"
+  },
+  {
+   "type": "move",
+   "unit": "jian-yong",
+   "x": 2,
+   "y": 6
+  },
+  {
+   "type": "wait",
+   "unit": "jian-yong",
+   "facing": "E"
+  },
+  {
+   "type": "move",
+   "unit": "zou-jing",
+   "x": 2,
+   "y": 9
+  },
+  {
+   "type": "move",
+   "unit": "zhang-fei",
+   "x": 8,
+   "y": 10
+  },
+  {
+   "type": "wait",
+   "unit": "zou-jing",
+   "facing": "N"
+  },
+  {
+   "type": "wait",
+   "unit": "zhang-fei",
+   "facing": "N"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "move",
+   "unit": "captain-ma",
+   "x": 11,
+   "y": 5
+  },
+  {
+   "type": "attack",
+   "unit": "taiping-adept",
+   "target": "zhang-fei"
+  },
+  {
+   "type": "wait",
+   "unit": "captain-ma",
+   "facing": "W"
+  },
+  {
+   "type": "move",
+   "unit": "cheng-yuanzhi",
+   "x": 9,
+   "y": 5
+  },
+  {
+   "type": "move",
+   "unit": "captain-sun",
+   "x": 11,
+   "y": 10
+  },
+  {
+   "type": "move",
+   "unit": "deng-mao",
+   "x": 9,
+   "y": 11
+  },
+  {
+   "type": "move",
+   "unit": "captain-wu",
+   "x": 11,
+   "y": 0
+  },
+  {
+   "type": "wait",
+   "unit": "captain-wu",
+   "facing": "S"
+  },
+  {
+   "type": "wait",
+   "unit": "cheng-yuanzhi",
+   "facing": "S"
+  },
+  {
+   "type": "wait",
+   "unit": "captain-sun",
+   "facing": "N"
+  },
+  {
+   "type": "undoMove",
+   "unit": "deng-mao"
+  },
+  {
+   "type": "move",
+   "unit": "deng-mao",
+   "x": 9,
+   "y": 11
+  },
+  {
+   "type": "wait",
+   "unit": "deng-mao",
+   "facing": "N"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "stratagem",
+   "unit": "zhang-fei",
+   "strat": "serpent-thrust",
+   "x": 9,
+   "y": 11,
+   "excludeFromChain": []
+  },
+  {
+   "type": "move",
+   "unit": "guan-yu",
+   "x": 3,
+   "y": 5
+  },
+  {
+   "type": "stratagem",
+   "unit": "jian-yong",
+   "strat": "fire-attack",
+   "x": 4,
+   "y": 7,
+   "excludeFromChain": []
+  },
+  {
+   "type": "move",
+   "unit": "liu-bei",
+   "x": 0,
+   "y": 3
+  },
+  {
+   "type": "undoMove",
+   "unit": "liu-bei"
+  },
+  {
+   "type": "move",
+   "unit": "liu-bei",
+   "x": 2,
+   "y": 1
+  },
+  {
+   "type": "move",
+   "unit": "zou-jing",
+   "x": 3,
+   "y": 10
+  },
+  {
+   "type": "wait",
+   "unit": "liu-bei",
+   "facing": "N"
+  },
+  {
+   "type": "wait",
+   "unit": "guan-yu",
+   "facing": "E"
+  },
+  {
+   "type": "wait",
+   "unit": "zou-jing",
+   "facing": "E"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "attack",
+   "unit": "taiping-adept",
+   "target": "zhang-fei"
+  },
+  {
+   "type": "stratagem",
+   "unit": "captain-ma",
+   "strat": "torch-raid",
+   "x": 10,
+   "y": 5,
+   "excludeFromChain": []
+  },
+  {
+   "type": "move",
+   "unit": "cheng-yuanzhi",
+   "x": 10,
+   "y": 3
+  },
+  {
+   "type": "move",
+   "unit": "captain-sun",
+   "x": 10,
+   "y": 11
+  },
+  {
+   "type": "wait",
+   "unit": "deng-mao",
+   "facing": "N"
+  },
+  {
+   "type": "wait",
+   "unit": "captain-wu",
+   "facing": "S"
+  },
+  {
+   "type": "wait",
+   "unit": "cheng-yuanzhi",
+   "facing": "W"
+  },
+  {
+   "type": "wait",
+   "unit": "captain-sun",
+   "facing": "W"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "stratagem",
+   "unit": "zhang-fei",
+   "strat": "serpent-thrust",
+   "x": 9,
+   "y": 11,
+   "excludeFromChain": []
+  },
+  {
+   "type": "move",
+   "unit": "guan-yu",
+   "x": 5,
+   "y": 4
+  },
+  {
+   "type": "move",
+   "unit": "zou-jing",
+   "x": 1,
+   "y": 9
+  },
+  {
+   "type": "wait",
+   "unit": "liu-bei",
+   "facing": "W"
+  },
+  {
+   "type": "move",
+   "unit": "jian-yong",
+   "x": 5,
+   "y": 6
+  },
+  {
+   "type": "wait",
+   "unit": "jian-yong",
+   "facing": "W"
+  },
+  {
+   "type": "undoMove",
+   "unit": "guan-yu"
+  },
+  {
+   "type": "move",
+   "unit": "guan-yu",
+   "x": 4,
+   "y": 6
+  },
+  {
+   "type": "wait",
+   "unit": "zou-jing",
+   "facing": "S"
+  },
+  {
+   "type": "wait",
+   "unit": "guan-yu",
+   "facing": "S"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "stratagem",
+   "unit": "captain-ma",
+   "strat": "torch-raid",
+   "x": 12,
+   "y": 5,
+   "excludeFromChain": []
+  },
+  {
+   "type": "move",
+   "unit": "captain-sun",
+   "x": 9,
+   "y": 10
+  },
+  {
+   "type": "wait",
+   "unit": "taiping-adept",
+   "facing": "W"
+  },
+  {
+   "type": "move",
+   "unit": "deng-mao",
+   "x": 10,
+   "y": 10
+  },
+  {
+   "type": "wait",
+   "unit": "captain-sun",
+   "facing": "E"
+  },
+  {
+   "type": "wait",
+   "unit": "captain-wu",
+   "facing": "N"
+  },
+  {
+   "type": "wait",
+   "unit": "cheng-yuanzhi",
+   "facing": "N"
+  },
+  {
+   "type": "undoMove",
+   "unit": "deng-mao"
+  },
+  {
+   "type": "wait",
+   "unit": "deng-mao",
+   "facing": "S"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "attack",
+   "unit": "zhang-fei",
+   "target": "captain-sun"
+  },
+  {
+   "type": "move",
+   "unit": "jian-yong",
+   "x": 7,
+   "y": 7
+  },
+  {
+   "type": "move",
+   "unit": "guan-yu",
+   "x": 5,
+   "y": 4
+  },
+  {
+   "type": "stratagem",
+   "unit": "jian-yong",
+   "strat": "sow-discord",
+   "x": 9,
+   "y": 8,
+   "excludeFromChain": []
+  },
+  {
+   "type": "undoMove",
+   "unit": "guan-yu"
+  },
+  {
+   "type": "wait",
+   "unit": "zou-jing",
+   "facing": "E"
+  },
+  {
+   "type": "move",
+   "unit": "guan-yu",
+   "x": 8,
+   "y": 6
+  },
+  {
+   "type": "wait",
+   "unit": "guan-yu",
+   "facing": "W"
+  },
+  {
+   "type": "move",
+   "unit": "liu-bei",
+   "x": 0,
+   "y": 2
+  },
+  {
+   "type": "wait",
+   "unit": "liu-bei",
+   "facing": "W"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "stratagem",
+   "unit": "captain-sun",
+   "strat": "mob-rush",
+   "x": 8,
+   "y": 10,
+   "excludeFromChain": []
+  },
+  {
+   "type": "move",
+   "unit": "captain-ma",
+   "x": 9,
+   "y": 6
+  },
+  {
+   "type": "attack",
+   "unit": "captain-ma",
+   "target": "guan-yu"
+  },
+  {
+   "type": "move",
+   "unit": "cheng-yuanzhi",
+   "x": 11,
+   "y": 6
+  },
+  {
+   "type": "wait",
+   "unit": "cheng-yuanzhi",
+   "facing": "W"
+  },
+  {
+   "type": "move",
+   "unit": "deng-mao",
+   "x": 10,
+   "y": 10
+  },
+  {
+   "type": "move",
+   "unit": "captain-wu",
+   "x": 9,
+   "y": 1
+  },
+  {
+   "type": "wait",
+   "unit": "deng-mao",
+   "facing": "W"
+  },
+  {
+   "type": "wait",
+   "unit": "captain-wu",
+   "facing": "S"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "stratagem",
+   "unit": "guan-yu",
+   "strat": "crescent-sweep",
+   "x": 9,
+   "y": 6,
+   "excludeFromChain": []
+  },
+  {
+   "type": "stratagem",
+   "unit": "zhang-fei",
+   "strat": "serpent-thrust",
+   "x": 9,
+   "y": 10,
+   "excludeFromChain": []
+  },
+  {
+   "type": "attack",
+   "unit": "jian-yong",
+   "target": "captain-ma"
+  },
+  {
+   "type": "move",
+   "unit": "liu-bei",
+   "x": 3,
+   "y": 2
+  },
+  {
+   "type": "move",
+   "unit": "zou-jing",
+   "x": 3,
+   "y": 8
+  },
+  {
+   "type": "wait",
+   "unit": "liu-bei",
+   "facing": "S"
+  },
+  {
+   "type": "wait",
+   "unit": "zou-jing",
+   "facing": "N"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "move",
+   "unit": "cheng-yuanzhi",
+   "x": 13,
+   "y": 8
+  },
+  {
+   "type": "attack",
+   "unit": "taiping-adept",
+   "target": "zhang-fei"
+  },
+  {
+   "type": "stratagem",
+   "unit": "captain-ma",
+   "strat": "torch-raid",
+   "x": 9,
+   "y": 5,
+   "excludeFromChain": []
+  },
+  {
+   "type": "move",
+   "unit": "captain-wu",
+   "x": 8,
+   "y": 2
+  },
+  {
+   "type": "attack",
+   "unit": "captain-sun",
+   "target": "zhang-fei"
+  },
+  {
+   "type": "move",
+   "unit": "deng-mao",
+   "x": 10,
+   "y": 6
+  },
+  {
+   "type": "wait",
+   "unit": "cheng-yuanzhi",
+   "facing": "E"
+  },
+  {
+   "type": "wait",
+   "unit": "captain-wu",
+   "facing": "S"
+  },
+  {
+   "type": "wait",
+   "unit": "deng-mao",
+   "facing": "E"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "attack",
+   "unit": "jian-yong",
+   "target": "taiping-adept"
+  },
+  {
+   "type": "move",
+   "unit": "guan-yu",
+   "x": 7,
+   "y": 10
+  },
+  {
+   "type": "sway",
+   "unit": "guan-yu",
+   "target": "captain-sun"
+  },
+  {
+   "type": "wait",
+   "unit": "zhang-fei",
+   "facing": "N"
+  },
+  {
+   "type": "move",
+   "unit": "liu-bei",
+   "x": 3,
+   "y": 1
+  },
+  {
+   "type": "move",
+   "unit": "zou-jing",
+   "x": 4,
+   "y": 9
+  },
+  {
+   "type": "wait",
+   "unit": "zou-jing",
+   "facing": "S"
+  },
+  {
+   "type": "wait",
+   "unit": "liu-bei",
+   "facing": "S"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "stratagem",
+   "unit": "taiping-adept",
+   "strat": "yellow-sky-hex",
+   "x": 7,
+   "y": 7,
+   "excludeFromChain": []
+  },
+  {
+   "type": "move",
+   "unit": "captain-ma",
+   "x": 8,
+   "y": 6
+  },
+  {
+   "type": "wait",
+   "unit": "cheng-yuanzhi",
+   "facing": "W"
+  },
+  {
+   "type": "move",
+   "unit": "captain-wu",
+   "x": 7,
+   "y": 3
+  },
+  {
+   "type": "move",
+   "unit": "deng-mao",
+   "x": 7,
+   "y": 6
+  },
+  {
+   "type": "stratagem",
+   "unit": "deng-mao",
+   "strat": "mob-rush",
+   "x": 7,
+   "y": 7,
+   "excludeFromChain": []
+  },
+  {
+   "type": "wait",
+   "unit": "captain-wu",
+   "facing": "S"
+  },
+  {
+   "type": "wait",
+   "unit": "captain-ma",
+   "facing": "S"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "move",
+   "unit": "zhang-fei",
+   "x": 10,
+   "y": 8
+  },
+  {
+   "type": "attack",
+   "unit": "zhang-fei",
+   "target": "taiping-adept"
+  },
+  {
+   "type": "sway",
+   "unit": "captain-sun",
+   "target": "taiping-adept"
+  },
+  {
+   "type": "move",
+   "unit": "zou-jing",
+   "x": 4,
+   "y": 10
+  },
+  {
+   "type": "move",
+   "unit": "guan-yu",
+   "x": 6,
+   "y": 9
+  },
+  {
+   "type": "move",
+   "unit": "liu-bei",
+   "x": 6,
+   "y": 2
+  },
+  {
+   "type": "sway",
+   "unit": "liu-bei",
+   "target": "captain-wu"
+  },
+  {
+   "type": "wait",
+   "unit": "zou-jing",
+   "facing": "S"
+  },
+  {
+   "type": "wait",
+   "unit": "guan-yu",
+   "facing": "E"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "move",
+   "unit": "deng-mao",
+   "x": 7,
+   "y": 5
+  },
+  {
+   "type": "move",
+   "unit": "captain-ma",
+   "x": 12,
+   "y": 7
+  },
+  {
+   "type": "move",
+   "unit": "cheng-yuanzhi",
+   "x": 12,
+   "y": 5
+  },
+  {
+   "type": "stratagem",
+   "unit": "captain-ma",
+   "strat": "torch-raid",
+   "x": 13,
+   "y": 7,
+   "excludeFromChain": []
+  },
+  {
+   "type": "sway",
+   "unit": "deng-mao",
+   "target": "captain-wu"
+  },
+  {
+   "type": "wait",
+   "unit": "cheng-yuanzhi",
+   "facing": "W"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "stratagem",
+   "unit": "jian-yong",
+   "strat": "fire-attack",
+   "x": 6,
+   "y": 8,
+   "excludeFromChain": []
+  },
+  {
+   "type": "move",
+   "unit": "guan-yu",
+   "x": 5,
+   "y": 4
+  },
+  {
+   "type": "stratagem",
+   "unit": "captain-wu",
+   "strat": "massed-arrows",
+   "x": 7,
+   "y": 5,
+   "excludeFromChain": []
+  },
+  {
+   "type": "move",
+   "unit": "zhang-fei",
+   "x": 10,
+   "y": 9
+  },
+  {
+   "type": "wait",
+   "unit": "liu-bei",
+   "facing": "N"
+  },
+  {
+   "type": "move",
+   "unit": "captain-sun",
+   "x": 9,
+   "y": 9
+  },
+  {
+   "type": "move",
+   "unit": "zou-jing",
+   "x": 6,
+   "y": 9
+  },
+  {
+   "type": "move",
+   "unit": "taiping-adept",
+   "x": 9,
+   "y": 6
+  },
+  {
+   "type": "attack",
+   "unit": "taiping-adept",
+   "target": "deng-mao"
+  },
+  {
+   "type": "wait",
+   "unit": "zou-jing",
+   "facing": "N"
+  },
+  {
+   "type": "wait",
+   "unit": "guan-yu",
+   "facing": "W"
+  },
+  {
+   "type": "wait",
+   "unit": "zhang-fei",
+   "facing": "N"
+  },
+  {
+   "type": "wait",
+   "unit": "captain-sun",
+   "facing": "N"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "move",
+   "unit": "cheng-yuanzhi",
+   "x": 11,
+   "y": 6
+  },
+  {
+   "type": "move",
+   "unit": "captain-ma",
+   "x": 12,
+   "y": 5
+  },
+  {
+   "type": "wait",
+   "unit": "cheng-yuanzhi",
+   "facing": "E"
+  },
+  {
+   "type": "move",
+   "unit": "deng-mao",
+   "x": 5,
+   "y": 6
+  },
+  {
+   "type": "wait",
+   "unit": "captain-ma",
+   "facing": "W"
+  },
+  {
+   "type": "wait",
+   "unit": "deng-mao",
+   "facing": "N"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "stratagem",
+   "unit": "jian-yong",
+   "strat": "fire-attack",
+   "x": 7,
+   "y": 10,
+   "excludeFromChain": []
+  },
+  {
+   "type": "stratagem",
+   "unit": "zou-jing",
+   "strat": "arrow-rain",
+   "x": 6,
+   "y": 6,
+   "excludeFromChain": []
+  },
+  {
+   "type": "stratagem",
+   "unit": "taiping-adept",
+   "strat": "yellow-sky-hex",
+   "x": 11,
+   "y": 6,
+   "excludeFromChain": []
+  },
+  {
+   "type": "move",
+   "unit": "liu-bei",
+   "x": 6,
+   "y": 6
+  },
+  {
+   "type": "stratagem",
+   "unit": "liu-bei",
+   "strat": "rally",
+   "x": 6,
+   "y": 6,
+   "excludeFromChain": []
+  },
+  {
+   "type": "move",
+   "unit": "guan-yu",
+   "x": 3,
+   "y": 4
+  },
+  {
+   "type": "move",
+   "unit": "captain-wu",
+   "x": 5,
+   "y": 4
+  },
+  {
+   "type": "move",
+   "unit": "captain-sun",
+   "x": 11,
+   "y": 9
+  },
+  {
+   "type": "wait",
+   "unit": "captain-wu",
+   "facing": "N"
+  },
+  {
+   "type": "wait",
+   "unit": "captain-sun",
+   "facing": "N"
+  },
+  {
+   "type": "move",
+   "unit": "zhang-fei",
+   "x": 10,
+   "y": 8
+  },
+  {
+   "type": "wait",
+   "unit": "guan-yu",
+   "facing": "E"
+  },
+  {
+   "type": "wait",
+   "unit": "zhang-fei",
+   "facing": "N"
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "stratagem",
+   "unit": "captain-ma",
+   "strat": "torch-raid",
+   "x": 13,
+   "y": 5,
+   "excludeFromChain": []
+  },
+  {
+   "type": "endPhase"
+  },
+  {
+   "type": "stratagem",
+   "unit": "taiping-adept",
+   "strat": "yellow-sky-hex",
+   "x": 11,
+   "y": 6,
+   "excludeFromChain": []
+  },
+  {
+   "type": "stratagem",
+   "unit": "liu-bei",
+   "strat": "rally",
+   "x": 6,
+   "y": 6,
+   "excludeFromChain": []
+  },
+  {
+   "type": "wait",
+   "unit": "jian-yong",
+   "facing": "N"
+  },
+  {
+   "type": "move",
+   "unit": "zhang-fei",
+   "x": 9,
+   "y": 8
+  },
+  {
+   "type": "move",
+   "unit": "guan-yu",
+   "x": 2,
+   "y": 9
+  },
+  {
+   "type": "move",
+   "unit": "zou-jing",
+   "x": 5,
+   "y": 11
+  },
+  {
+   "type": "move",
+   "unit": "captain-sun",
+   "x": 12,
+   "y": 10
+  },
+  {
+   "type": "move",
+   "unit": "captain-wu",
+   "x": 2,
+   "y": 4
+  },
+  {
+   "type": "wait",
+   "unit": "guan-yu",
+   "facing": "E"
+  },
+  {
+   "type": "wait",
+   "unit": "captain-sun",
+   "facing": "N"
+  },
+  {
+   "type": "wait",
+   "unit": "zhang-fei",
+   "facing": "S"
+  },
+  {
+   "type": "wait",
+   "unit": "zou-jing",
+   "facing": "S"
+  },
+  {
+   "type": "wait",
+   "unit": "captain-wu",
+   "facing": "E"
+  },
+  {
+   "type": "endPhase"
+  }
+ ],
+ "expect": {
+  "round": 13,
+  "side": "yellow",
+  "troops": {
+   "liu-bei": 2000,
+   "guan-yu": 1980,
+   "zhang-fei": 700,
+   "zou-jing": 2500,
+   "jian-yong": 1160,
+   "cheng-yuanzhi": 2750,
+   "captain-sun": 280,
+   "captain-ma": 710,
+   "captain-wu": 1500,
+   "taiping-adept": 450
+  },
+  "sides": {
+   "liu-bei": "han",
+   "guan-yu": "han",
+   "zhang-fei": "han",
+   "zou-jing": "han",
+   "jian-yong": "han",
+   "cheng-yuanzhi": "yellow",
+   "captain-sun": "han",
+   "captain-ma": "yellow",
+   "captain-wu": "han",
+   "taiping-adept": "han"
+  },
+  "defeated": [
+   "captain-gao",
+   "deng-mao"
+  ],
+  "burning": 5,
+  "ash": 10,
+  "rng": [
+   305999222,
+   2414137638,
+   1207801306,
+   533014560
+  ]
+ }
+}

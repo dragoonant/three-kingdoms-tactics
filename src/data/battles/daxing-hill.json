@@ -1,0 +1,53 @@
+{
+  "id": "daxing-hill",
+  "name": "Daxing Hill",
+  "year": 184,
+  "map": [
+    "TTT...ff~...TT",
+    "TT...fff~..hTT",
+    "T....fffo.hhh.",
+    "....ffff~.hhh.",
+    "...fffff~..hh.",
+    "....fff.~...h.",
+    "=v============",
+    "....fff.~...h.",
+    "...ffff.~..hh.",
+    "T...fff.~..hhT",
+    "TT...ff.o...TT",
+    "TTT.....~..TTT"
+  ],
+  "legend": {
+    ".": "plain",
+    "f": "farm",
+    "T": "forest",
+    "h": "hill",
+    "v": "village",
+    "=": "road",
+    "~": "river",
+    "o": "ford"
+  },
+  "bridges": [{ "x": 8, "y": 6 }],
+  "turnLimit": 15,
+  "onTimeout": "yellow",
+  "sideOrder": ["han", "yellow"],
+  "wind": [
+    { "round": 1, "dir": "E", "strength": "breeze" },
+    { "round": 6, "dir": null, "strength": "calm" },
+    { "round": 9, "dir": "W", "strength": "gale" },
+    { "round": 12, "dir": "E", "strength": "breeze" }
+  ],
+  "units": [
+    { "id": "liu-bei", "officer": "liu-bei", "side": "han", "type": "infantry", "x": 1, "y": 6, "facing": "E", "troops": 2000, "commander": true },
+    { "id": "guan-yu", "officer": "guan-yu", "side": "han", "type": "cavalry", "x": 3, "y": 4, "facing": "E", "troops": 2000, "commander": false },
+    { "id": "zhang-fei", "officer": "zhang-fei", "side": "han", "type": "infantry", "x": 3, "y": 8, "facing": "E", "troops": 2000, "commander": false },
+    { "id": "zou-jing", "officer": "zou-jing", "side": "han", "type": "archers", "x": 2, "y": 5, "facing": "E", "troops": 2500, "commander": false },
+    { "id": "jian-yong", "officer": "jian-yong", "side": "han", "type": "archers", "x": 2, "y": 7, "facing": "E", "troops": 1500, "commander": false },
+    { "id": "cheng-yuanzhi", "officer": "cheng-yuanzhi", "side": "yellow", "type": "infantry", "x": 11, "y": 4, "facing": "W", "troops": 3000, "commander": true },
+    { "id": "deng-mao", "officer": "deng-mao", "side": "yellow", "type": "infantry", "x": 10, "y": 7, "facing": "W", "troops": 2500, "commander": false },
+    { "id": "captain-gao", "officer": "captain-gao", "side": "yellow", "type": "infantry", "x": 9, "y": 2, "facing": "W", "troops": 1500, "commander": false },
+    { "id": "captain-sun", "officer": "captain-sun", "side": "yellow", "type": "infantry", "x": 9, "y": 9, "facing": "W", "troops": 1500, "commander": false },
+    { "id": "captain-ma", "officer": "captain-ma", "side": "yellow", "type": "cavalry", "x": 10, "y": 6, "facing": "W", "troops": 1500, "commander": false },
+    { "id": "captain-wu", "officer": "captain-wu", "side": "yellow", "type": "archers", "x": 11, "y": 3, "facing": "W", "troops": 1500, "commander": false },
+    { "id": "taiping-adept", "officer": "taiping-adept", "side": "yellow", "type": "archers", "x": 12, "y": 5, "facing": "W", "troops": 1200, "commander": false }
+  ]
+}
