@@ -40,13 +40,13 @@
   ],
   "units": [
     {"id": "zhang-liang", "officer": "zhang-liang", "side": "yellow", "type": "infantry", "x": 13, "y": 5, "facing": "W", "troops": 3000, "commander": true},
-    {"id": "zhang-bao", "officer": "zhang-bao", "side": "yellow", "type": "archers", "x": 10, "y": 1, "facing": "W", "troops": 1600, "commander": false},
-    {"id": "gz-guard", "officer": "gz-guard", "side": "yellow", "type": "infantry", "x": 9, "y": 2, "facing": "W", "troops": 1800, "commander": false},
-    {"id": "gz-vanguard-a", "officer": "gz-vanguard-a", "side": "yellow", "type": "infantry", "x": 8, "y": 4, "facing": "W", "troops": 1800, "commander": false},
-    {"id": "gz-vanguard-b", "officer": "gz-vanguard-b", "side": "yellow", "type": "infantry", "x": 8, "y": 8, "facing": "W", "troops": 1800, "commander": false},
-    {"id": "gz-horse", "officer": "gz-horse", "side": "yellow", "type": "cavalry", "x": 9, "y": 6, "facing": "W", "troops": 1500, "commander": false},
-    {"id": "gz-bowman-a", "officer": "gz-bowman-a", "side": "yellow", "type": "archers", "x": 11, "y": 4, "facing": "W", "troops": 1300, "commander": false},
-    {"id": "gz-bowman-b", "officer": "gz-bowman-b", "side": "yellow", "type": "archers", "x": 11, "y": 7, "facing": "W", "troops": 1300, "commander": false}
+    {"id": "zhang-bao", "officer": "zhang-bao", "side": "yellow", "type": "archers", "x": 10, "y": 1, "facing": "W", "troops": 1800, "commander": false},
+    {"id": "gz-guard", "officer": "gz-guard", "side": "yellow", "type": "infantry", "x": 9, "y": 2, "facing": "W", "troops": 2200, "commander": false},
+    {"id": "gz-vanguard-a", "officer": "gz-vanguard-a", "side": "yellow", "type": "infantry", "x": 8, "y": 4, "facing": "W", "troops": 2300, "commander": false},
+    {"id": "gz-vanguard-b", "officer": "gz-vanguard-b", "side": "yellow", "type": "infantry", "x": 8, "y": 8, "facing": "W", "troops": 2300, "commander": false},
+    {"id": "gz-horse", "officer": "gz-horse", "side": "yellow", "type": "cavalry", "x": 9, "y": 6, "facing": "W", "troops": 1900, "commander": false},
+    {"id": "gz-bowman-a", "officer": "gz-bowman-a", "side": "yellow", "type": "archers", "x": 11, "y": 4, "facing": "W", "troops": 1500, "commander": false},
+    {"id": "gz-bowman-b", "officer": "gz-bowman-b", "side": "yellow", "type": "archers", "x": 11, "y": 7, "facing": "W", "troops": 1500, "commander": false}
   ],
   "guests": [
     {"id": "gz-imperial-spears", "officer": "gz-imperial-spears", "side": "han", "type": "infantry", "x": 2, "y": 3, "facing": "E", "troops": 1800, "commander": false},

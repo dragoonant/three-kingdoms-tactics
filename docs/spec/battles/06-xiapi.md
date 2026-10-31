@@ -68,14 +68,14 @@ Shared officers use the numbers of 14-campaign-battles.md. `*` = invented (battl
 | (deploy 1–4) | roster choice: guan-yu, zhang-fei, jian-yong, mi-zhu, sun-qian | han | roster | roster | per table | — | per table | starts 1–4: (3,4) E, (3,6) E, (2,3) E, (2,7) E |
 | cao-cao | Cao Cao (guest) | han | cavalry | 2800 | 72/94/98/96 | — | crescent-sweep, fire-attack, thundering-charge | (3,2) E |
 | xiahou-dun | Xiahou Dun (guest) | han | cavalry | 2400 | 92/58/88/70 | — | thundering-charge, serpent-thrust | (3,8) E |
-| lu-bu | Lu Bu (commander) | lu | cavalry | 3600 | 100/28/90/40 | — | thundering-charge, crescent-sweep, thunder-roar | (10,5) W |
-| chen-gong | Chen Gong | lu | archers | 1900 | 52/92/75/64 | 45 (recruitable) | fire-attack, sow-discord | (9,3) N, rampart |
-| gao-shun | Gao Shun | lu | infantry | 2800 | 86/50/88/55 | 50 (recruitable) | crescent-sweep, thunder-roar | (9,5) W, inside the gate |
-| zhang-liao | Zhang Liao | lu | cavalry | 3000 | 93/78/94/76 | — (not swayable) | thundering-charge, crescent-sweep | (7,3) W, outside the north-west wall |
-| xiapi-picket | Xiapi Picket Captain* | lu | infantry | 2200 | 62/35/55/30 | 75 | twin-blades | (7,8) W, outside the south-west wall |
-| xiapi-bowman-n | Wall Bowman* | lu | archers | 1600 | 50/40/45/30 | 80 | massed-arrows | (11,3) N, rampart |
-| xiapi-bowman-s | Wall Bowman* | lu | archers | 1600 | 50/40/45/30 | 80 | massed-arrows | (9,8) S, rampart |
-| xiapi-guard | Lu Bu's Household Guard* | lu | infantry | 2800 | 74/30/70/30 | 85 | crescent-sweep | (10,4) W |
+| lu-bu | Lu Bu (commander) | lu | cavalry | 4400 | 100/28/90/40 | — | thundering-charge, crescent-sweep, thunder-roar | (10,5) W |
+| chen-gong | Chen Gong | lu | archers | 2300 | 52/92/75/64 | 45 (recruitable) | fire-attack, sow-discord | (9,3) N, rampart |
+| gao-shun | Gao Shun | lu | infantry | 3400 | 86/50/88/55 | 50 (recruitable) | crescent-sweep, thunder-roar | (9,5) W, inside the gate |
+| zhang-liao | Zhang Liao | lu | cavalry | 3600 | 93/78/94/76 | — (not swayable) | thundering-charge, crescent-sweep | (7,3) W, outside the north-west wall |
+| xiapi-picket | Xiapi Picket Captain* | lu | infantry | 2800 | 62/35/55/30 | 75 | twin-blades | (7,8) W, outside the south-west wall |
+| xiapi-bowman-n | Wall Bowman* | lu | archers | 2000 | 50/40/45/30 | 80 | massed-arrows | (11,3) N, rampart |
+| xiapi-bowman-s | Wall Bowman* | lu | archers | 2000 | 50/40/45/30 | 80 | massed-arrows | (9,8) S, rampart |
+| xiapi-guard | Lu Bu's Household Guard* | lu | infantry | 3400 | 74/30/70/30 | 85 | crescent-sweep | (10,4) W |
 
 Deploy: `deploySlots` 5, `required` liu-bei, `defaultDeploy` liu-bei, guan-yu, zhang-fei, jian-yong, mi-zhu. The roster at this point is Liu Bei, Guan Yu, Zhang Fei, Jian Yong, Mi Zhu and Sun Qian (Zou Jing left after Qingzhou, Zhao Yun after Xuzhou), so one of the three support officers sits out. Eight enemy units, two guests and five deployed: seven on the Han side.
 
@@ -106,10 +106,12 @@ At round 8 the gate opens and Lu Bu, who has been pacing inside, comes down the 
 - Floods run at the **end** phase so a unit caught in the first band can still step out in that round; the gate opens at the **start** of round 8 so Lu Bu's side can act on it at once.
 - The moat (`water`) sits directly outside every rampart so the rampart archers cannot be escaladed. Without it a normal-AI Han army climbed the ramparts in round 2 and routed Lu Bu by round 4; with it the siege lasts until the gate opens.
 - Invented units' Loyalty is 75–85 so a sway attempt is a long shot; Chen Gong and Gao Shun keep their shared-table Loyalty (45 and 50) because they are the intended recruits.
-- Lu Bu has 3600 troops (above the 3000 ceiling of earlier commanders) because the walls give the Han side free ranged turns; this was the lever used to bring the AI win rate into range.
+- Lu Bu has 4400 troops since the campaign-balance pass (3600 before; above the 3000 ceiling of earlier commanders) because the walls give the Han side free ranged turns; this was the lever used to bring the AI win rate into range.
 - Three battle-local officer records (`xiapi-picket`, `xiapi-bowman`, `xiapi-guard`) cover the four invented units; ids are prefixed `xiapi-`.
 
 ## Balance notes
 - `npm run sim -- --battle xiapi --games 100` (random policy both sides): winners lu=94 han=6, reasons timeout=73 commander=27, avgRounds 12.94, 0 invariant failures; both sides win.
 - AI bench, 30 games per direction, seeds 5000–5029, budget 300 ms (a locally patched copy of `tools/ai-bench.ts`, because the committed bench hard-codes the enemy seat as `yellow` and crashes on `lu`): `normal(han)` vs `normal(lu)` 25/30 = 83%, average 11.1 rounds, 3 timeouts; `random(han)` vs `normal(lu)` 0/30; `normal(han)` vs `random(lu)` 30/30. With the first troop numbers and the 8-unit enemy `normal(han)` won 97–100%, so the garrison was thickened (Gao Shun, Zhang Liao, the picket, the Household Guard and Chen Gong gained 400–600 troops each, the bowmen 300); a second north picket that fitted the design was dropped to stay at 8 units.
 - The normal AI sways freely (about 2 attempts per game) and spends rounds 1–7 shooting across the walls; both are why the Han win rate is at the top of the target range. Re-bench once the AI becomes objective-aware.
+- **Campaign-balance pass (AI v2, battles 2-9).** With the improved AI the bench (normal vs normal, roster officers at 2000 troops) had Han at **87%** / 11.4 rounds, above the 40-65% wanted for battle 6. Change, all in `xiapi.json` and troops only, a roughly +20-25% garrison: Lu Bu 3600 -> 4400, Gao Shun and the Household Guard 2800 -> 3400, Zhang Liao 3000 -> 3600, the picket 2200 -> 2800, the wall bowmen 1600 -> 2000, Chen Gong 1900 -> 2300. The flood timeline, the walls/moat and the round-8 gate are untouched.
+  Result (normal vs normal, 30 games): seeds 5000-5029 **87% -> 57%**, 11.2 rounds (7 timeouts); holdout seeds 7000-7039 **55%**, 11.6 rounds. random(han) 0%. 0 fallbacks / illegal / invariants. No test changed.

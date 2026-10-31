@@ -56,17 +56,19 @@ Player: `deploySlots` 6, required **Liu Bei and Zhuge Liang**, `defaultDeploy` L
 | zhou-yu | Zhou Yu (guest) | han | archers | 2200 | 76/96/96/90 | — | fire-attack, massed-arrows | (6,8) N, on the hill |
 | gan-ning | Gan Ning (guest) | han | cavalry | 2200 | 94/62/82/55 | — | thundering-charge, twin-blades | (10,9) N |
 | huang-gai | Huang Gai (reinforcement) | han | infantry | 1800 | 80/68/82/72 | — | serpent-thrust, fire-ships | round 5, entry (9,6) N |
-| cao-cao | Cao Cao (commander, retreatAt 0.5) | cao | cavalry | 3000 | 72/94/98/96 | — | crescent-sweep, fire-attack, thundering-charge | (7,3) S |
-| cai-mao | Cai Mao | cao | archers | 2000 | 66/70/74/40 | — | arrow-rain, massed-arrows | (7,2) S |
-| cao-ren | Cao Ren | cao | infantry | 2400 | 86/62/90/68 | — | serpent-thrust, crescent-sweep | (4,4) S |
-| xu-chu | Xu Chu | cao | infantry | 2400 | 97/32/66/45 | — | serpent-thrust, thunder-roar | (11,4) S |
-| zhang-liao | Zhang Liao | cao | cavalry | 2400 | 93/78/94/76 | — | thundering-charge, crescent-sweep | (9,5) S |
+| cao-cao | Cao Cao (commander, retreatAt 0.5) | cao | cavalry | 5400 | 72/94/98/96 | — | crescent-sweep, fire-attack, thundering-charge | (7,1) S |
+| cai-mao | Cai Mao | cao | archers | 2600 | 66/70/74/40 | — | arrow-rain, massed-arrows | (7,2) S |
+| cao-ren | Cao Ren | cao | infantry | 3000 | 86/62/90/68 | — | serpent-thrust, crescent-sweep | (4,4) S |
+| xu-chu | Xu Chu | cao | infantry | 3000 | 97/32/66/45 | — | serpent-thrust, thunder-roar | (11,4) S |
+| zhang-liao | Zhang Liao | cao | cavalry | 3000 | 93/78/94/76 | — | thundering-charge, crescent-sweep | (9,5) S |
 | red-cliffs-marine-a | Fleet Marine Captain Bai* | cao | infantry | 1800 | 68/38/55/36 | 42 | mob-rush, twin-blades | (6,4) S |
 | red-cliffs-marine-b | Fleet Marine Captain Ge* | cao | infantry | 1800 | 66/40/58/38 | 46 | twin-blades | (8,3) S |
 | red-cliffs-crossbow | Crossbow Captain Shen* | cao | archers | 1500 | 58/44/50/36 | 44 | massed-arrows | (7,5) S |
+| red-cliffs-guard-a | Flagship Guard Captain Lu* | cao | infantry | 2400 | 70/38/58/36 | 60 | twin-blades | (6,1) S |
+| red-cliffs-guard-b | Flagship Guard Captain Xun* | cao | infantry | 2400 | 68/40/58/36 | 60 | serpent-thrust | (8,1) S |
 | red-cliffs-reserve | Fleet Reserve Captain Dai* | cao | infantry | 1800 | 64/42/54/34 | 40 | mob-rush | round 4, entry (8,1) S |
 
-Enemy start: 8 units, all on deck tiles; plus one reserve captain in round 4. Cao Cao's bond list is empty; he cannot be swayed (Loyalty null, and he is a commander). The four invented captains can.
+Enemy start: 10 units, all on deck tiles; plus one reserve captain in round 4. Cao Cao's bond list is empty; he cannot be swayed (Loyalty null, and he is a commander). The four invented captains can.
 
 ## Stratagems
 No battle-local stratagems: everything is in the shared table. The ones that decide this battle:
@@ -100,13 +102,14 @@ Huang Gai appears ready to act with 4 Qi, standing in the shallows beside a deck
 | cao-cao | hold | the flagship stays at the centre of his own fleet |
 | cai-mao | guard:cao-cao | the admiral stays by the flagship |
 | red-cliffs-marine-b | guard:cao-cao | the commander's guard |
+| red-cliffs-guard-a, red-cliffs-guard-b | guard:cao-cao | the flagship ring at (6,1) and (8,1) |
 | red-cliffs-crossbow | hold | covers the southern deck row |
 | cao-ren, xu-chu, zhang-liao, red-cliffs-marine-a, red-cliffs-reserve | advance | the landing parties: they wade the strip and fight on the reed beds in rounds 2–5 |
 
 ## Intended play
 Red Cliffs rewards patience and then punishes hesitation. For four rounds the wind is wrong and the fleet is out of reach, so the fight is on the shore: Cao Ren, Xu Chu and Zhang Liao land at the reed landings, wade the strip (where they take 25% more damage and move at a third of their speed) and meet the Han line on the reed beds. Zhou Yu on the hill (6,8) reaches the landing at (4,6) and the strip with his bow; Gan Ning breaks the first wave. The temptation is Zhuge Liang's valley-blaze or Zhou Yu's fire-attack in round 3 or 4: lit early the fire either does nothing (the breeze carries it south, onto the strip, where there is nothing to burn) or, if it catches the landing reeds, runs down onto the Han reed beds. The honest play is to keep Qi in reserve (Zhou Yu 6 Qi from round 3, Zhuge Liang 6 Qi, Huang Gai 4 at arrival) and hold the shore.
 
-In round 5 the gale arrives. Huang Gai appears in the shallows beside the fleet; his fire-ships ignites a five-tile cross. Zhou Yu and Zhuge Liang add a second and a third source in the same phase (the integration test lights three points in round 5 and the fleet is down to a third of its decks by round 10). From then on the fire runs north a row a round, fans out sideways, confuses half of what it touches, and sinks the decks behind it so that nothing on the fleet can retreat south. The Han job is to keep the fires fed, to kill what stumbles ashore, and to get a bow or a fire stratagem within reach of the flagship at (7,3): a unit on the strip at (7,6) is three tiles from it. Cao Cao breaks at 1,500 troops, and fire alone does not get him there before round 12: Zhou Yu's bow, Huang Gai's fire ships and Gan Ning's blade must finish him.
+In round 5 the gale arrives. Huang Gai appears in the shallows beside the fleet; his fire-ships ignites a five-tile cross. Zhou Yu and Zhuge Liang add a second and a third source in the same phase (the integration test lights three points in round 5 and the fleet is down to a third of its decks by round 10). From then on the fire runs north a row a round, fans out sideways, confuses half of what it touches, and sinks the decks behind it so that nothing on the fleet can retreat south. The Han job is to keep the fires fed, to kill what stumbles ashore, and to get a bow or a fire stratagem within reach of the flagship (at (7,1) from the start; the AI also shifts him a little): a unit on the strip at (7,6) is five tiles from it, so the decks must burn or be crossed first. Cao Cao breaks at 1,500 troops, and fire alone does not get him there before round 12: Zhou Yu's bow, Huang Gai's fire ships and Gan Ning's blade must finish him.
 
 Zhuge Liang at level 7 can shorten the whole waiting game with borrow-the-wind (see Wind), but it costs him a round of Qi and his action; the wind he borrows is still only a gale, not an excuse to stop defending. The thing to learn is the same thing the earlier fire battles taught, now at scale: a fire is a clock, and the wind is its hand.
 
@@ -114,6 +117,9 @@ Zhuge Liang at level 7 can shorten the whole waiting game with borrow-the-wind (
 - `npm run sim -- --battle red-cliffs --games 100` (random both sides): winners cao=45 han=55, avgRounds 12.24, 0 invariant failures; fires=1757 ignited + 5013 spread.
 - `tools/ai-bench.ts --battle red-cliffs --games 30 --pairs normal:normal,random:normal,normal:random --jobs 4` (local copy keyed by the real enemy side id; the stock bench crashes on a non-`yellow` enemy and its invariant check counts reinforcements as lost units — the `inv` column is meaningless for any battle with reinforcements): normal(han) vs normal(cao) **80%** (24-6, 6 timeouts, 12.2 rounds on average); random(han) vs normal(cao) 0%; normal(han) vs random(cao) 100%; normal(cao) vs random(han) 100%. In range (35–85%, ≥5 rounds).
 - A traced AI-vs-AI game (seed 5000) ends in round 12 by Cao Cao's retreat: the Han AI wades the strip, lights the fleet when the gale comes, and its own units are scorched on the reed landings; Cao Cao is worn down to 1,500 by strikes and fire in rounds 9–12. With three fires lit in round 5 and no other action, an idle Cao Cao on the flagship takes his first fire damage in round 9 and is at 1,800 in round 12; the fire alone is slow, which is why the Han must finish him.
+- **Campaign-balance pass (AI v2, battles 2-9).** With the improved AI the bench (normal vs normal, roster officers at 2000 troops) had Han at **93%** / 11.5 rounds, above the 35-60% wanted for battle 9. Fire damage is a flat 10% of the victim's max troops per tick and Cao Cao's retreat line is 50% of his max, so scaling troops alone barely moves it (4000 / 3000-troop landing parties gave 92%, and an extra round-2 landing skiff 87%). What moved it: (1) **Cao Cao moved from the flagship's centre (7,3) to the stern (7,1)**, so the fire reaches him two rounds later and shore archers cannot reach him until the decks between have burnt; Cai Mao closes in to (7,2) and the two new **Flagship Guard Captains** (infantry, 2400, `guard:cao-cao`, invented) stand at (6,1) and (8,1), a ring that leaves only the south face open (70-78% with Cao Cao at 3000-3800); (2) **Cao Cao 3000 -> 5400**, which makes the strike chains that finish him cost more (the retreat line is 2700); (3) Cai Mao 2000 -> 2600 and Cao Ren, Xu Chu and Zhang Liao 2400 -> 3000. The gale in round 5, Huang Gai's arrival and the round-4 reserve are untouched, and the win is still the fire on the chained fleet (it still lights the fleet in the first rounds of the gale; the finishing chain follows).
+  Result (normal vs normal, 30 games): seeds 5000-5029 **93% -> 53%**, 13.1 rounds (11 timeouts); holdout seeds 7000-7039 **60%**, 13.0 rounds (15 timeouts). random(han) 0%. 0 fallbacks / illegal / invariants. The AI now needs most of the 14 rounds, so a human who lights the fleet at once and focuses Cao Cao will do notably better than the AI.
+  Test changes in `battle-red-cliffs.test.ts`: Cao Cao troops 5400, the retreat test patches him to 2720 (just above the 2700 line), Cai Mao and Gan Ning are moved to open the guard ring around (7,1), and Xu Chu's scorched-troops check is `< 3000`.
 
 ## Rulings
 - **Wind direction.** The engine's directions are N/E/S/W. The south-east wind is `N` gale. The early wind is `S` breeze (the brief's "toward S").

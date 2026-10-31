@@ -39,14 +39,16 @@
     {"round": 12, "dir": null, "strength": "calm"}
   ],
   "units": [
-    {"id": "qz-rebel-chief", "officer": "qz-rebel-chief", "side": "yellow", "type": "infantry", "x": 11, "y": 5, "facing": "W", "troops": 3200, "commander": true},
-    {"id": "qz-raider-a", "officer": "qz-raider-a", "side": "yellow", "type": "cavalry", "x": 10, "y": 3, "facing": "W", "troops": 1700, "commander": false},
-    {"id": "qz-raider-b", "officer": "qz-raider-b", "side": "yellow", "type": "cavalry", "x": 10, "y": 8, "facing": "W", "troops": 1700, "commander": false},
-    {"id": "qz-spearman-a", "officer": "qz-spearman-a", "side": "yellow", "type": "infantry", "x": 9, "y": 4, "facing": "W", "troops": 2100, "commander": false},
-    {"id": "qz-spearman-b", "officer": "qz-spearman-b", "side": "yellow", "type": "infantry", "x": 9, "y": 7, "facing": "W", "troops": 2100, "commander": false},
-    {"id": "qz-bowman-a", "officer": "qz-bowman-a", "side": "yellow", "type": "archers", "x": 10, "y": 4, "facing": "W", "troops": 1300, "commander": false},
-    {"id": "qz-bowman-b", "officer": "qz-bowman-b", "side": "yellow", "type": "archers", "x": 10, "y": 7, "facing": "W", "troops": 1300, "commander": false},
-    {"id": "qz-adept", "officer": "qz-adept", "side": "yellow", "type": "archers", "x": 11, "y": 6, "facing": "W", "troops": 1200, "commander": false}
+    {"id": "qz-rebel-chief", "officer": "qz-rebel-chief", "side": "yellow", "type": "infantry", "x": 11, "y": 5, "facing": "W", "troops": 3600, "commander": true},
+    {"id": "qz-raider-a", "officer": "qz-raider-a", "side": "yellow", "type": "cavalry", "x": 10, "y": 3, "facing": "W", "troops": 2000, "commander": false},
+    {"id": "qz-raider-b", "officer": "qz-raider-b", "side": "yellow", "type": "cavalry", "x": 10, "y": 8, "facing": "W", "troops": 2000, "commander": false},
+    {"id": "qz-spearman-a", "officer": "qz-spearman-a", "side": "yellow", "type": "infantry", "x": 9, "y": 4, "facing": "W", "troops": 2400, "commander": false},
+    {"id": "qz-spearman-b", "officer": "qz-spearman-b", "side": "yellow", "type": "infantry", "x": 9, "y": 7, "facing": "W", "troops": 2400, "commander": false},
+    {"id": "qz-bowman-a", "officer": "qz-bowman-a", "side": "yellow", "type": "archers", "x": 10, "y": 4, "facing": "W", "troops": 1500, "commander": false},
+    {"id": "qz-bowman-b", "officer": "qz-bowman-b", "side": "yellow", "type": "archers", "x": 10, "y": 7, "facing": "W", "troops": 1500, "commander": false},
+    {"id": "qz-spearman-c", "officer": "qz-spearman-c", "side": "yellow", "type": "infantry", "x": 9, "y": 5, "facing": "W", "troops": 1600, "commander": false},
+    {"id": "qz-raider-c", "officer": "qz-raider-c", "side": "yellow", "type": "cavalry", "x": 9, "y": 6, "facing": "W", "troops": 1200, "commander": false},
+    {"id": "qz-adept", "officer": "qz-adept", "side": "yellow", "type": "archers", "x": 11, "y": 6, "facing": "W", "troops": 1300, "commander": false}
   ],
   "guests": [
     {"id": "zou-jing", "officer": "zou-jing", "side": "han", "type": "archers", "x": 2, "y": 7, "facing": "E", "troops": 2500, "commander": false}
@@ -72,7 +74,7 @@
     {"round": 2, "phase": "end", "kind": "message", "text": "Horns sound on both ridges at dawn. Guan Yu and Zhang Fei are coming down."},
     {"round": 4, "phase": "end", "kind": "message", "text": "Behind the rebel camp the bar of the Qingzhou gate is being lifted."}
   ],
-  "enemyBehaviour": {"qz-rebel-chief": "pursue:liu-bei", "qz-raider-a": "advance", "qz-raider-b": "advance", "qz-spearman-a": "advance", "qz-spearman-b": "advance", "qz-bowman-a": "guard:12,6", "qz-bowman-b": "guard:12,6", "qz-adept": "guard:12,6"},
+  "enemyBehaviour": {"qz-rebel-chief": "pursue:liu-bei", "qz-raider-a": "advance", "qz-raider-b": "advance", "qz-spearman-a": "advance", "qz-spearman-b": "advance", "qz-spearman-c": "advance", "qz-raider-c": "advance", "qz-bowman-a": "guard:12,6", "qz-bowman-b": "guard:12,6", "qz-adept": "guard:12,6"},
   "joins": [],
   "departs": [
     {"officer": "zou-jing", "note": "Zou Jing turns back to Youzhou with the news; the brothers go on without him."}
@@ -83,6 +85,8 @@
     {"id": "qz-raider-b", "name": "Raider Bo", "war": 54, "int": 25, "lead": 40, "cha": 20, "loyalty": 38, "bonds": [], "stratagems": ["mob-rush"], "source": "invented", "type": "cavalry", "invented": true},
     {"id": "qz-spearman-a", "name": "Captain Du", "war": 50, "int": 30, "lead": 45, "cha": 25, "loyalty": 45, "bonds": [], "stratagems": ["mob-rush"], "source": "invented", "type": "infantry", "invented": true},
     {"id": "qz-spearman-b", "name": "Captain Lei", "war": 50, "int": 32, "lead": 44, "cha": 28, "loyalty": 42, "bonds": [], "stratagems": ["mob-rush"], "source": "invented", "type": "infantry", "invented": true},
+    {"id": "qz-spearman-c", "name": "Captain Gao", "war": 51, "int": 30, "lead": 44, "cha": 24, "loyalty": 44, "bonds": [], "stratagems": ["mob-rush"], "source": "invented", "type": "infantry", "invented": true},
+    {"id": "qz-raider-c", "name": "Raider Kun", "war": 54, "int": 24, "lead": 40, "cha": 20, "loyalty": 36, "bonds": [], "stratagems": ["mob-rush"], "source": "invented", "type": "cavalry", "invented": true},
     {"id": "qz-bowman-a", "name": "Bowman Kuang", "war": 46, "int": 38, "lead": 40, "cha": 28, "loyalty": 50, "bonds": [], "stratagems": ["massed-arrows"], "source": "invented", "type": "archers", "invented": true},
     {"id": "qz-bowman-b", "name": "Bowman Ning", "war": 46, "int": 36, "lead": 40, "cha": 26, "loyalty": 48, "bonds": [], "stratagems": ["massed-arrows"], "source": "invented", "type": "archers", "invented": true},
     {"id": "qz-adept", "name": "Taiping Adept Shan", "war": 30, "int": 66, "lead": 38, "cha": 50, "loyalty": 55, "bonds": [], "stratagems": ["yellow-sky-hex"], "source": "invented", "type": "archers", "invented": true}

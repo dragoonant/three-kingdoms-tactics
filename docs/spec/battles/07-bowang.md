@@ -9,7 +9,7 @@
 - Invented units, flagged `invented: true`: Cao Light Horse (2 units), Cao Spear Captain (2), Cao Crossbow Captain (1).
 
 ## Objective
-- Win: rout Xiahou Dun. He has `retreatAt: 0.5`, so taking him to half strength (1500 of 3000 troops) wins; a retreat counts as a rout.
+- Win: rout Xiahou Dun. He has `retreatAt: 0.5`, so taking him to half strength (1250 of 2500 troops) wins; a retreat counts as a rout.
 - Lose: Liu Bei is routed, or round 12 ends (`onTimeout: cao`).
 - Side order: `han` (player) then `cao`.
 - Par: 8 rounds.
@@ -56,13 +56,13 @@ Shared officers use the numbers of 14-campaign-battles.md. `*` = invented (battl
 | zhuge-liang | Zhuge Liang | han | archers | roster | 38/100/92/95 | — | valley-blaze, eight-trigrams | start 1: (3,7) E, forest edge |
 | zhao-yun | Zhao Yun (bait) | han | cavalry | roster | 96/76/90/82 | — | serpent-thrust, thundering-charge | start 2: (6,8) N, in the neck |
 | (deploy 3–6) | roster choice: guan-yu, zhang-fei, guan-ping, jian-yong, mi-zhu, sun-qian | han | roster | roster | per table | — | per table | starts 3–6 are the ambush posts: (3,6) E, (9,6) W, (4,9) E, (8,9) W |
-| xiahou-dun | Xiahou Dun (commander) | cao | cavalry | 3000 | 92/58/88/70 | — | thundering-charge, serpent-thrust | (6,0) S |
-| yu-jin | Yu Jin | cao | infantry | 2200 | 80/66/85/58 | — | twin-blades, thunder-roar | (4,1) S |
-| li-dian | Li Dian | cao | infantry | 2200 | 76/72/76/60 | — | twin-blades, sow-discord | (8,1) S |
+| xiahou-dun | Xiahou Dun (commander) | cao | cavalry | 2500 | 92/58/88/70 | — | thundering-charge, serpent-thrust | (6,0) S |
+| yu-jin | Yu Jin | cao | infantry | 2000 | 80/66/85/58 | — | twin-blades, thunder-roar | (4,1) S |
+| li-dian | Li Dian | cao | infantry | 2000 | 76/72/76/60 | — | twin-blades, sow-discord | (8,1) S |
 | bowang-scout-a | Cao Light Horse* | cao | cavalry | 1500 | 62/35/50/30 | 70 | thundering-charge | (5,0) S |
 | bowang-scout-b | Cao Light Horse* | cao | cavalry | 1500 | 62/35/50/30 | 70 | thundering-charge | (7,0) S |
-| bowang-spear-a | Cao Spear Captain* | cao | infantry | 1700 | 64/38/60/32 | 75 | serpent-thrust | (5,2) S |
-| bowang-spear-b | Cao Spear Captain* | cao | infantry | 1700 | 64/38/60/32 | 75 | serpent-thrust | (7,2) S |
+| bowang-spear-a | Cao Spear Captain* | cao | infantry | 1600 | 64/38/60/32 | 75 | serpent-thrust | (5,2) S |
+| bowang-spear-b | Cao Spear Captain* | cao | infantry | 1600 | 64/38/60/32 | 75 | serpent-thrust | (7,2) S |
 | bowang-crossbow | Cao Crossbow Captain* | cao | archers | 1300 | 55/45/50/35 | 75 | massed-arrows | (6,2) S |
 
 Deploy: `deploySlots` 7, `required` liu-bei, zhuge-liang, zhao-yun (deployed first, in that order, onto starts 0, 1 and 2), `defaultDeploy` liu-bei, zhuge-liang, zhao-yun, guan-yu, zhang-fei, guan-ping, jian-yong. Roster at this point: nine officers (Liu Bei, Guan Yu, Zhang Fei, Jian Yong, Mi Zhu, Sun Qian, Zhuge Liang, Zhao Yun, Guan Ping) for seven slots. Starts 3–6 carry `ambush: true` (a label in the deploy screen only; no rule effect). Eight enemy units against seven.
@@ -109,3 +109,5 @@ Mistakes the map punishes: lighting the reeds before round 4 (calm wind spreads 
 - `npm run sim -- --battle bowang --games 100` (random policy both sides): winners cao=95 han=5, reasons timeout=94 commander=6, avgRounds 11.82, 0 invariant failures; both sides win.
 - AI bench, 30 games per direction, seeds 5000–5029, budget 300 ms (a locally patched copy of `tools/ai-bench.ts` that reads the enemy side id from the battle; the committed bench hard-codes `yellow`): `normal(han)` vs `normal(cao)` 14/30 = 47%, average 11.0 rounds, 16 timeouts; `random(han)` vs `normal(cao)` 0/30; `normal(han)` vs `random(cao)` 30/30.
 - Over half the AI games time out: the cautious AI Cao army stays at the reed edge and the Han AI does not use the ambush, so the battle is decided by whether the Han AI comes out to meet it. Today's AI does not play the intended trap at all, so these numbers are only a sanity check; re-bench with the objective-aware AI.
+- **Campaign-balance pass (AI v2, battles 2-9).** With the improved AI the bench (normal vs normal, roster officers at 2000 troops) had Han at **30%** / 10.8 rounds, under the 40-65% wanted for battle 7. Changes, all in `bowang.json` and troops only: Xiahou Dun 3000 -> 2500 (he retreats at half, so the line drops from 1500 to 1250; this is by far the strongest lever: 2700 gave 42%, and 3000 with every other unit cut to 1200-1800 gave 17% then 50% with a hollow army), Yu Jin and Li Dian 2200 -> 2000, the spear captains 1700 -> 1600. Ambush starts, wind and `pursue:zhao-yun` untouched.
+  Result (normal vs normal, 30 games): seeds 5000-5029 **30% -> 53%**, 9.7 rounds (13 timeouts); holdout seeds 7000-7039 **55%**, 10.2 rounds (18 timeouts). random(han) 0%. 0 fallbacks / illegal / invariants. Test change: `battle-bowang.test.ts` now expects Xiahou Dun at 2500 troops / maxTroops (was 3000); its 1510-troop setup still works because the Zhao Yun hit it checks deals more than the 260 needed to cross the new 1250 line.

@@ -59,7 +59,7 @@ describe('Bowang: the valley wind (R-WIND-1)', () => {
 describe('Bowang: Xiahou Dun retreats at half strength (R2-OBJ-2)', () => {
   it('a hit that takes him to 50% or below removes him from the board and wins the battle', () => {
     let s = createBattle('bowang', 4)
-    expect(u(s, 'xiahou-dun')).toMatchObject({ commander: true, retreatAt: 0.5, troops: 3000, maxTroops: 3000 })
+    expect(u(s, 'xiahou-dun')).toMatchObject({ commander: true, retreatAt: 0.5, troops: 2500, maxTroops: 2500 })
     // bring him next to Zhao Yun (the bait) at 1510 troops
     s = patch(s, 'xiahou-dun', { x: 6, y: 7, facing: 'N', troops: 1510 })
     expect(u(s, 'zhao-yun')).toMatchObject({ x: 6, y: 8 })

@@ -38,9 +38,9 @@
   "units": [
     {"id": "lu-bu", "officer": "lu-bu", "side": "dong", "type": "cavalry", "x": 11, "y": 5, "facing": "W", "troops": 3200, "commander": false, "retreatAt": 0.5},
     {"id": "li-jue", "officer": "li-jue", "side": "dong", "type": "cavalry", "x": 13, "y": 6, "facing": "W", "troops": 2000, "commander": true},
-    {"id": "guo-si", "officer": "guo-si", "side": "dong", "type": "cavalry", "x": 11, "y": 6, "facing": "W", "troops": 1800, "commander": false},
-    {"id": "zhang-liao", "officer": "zhang-liao", "side": "dong", "type": "cavalry", "x": 7, "y": 3, "facing": "W", "troops": 2200, "commander": false},
-    {"id": "hulao-gate-guard", "officer": "hulao-gate-guard", "side": "dong", "type": "infantry", "x": 8, "y": 5, "facing": "W", "troops": 1600, "commander": false},
+    {"id": "guo-si", "officer": "guo-si", "side": "dong", "type": "cavalry", "x": 11, "y": 6, "facing": "W", "troops": 1700, "commander": false},
+    {"id": "zhang-liao", "officer": "zhang-liao", "side": "dong", "type": "cavalry", "x": 7, "y": 3, "facing": "W", "troops": 1900, "commander": false},
+    {"id": "hulao-gate-guard", "officer": "hulao-gate-guard", "side": "dong", "type": "infantry", "x": 8, "y": 5, "facing": "W", "troops": 1500, "commander": false},
     {"id": "hulao-gate-archer-n", "officer": "hulao-gate-archer", "side": "dong", "type": "archers", "x": 10, "y": 3, "facing": "W", "troops": 1200, "commander": false},
     {"id": "hulao-gate-firebow", "officer": "hulao-gate-firebow", "side": "dong", "type": "archers", "x": 10, "y": 7, "facing": "W", "troops": 1200, "commander": false},
     {"id": "hulao-gate-archer-s", "officer": "hulao-gate-archer", "side": "dong", "type": "archers", "x": 10, "y": 9, "facing": "W", "troops": 1200, "commander": false}
