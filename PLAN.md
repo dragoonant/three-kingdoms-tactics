@@ -30,15 +30,15 @@ An original 3D grid tactics game set in the Three Kingdoms era, built as a spiri
 | M | What | Where | Status |
 |---|---|---|---|
 | M0 | Scaffold, specs 00/10/11/50, PLAN, CLAUDE.md, Pages | cloud | done 2026-10-31 |
-| M1 | Data: terrain, officers, stratagems, Daxing Hill JSON + validator | cloud | |
-| M2 | Engine: pure reducer per 10-rules, seeded RNG, replay, sim with invariants, rule-id tests | cloud | |
-| M3 | Playable slice: sand-table skin, stand-in MGSD figures, HUD/slips/seal, director, greedy bot, briefing + how-to-play | cloud | |
-| M4 | Utility AI in a worker; ai-bench (normal beats random ≥ 95%) | cloud | |
+| M1 | Data: terrain, officers, stratagems, Daxing Hill JSON + validator | cloud | done 2026-10-31 |
+| M2 | Engine: pure reducer per 10-rules, seeded RNG, replay, sim with invariants, rule-id tests | cloud | done 2026-10-31 |
+| M3 | Playable slice: sand-table skin, stand-in MGSD figures, HUD/slips/seal, director, greedy bot, briefing + how-to-play | cloud | done 2026-10-31 |
+| M4 | Utility AI in a worker; ai-bench (normal beats random ≥ 95%) | cloud | done 2026-10-31 (objective-aware v2 too) |
 | M5 | Art: MGSD officer concepts → Hunyuan GLBs; sand-table terrain props | owner's PC | |
 | M6 | Audio: drums/guqin/erhu score, seal stamp, fire, clash SFX | owner's PC | |
 | M7 | Polish, phone layout, settings, end screen | cloud | |
-| M8 | Campaign framework: progression, camp, roster, saves, story scenes, Iron Oath | cloud | |
-| M9 | Campaign battles 2–9 (specs + data + scenes + per-battle AI checks) | cloud | |
+| M8 | Campaign framework: progression, camp, roster, saves, story scenes, Iron Oath | cloud | done 2026-11-01 |
+| M9 | Campaign battles 2–9 (specs + data + scenes + per-battle AI checks) | cloud | done 2026-11-01 (AI-vs-AI balanced; human playtest pending) |
 
 ## Rulings / balance log
 (`RULING: <rule> | <what we did> | <why>`)

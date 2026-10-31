@@ -185,7 +185,7 @@ function describeTimeline(t: BattleState['timeline'][number], state: BattleState
   const base = { round: t.round, phase: t.phase }
   switch (t.kind) {
     case 'terrain':
-      return { ...base, kind: 'terrain', text: `${state.data.terrain[t.to].name} spreads over ${t.tiles.length} tile${t.tiles.length === 1 ? '' : 's'}`, tiles: t.tiles.map(([x, y]) => ({ x, y })) }
+      return { ...base, kind: 'terrain', text: `${t.tiles.length} tile${t.tiles.length === 1 ? '' : 's'} become${t.tiles.length === 1 ? 's' : ''} ${state.data.terrain[t.to].name.toLowerCase()}`, tiles: t.tiles.map(([x, y]) => ({ x, y })) }
     case 'wind':
       return { ...base, kind: 'wind', text: t.strength === 'calm' || t.dir === null ? 'The wind drops' : `The wind turns to a ${t.strength} toward ${t.dir}`, tiles: [] }
     case 'message':
@@ -213,7 +213,7 @@ export function timelinePreview(state: BattleState, limit = 6): TimelineItemPrev
       round: r.round,
       phase: 'start',
       kind: 'reinforcement',
-      text: `${r.units.length} reinforcement${r.units.length === 1 ? '' : 's'} arrive for ${state.sides.find((s) => s.id === r.side)?.name ?? r.side}`,
+      text: `${r.units.length} reinforcement${r.units.length === 1 ? ' arrives' : 's arrive'} for ${state.sides.find((s) => s.id === r.side)?.name ?? r.side}`,
       tiles: r.entry.map(([x, y]) => ({ x, y })),
     })
   }
