@@ -1,10 +1,13 @@
 {
-  "stub": true,
   "pre": [
-    {
-      "speaker": "narrator",
-      "text": "[stub] Scene text for epilogue will be written by a content builder."
-    }
+    {"speaker": "narrator", "text": "Cao Cao fled north by the Huarong road, through marsh and mist. The rain turned the track to mud, and his soldiers cut brushwood to lay under their horses' feet. Of the host that came south in the autumn, only a few thousand rode home."},
+    {"speaker": "guan-yu", "text": "He passed me at a bend in the road. I owed him a debt, and I paid it. That is all anyone needs to hear."},
+    {"speaker": "narrator", "text": "That winter the realm began to settle into three. Cao Cao kept the north and the Yellow River plains. Sun Quan held the south and the river. Between them, in the borrowed provinces along the Yangtze, Liu Bei held a strip of land and the loyalty of a few thousand."},
+    {"speaker": "liu-bei", "text": "Three of us once, under the peach trees. Now it seems that the whole country has come to be three of everything."},
+    {"speaker": "zhang-fei", "text": "And a few more of us every year. Where do we go next, brother?"},
+    {"speaker": "zhuge-liang", "text": "West, in time. Shu has rich land and a poor master. But not this winter. This winter we count the dead and tend the living."},
+    {"speaker": "liu-bei", "text": "Then we start there. The oath was never to win. It was to stay together and to be of use."},
+    {"speaker": "narrator", "text": "So the old order of the Han came to its end, and the age of the Three Kingdoms began."}
   ],
   "post": []
 }

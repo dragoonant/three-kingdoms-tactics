@@ -2,48 +2,239 @@
   "id": "red-cliffs",
   "name": "Red Cliffs",
   "year": 208,
-  "stub": true,
   "title": "The Fire at Red Cliffs",
-  "place": "Chibi",
+  "place": "Chibi, on the Yangtze",
   "blurb": [
-    "[stub] Placeholder battle. A content builder will replace this file with the full design for Red Cliffs."
+    "Cao Cao has brought eight hundred thousand men, or so his letters claim, down the Yangtze, and his northern soldiers, who cannot stand on a rolling deck, have had their ships chained bow to stern to make a floating road. Sun Quan's admiral Zhou Yu holds the southern bank with Liu Bei's company beside him.",
+    "A fleet that cannot cast loose cannot flee. Fire is the answer, but all the early autumn the wind has blown from the north-west, straight back onto the south bank. Huang Gai has promised to bring fire ships alongside the moment it turns. Hold the shore, keep your hands cool, and be ready when it does."
   ],
   "map": [
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    ".........."
+    "wwwwwwwwwwwwwwww",
+    "wwwwddddddddwwww",
+    "wwwddddddddddwww",
+    "wwwddddddddddwww",
+    "wwwddddddddddwww",
+    "wwwddddddddddwww",
+    "ssseesssssseesss",
+    "eeeeeeeeeeeeeeee",
+    ".T....hh....T...",
+    "...T......T.....",
+    "..h..........h..",
+    ".....v....v.....",
+    "T..............T"
   ],
-  "legend": {".": "plain"},
+  "legend": {".": "plain", "T": "forest", "h": "hill", "v": "village", "s": "shallows", "e": "reeds", "d": "deck", "w": "water"},
   "bridges": [],
   "turnLimit": 14,
   "onTimeout": "cao",
   "sideOrder": ["han", "cao"],
   "sides": [{"id": "han", "name": "Han", "colourToken": "han"}, {"id": "cao", "name": "Cao Cao's army", "colourToken": "cao"}],
-  "wind": [
-    {"round": 1, "dir": null, "strength": "calm"}
-  ],
+  "wind": [{"round": 1, "dir": "S", "strength": "breeze"}, {"round": 5, "dir": "N", "strength": "gale"}],
   "units": [
-    {"id": "cao-cao", "officer": "cao-cao", "side": "cao", "type": "cavalry", "x": 8, "y": 3, "facing": "W", "troops": 3200, "commander": true, "retreatAt": 0.5},
-    {"id": "cai-mao", "officer": "cai-mao", "side": "cao", "type": "archers", "x": 8, "y": 4, "facing": "W", "troops": 2000, "commander": false},
-    {"id": "cao-ren", "officer": "cao-ren", "side": "cao", "type": "infantry", "x": 7, "y": 2, "facing": "W", "troops": 2400, "commander": false}
+    {
+      "id": "cao-cao",
+      "officer": "cao-cao",
+      "side": "cao",
+      "type": "cavalry",
+      "x": 7,
+      "y": 3,
+      "facing": "S",
+      "troops": 3000,
+      "commander": true,
+      "retreatAt": 0.5
+    },
+    {"id": "cai-mao", "officer": "cai-mao", "side": "cao", "type": "archers", "x": 7, "y": 2, "facing": "S", "troops": 2000, "commander": false},
+    {"id": "cao-ren", "officer": "cao-ren", "side": "cao", "type": "infantry", "x": 4, "y": 4, "facing": "S", "troops": 2400, "commander": false},
+    {"id": "xu-chu", "officer": "xu-chu", "side": "cao", "type": "infantry", "x": 11, "y": 4, "facing": "S", "troops": 2400, "commander": false},
+    {"id": "zhang-liao", "officer": "zhang-liao", "side": "cao", "type": "cavalry", "x": 9, "y": 5, "facing": "S", "troops": 2400, "commander": false},
+    {
+      "id": "red-cliffs-marine-a",
+      "officer": "red-cliffs-marine-a",
+      "side": "cao",
+      "type": "infantry",
+      "x": 6,
+      "y": 4,
+      "facing": "S",
+      "troops": 1800,
+      "commander": false
+    },
+    {
+      "id": "red-cliffs-marine-b",
+      "officer": "red-cliffs-marine-b",
+      "side": "cao",
+      "type": "infantry",
+      "x": 8,
+      "y": 3,
+      "facing": "S",
+      "troops": 1800,
+      "commander": false
+    },
+    {
+      "id": "red-cliffs-crossbow",
+      "officer": "red-cliffs-crossbow",
+      "side": "cao",
+      "type": "archers",
+      "x": 7,
+      "y": 5,
+      "facing": "S",
+      "troops": 1500,
+      "commander": false
+    }
+  ],
+  "guests": [
+    {"id": "zhou-yu", "officer": "zhou-yu", "side": "han", "type": "archers", "x": 6, "y": 8, "facing": "N", "troops": 2200, "commander": false},
+    {"id": "gan-ning", "officer": "gan-ning", "side": "han", "type": "cavalry", "x": 10, "y": 9, "facing": "N", "troops": 2200, "commander": false}
   ],
   "playerStarts": [
-    {"x": 1, "y": 3, "facing": "E"},
-    {"x": 1, "y": 4, "facing": "E"},
-    {"x": 1, "y": 2, "facing": "E"},
-    {"x": 1, "y": 5, "facing": "E"},
-    {"x": 0, "y": 3, "facing": "E"},
-    {"x": 0, "y": 4, "facing": "E"}
+    {"x": 8, "y": 11, "facing": "N"},
+    {"x": 7, "y": 10, "facing": "N"},
+    {"x": 9, "y": 10, "facing": "N"},
+    {"x": 6, "y": 10, "facing": "N"},
+    {"x": 10, "y": 10, "facing": "N"},
+    {"x": 8, "y": 9, "facing": "N"}
   ],
   "deploySlots": 6,
   "required": ["liu-bei", "zhuge-liang"],
   "defaultDeploy": ["liu-bei", "zhuge-liang", "guan-yu", "zhang-fei", "zhao-yun", "guan-ping"],
   "par": 12,
-  "objectives": {"win": [{"type": "routCommander"}], "lose": [{"type": "commanderLost"}, {"type": "timeout", "round": 14}]},
-  "enemyBehaviour": {}
+  "objectives": {
+    "win": [{"type": "routCommander", "label": "Break Cao Cao: rout him or force him to flee"}],
+    "lose": [{"type": "commanderLost"}, {"type": "timeout", "round": 14}]
+  },
+  "reinforcements": [
+    {
+      "round": 4,
+      "side": "cao",
+      "units": [
+        {
+          "id": "red-cliffs-reserve",
+          "officer": "red-cliffs-reserve",
+          "side": "cao",
+          "type": "infantry",
+          "x": 8,
+          "y": 1,
+          "facing": "S",
+          "troops": 1800,
+          "commander": false
+        }
+      ],
+      "entry": [[8, 1], [7, 1]]
+    },
+    {
+      "round": 5,
+      "side": "han",
+      "units": [
+        {
+          "id": "huang-gai",
+          "officer": "huang-gai",
+          "side": "han",
+          "type": "infantry",
+          "x": 9,
+          "y": 6,
+          "facing": "N",
+          "troops": 1800,
+          "commander": false
+        }
+      ],
+      "entry": [[9, 6], [8, 6], [10, 6]]
+    }
+  ],
+  "timeline": [
+    {
+      "round": 1,
+      "phase": "start",
+      "kind": "message",
+      "text": "Cao Cao's ships lie chained bow to stern from bank to bank, a floating road a hundred decks long. The wind is out of the north-west and every spark would fly back at us."
+    },
+    {
+      "round": 4,
+      "phase": "end",
+      "kind": "message",
+      "text": "Zhou Yu's pickets report the pennants on the flagship sagging. Toward the fifth watch the air goes still, then stirs from the south-east."
+    },
+    {
+      "round": 5,
+      "phase": "start",
+      "kind": "message",
+      "text": "The south-east wind has come, a true gale, and it is blowing straight up the river into the fleet. Huang Gai's fire ships slip their moorings."
+    },
+    {
+      "round": 10,
+      "phase": "start",
+      "kind": "message",
+      "text": "Whatever has not burned is cut loose or sunk. The river is full of drifting spars and smoke."
+    }
+  ],
+  "enemyBehaviour": {
+    "cao-cao": "hold",
+    "cai-mao": "guard:cao-cao",
+    "cao-ren": "advance",
+    "xu-chu": "advance",
+    "zhang-liao": "advance",
+    "red-cliffs-marine-a": "advance",
+    "red-cliffs-marine-b": "guard:cao-cao",
+    "red-cliffs-crossbow": "hold",
+    "red-cliffs-reserve": "advance"
+  },
+  "officers": [
+    {
+      "id": "red-cliffs-marine-a",
+      "name": "Fleet Marine Captain Bai",
+      "war": 68,
+      "int": 38,
+      "lead": 55,
+      "cha": 36,
+      "loyalty": 42,
+      "bonds": [],
+      "stratagems": ["mob-rush", "twin-blades"],
+      "source": "invented",
+      "invented": true,
+      "type": "infantry"
+    },
+    {
+      "id": "red-cliffs-marine-b",
+      "name": "Fleet Marine Captain Ge",
+      "war": 66,
+      "int": 40,
+      "lead": 58,
+      "cha": 38,
+      "loyalty": 46,
+      "bonds": [],
+      "stratagems": ["twin-blades"],
+      "source": "invented",
+      "invented": true,
+      "type": "infantry"
+    },
+    {
+      "id": "red-cliffs-crossbow",
+      "name": "Crossbow Captain Shen",
+      "war": 58,
+      "int": 44,
+      "lead": 50,
+      "cha": 36,
+      "loyalty": 44,
+      "bonds": [],
+      "stratagems": ["massed-arrows"],
+      "source": "invented",
+      "invented": true,
+      "type": "archers"
+    },
+    {
+      "id": "red-cliffs-reserve",
+      "name": "Fleet Reserve Captain Dai",
+      "war": 64,
+      "int": 42,
+      "lead": 54,
+      "cha": 34,
+      "loyalty": 40,
+      "bonds": [],
+      "stratagems": ["mob-rush"],
+      "source": "invented",
+      "invented": true,
+      "type": "infantry"
+    }
+  ],
+  "stratagems": [],
+  "joins": [],
+  "departs": []
 }

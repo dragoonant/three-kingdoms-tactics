@@ -2,48 +2,291 @@
   "id": "changban",
   "name": "Changban",
   "year": 208,
-  "stub": true,
   "title": "The Flight at Changban",
-  "place": "Changban",
+  "place": "Changban, Jing Province",
   "blurb": [
-    "[stub] Placeholder battle. A content builder will replace this file with the full design for Changban."
+    "Liu Bei would not leave the people of Xiangyang behind, and the people would not leave him. Tens of thousands trail his column toward Jiangling at ten li a day, and Cao Cao has sent his light riders to run it down.",
+    "The column has just crossed the Changban bridge. Behind it the stream is the only wall in the country; ahead lies a long marsh, and the south edge of the map is the road to safety. Get Liu Bei and three more of your company off that edge. Fight only as long as it buys the road, and remember that reeds burn."
   ],
   "map": [
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    ".........."
+    "TT...f..=..f..TT",
+    "~~o~~~~~b~~~~o~~",
+    "~~o~~~~~b~~~~o~~",
+    "T..ff...=.T..f..",
+    "..f...hh=....f..",
+    "eeeeeeee=eeeeeee",
+    "eee.eeee=eeee.ee",
+    "eeeeee.e=e.eeeee",
+    "ee.eeeee=eeeee.e",
+    "eeeeeeee=eeeeeee",
+    "..f...T.=..T.f..",
+    "T.f..T..=...f..T",
+    "T...v...=...v..T",
+    "TT......=.....TT"
   ],
-  "legend": {".": "plain"},
-  "bridges": [],
+  "legend": {".": "plain", "f": "farm", "T": "forest", "h": "hill", "v": "village", "=": "road", "~": "river", "o": "ford", "e": "reeds", "b": "bridge"},
+  "bridges": [{"x": 8, "y": 1}, {"x": 8, "y": 2}],
   "turnLimit": 12,
   "onTimeout": "cao",
   "sideOrder": ["han", "cao"],
   "sides": [{"id": "han", "name": "Han", "colourToken": "han"}, {"id": "cao", "name": "Cao Cao's army", "colourToken": "cao"}],
-  "wind": [
-    {"round": 1, "dir": null, "strength": "calm"}
-  ],
+  "wind": [{"round": 1, "dir": "N", "strength": "breeze"}, {"round": 8, "dir": null, "strength": "calm"}],
   "units": [
-    {"id": "cao-cao", "officer": "cao-cao", "side": "cao", "type": "cavalry", "x": 8, "y": 3, "facing": "W", "troops": 3000, "commander": true},
-    {"id": "xu-chu", "officer": "xu-chu", "side": "cao", "type": "infantry", "x": 8, "y": 4, "facing": "W", "troops": 2400, "commander": false},
-    {"id": "zhang-he", "officer": "zhang-he", "side": "cao", "type": "cavalry", "x": 7, "y": 2, "facing": "W", "troops": 2200, "commander": false}
+    {
+      "id": "changban-rider-a",
+      "officer": "changban-rider-a",
+      "side": "cao",
+      "type": "cavalry",
+      "x": 5,
+      "y": 8,
+      "facing": "S",
+      "troops": 1800,
+      "commander": false
+    },
+    {
+      "id": "changban-rider-b",
+      "officer": "changban-rider-b",
+      "side": "cao",
+      "type": "cavalry",
+      "x": 11,
+      "y": 8,
+      "facing": "S",
+      "troops": 1800,
+      "commander": false
+    },
+    {
+      "id": "changban-bowmen",
+      "officer": "changban-bowmen",
+      "side": "cao",
+      "type": "archers",
+      "x": 11,
+      "y": 0,
+      "facing": "S",
+      "troops": 1300,
+      "commander": false
+    },
+    {
+      "id": "changban-picket",
+      "officer": "changban-picket",
+      "side": "cao",
+      "type": "infantry",
+      "x": 8,
+      "y": 10,
+      "facing": "N",
+      "troops": 1800,
+      "commander": false
+    },
+    {
+      "id": "changban-rider-d",
+      "officer": "changban-rider-d",
+      "side": "cao",
+      "type": "cavalry",
+      "x": 4,
+      "y": 11,
+      "facing": "N",
+      "troops": 1800,
+      "commander": false
+    }
   ],
   "playerStarts": [
-    {"x": 1, "y": 3, "facing": "E"},
-    {"x": 1, "y": 4, "facing": "E"},
-    {"x": 1, "y": 2, "facing": "E"},
-    {"x": 1, "y": 5, "facing": "E"},
-    {"x": 0, "y": 3, "facing": "E"},
-    {"x": 0, "y": 4, "facing": "E"}
+    {"x": 8, "y": 5, "facing": "S"},
+    {"x": 7, "y": 3, "facing": "N"},
+    {"x": 9, "y": 4, "facing": "S"},
+    {"x": 6, "y": 5, "facing": "S"},
+    {"x": 10, "y": 5, "facing": "S"},
+    {"x": 7, "y": 6, "facing": "S"}
   ],
   "deploySlots": 6,
   "required": ["liu-bei"],
-  "defaultDeploy": ["liu-bei", "guan-yu", "zhang-fei", "zhuge-liang", "zhao-yun", "guan-ping"],
-  "par": 10,
-  "objectives": {"win": [{"type": "routCommander"}], "lose": [{"type": "commanderLost"}, {"type": "timeout", "round": 12}]},
-  "enemyBehaviour": {}
+  "defaultDeploy": ["liu-bei", "zhang-fei", "guan-yu", "zhao-yun", "zhuge-liang", "guan-ping"],
+  "par": 8,
+  "objectives": {
+    "win": [
+      {
+        "type": "escape",
+        "units": ["liu-bei"],
+        "count": 4,
+        "tiles": [
+          [2, 11], [3, 11], [4, 11], [5, 11], [6, 11], [7, 11], [8, 11], [9, 11], [10, 11], [11, 11], [12, 11],
+          [13, 11], [2, 12], [3, 12], [4, 12], [5, 12], [6, 12], [7, 12], [8, 12], [9, 12], [10, 12], [11, 12],
+          [12, 12], [13, 12], [2, 13], [3, 13], [4, 13], [5, 13], [6, 13], [7, 13], [8, 13], [9, 13], [10, 13],
+          [11, 13], [12, 13], [13, 13]
+        ],
+        "label": "Get Liu Bei and three more off the south edge"
+      }
+    ],
+    "lose": [{"type": "commanderLost"}, {"type": "timeout", "round": 12}]
+  },
+  "reinforcements": [
+    {
+      "round": 2,
+      "side": "cao",
+      "units": [
+        {"id": "zhang-he", "officer": "zhang-he", "side": "cao", "type": "cavalry", "x": 6, "y": 0, "facing": "S", "troops": 2200, "commander": false},
+        {
+          "id": "changban-rider-c",
+          "officer": "changban-rider-c",
+          "side": "cao",
+          "type": "cavalry",
+          "x": 10,
+          "y": 0,
+          "facing": "S",
+          "troops": 1400,
+          "commander": false
+        }
+      ],
+      "entry": [[6, 0], [10, 0]]
+    },
+    {
+      "round": 4,
+      "side": "cao",
+      "units": [
+        {"id": "xu-chu", "officer": "xu-chu", "side": "cao", "type": "infantry", "x": 7, "y": 0, "facing": "S", "troops": 2400, "commander": false},
+        {
+          "id": "xiahou-yuan",
+          "officer": "xiahou-yuan",
+          "side": "cao",
+          "type": "archers",
+          "x": 9,
+          "y": 0,
+          "facing": "S",
+          "troops": 2000,
+          "commander": false
+        }
+      ],
+      "entry": [[7, 0], [9, 0]]
+    },
+    {
+      "round": 6,
+      "side": "cao",
+      "units": [
+        {"id": "cao-cao", "officer": "cao-cao", "side": "cao", "type": "cavalry", "x": 8, "y": 0, "facing": "S", "troops": 3000, "commander": true},
+        {"id": "cao-ren", "officer": "cao-ren", "side": "cao", "type": "infantry", "x": 6, "y": 0, "facing": "S", "troops": 2400, "commander": false}
+      ],
+      "entry": [[8, 0], [6, 0]]
+    }
+  ],
+  "timeline": [
+    {
+      "round": 1,
+      "phase": "start",
+      "kind": "message",
+      "text": "Cao Cao's light riders have covered three hundred li in a day and a night. Behind the column the Changban bridge is the only dry crossing for miles."
+    },
+    {
+      "round": 5,
+      "phase": "start",
+      "kind": "message",
+      "text": "Dust on the northern road, thicker than before: the infantry and the bowmen are coming up behind the horse."
+    },
+    {
+      "round": 6,
+      "phase": "start",
+      "kind": "message",
+      "text": "A great banner on the far bank. Cao Cao himself has come to see the chase and does not ride any closer."
+    },
+    {"round": 10, "phase": "start", "kind": "message", "text": "The light is going. Whoever is still on the road at nightfall is on their own."}
+  ],
+  "enemyBehaviour": {
+    "changban-rider-a": "ambush:3",
+    "changban-rider-b": "ambush:3",
+    "changban-rider-d": "ambush:3",
+    "changban-bowmen": "advance",
+    "changban-picket": "hold",
+    "zhang-he": "advance",
+    "changban-rider-c": "advance",
+    "xu-chu": "advance",
+    "xiahou-yuan": "advance",
+    "cao-cao": "hold",
+    "cao-ren": "advance"
+  },
+  "officers": [
+    {
+      "id": "changban-rider-a",
+      "name": "Light Cavalry Captain Hu",
+      "war": 72,
+      "int": 38,
+      "lead": 52,
+      "cha": 35,
+      "loyalty": 40,
+      "bonds": [],
+      "stratagems": ["thundering-charge"],
+      "source": "invented",
+      "invented": true,
+      "type": "cavalry"
+    },
+    {
+      "id": "changban-rider-b",
+      "name": "Light Cavalry Captain Mo",
+      "war": 70,
+      "int": 35,
+      "lead": 50,
+      "cha": 32,
+      "loyalty": 42,
+      "bonds": [],
+      "stratagems": ["serpent-thrust", "thundering-charge"],
+      "source": "invented",
+      "invented": true,
+      "type": "cavalry"
+    },
+    {
+      "id": "changban-bowmen",
+      "name": "Bowman Captain Pei",
+      "war": 60,
+      "int": 45,
+      "lead": 48,
+      "cha": 38,
+      "loyalty": 45,
+      "bonds": [],
+      "stratagems": ["massed-arrows"],
+      "source": "invented",
+      "invented": true,
+      "type": "archers"
+    },
+    {
+      "id": "changban-picket",
+      "name": "Pike Captain Gui",
+      "war": 68,
+      "int": 42,
+      "lead": 60,
+      "cha": 40,
+      "loyalty": 48,
+      "bonds": [],
+      "stratagems": ["serpent-thrust", "thunder-roar"],
+      "source": "invented",
+      "invented": true,
+      "type": "infantry"
+    },
+    {
+      "id": "changban-rider-d",
+      "name": "Light Cavalry Captain Ren",
+      "war": 71,
+      "int": 36,
+      "lead": 51,
+      "cha": 33,
+      "loyalty": 41,
+      "bonds": [],
+      "stratagems": ["thundering-charge"],
+      "source": "invented",
+      "invented": true,
+      "type": "cavalry"
+    },
+    {
+      "id": "changban-rider-c",
+      "name": "Tiger Cavalry Captain Yue",
+      "war": 76,
+      "int": 40,
+      "lead": 58,
+      "cha": 38,
+      "loyalty": 50,
+      "bonds": [],
+      "stratagems": ["thundering-charge", "crescent-sweep"],
+      "source": "invented",
+      "invented": true,
+      "type": "cavalry"
+    }
+  ],
+  "stratagems": [],
+  "joins": [],
+  "departs": []
 }

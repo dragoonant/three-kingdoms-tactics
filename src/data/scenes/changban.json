@@ -1,15 +1,18 @@
 {
-  "stub": true,
   "pre": [
-    {
-      "speaker": "narrator",
-      "text": "[stub] Scene text for changban will be written by a content builder."
-    }
+    {"speaker": "narrator", "text": "Xiangyang opened its gates to Cao Cao without a fight, and a hundred thousand people chose to walk south behind Liu Bei rather than live under a new master. On a good day they cover ten li."},
+    {"speaker": "zhuge-liang", "text": "Ten li a day. Cao Cao's light riders cover three hundred. You can do that sum yourself, my lord."},
+    {"speaker": "liu-bei", "text": "I can. I also know what I would be if I did it the other way around. Where is the water?"},
+    {"speaker": "guan-yu", "text": "One stream, one bridge, and a marsh on this side that will slow the horses as much as it slows us. They will be on us by dusk."},
+    {"speaker": "zhang-fei", "text": "Then I stand at the bridge. Let them come across one horse at a time. I never minded a queue."},
+    {"speaker": "liu-bei", "text": "I need you alive more than I need the bridge, third brother. Hold it only long enough for the others to clear the marsh."},
+    {"speaker": "zhuge-liang", "text": "The reeds are as dry as tinder, and the breeze runs north, toward them. Remember that when the road behind you fills with riders."}
   ],
   "post": [
-    {
-      "speaker": "narrator",
-      "text": "[stub] Closing scene for changban."
-    }
+    {"speaker": "narrator", "text": "The last of the company reaches the southern road as the light fails. Behind them the riders of Cao Cao mill at the bridge, each unwilling to be the first onto the planks."},
+    {"speaker": "zhang-fei", "text": "I roared once and a horse threw its rider. A second time would have been showing off."},
+    {"speaker": "guan-yu", "text": "And the people?"},
+    {"speaker": "liu-bei", "text": "Scattered, and most of them alive. We will find them again. They have no one else to follow, and I have no one else to be."},
+    {"speaker": "zhuge-liang", "text": "Jiangxia, my lord, and from there an envoy east. Sun Quan has the one thing we lack, a river full of ships, and a good reason to fear Cao Cao."}
   ]
 }
