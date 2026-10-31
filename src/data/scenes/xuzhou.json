@@ -1,15 +1,20 @@
 {
-  "stub": true,
   "pre": [
-    {
-      "speaker": "narrator",
-      "text": "[stub] Scene text for xuzhou will be written by a content builder."
-    }
+    {"speaker": "narrator", "text": "A letter reaches Pingyuan that has been read, wept over and read again. Cao Cao's father died on the road through Xuzhou, and Cao Cao is coming down on the whole province like a landslide."},
+    {"speaker": "liu-bei", "text": "Tao Qian is an honest old man, and honest men are the ones who get ground between the stones. We go, and we do not argue about it."},
+    {"speaker": "zhao-yun", "text": "Lord Gongsun has lent me for the season, not for the battle. I will hold the east gate as though it were his own. I say that so you can plan around it."},
+    {"speaker": "tao-qian", "text": "My men did not do it, Lord Liu. An escort I trusted turned out to be a pack of wolves, and now the whole city pays. Hold it for me until his anger wears down. That is all I ask."},
+    {"speaker": "guan-yu", "text": "The walls are old. There are three places a man can climb them, and the south one is rotten besides. Count the places. Count the men we have. Be glad that the answer is not a smaller number."},
+    {"speaker": "zhang-fei", "text": "Let them climb. I'll stand on the wall and knock them off one by one. Ha! How long? I could do it in my sleep."},
+    {"speaker": "narrator", "text": "The farmland outside the east wall is stubble to the road, and the wind is blowing east. The governor's scouts say the northern roads are restless: ten days, perhaps, before Cao Cao must choose between Xuzhou and his own home."}
   ],
   "post": [
-    {
-      "speaker": "narrator",
-      "text": "[stub] Closing scene for xuzhou."
-    }
+    {"speaker": "narrator", "text": "On the tenth morning the drums on the plain fall silent. A rider has come in from the north: Lu Bu has taken Yanzhou while the army was away, and Cao Cao's camp strikes its tents before dawn."},
+    {"speaker": "zhang-fei", "text": "He ran home with his tail between his legs! Did you see his back, brothers? I'd know it anywhere."},
+    {"speaker": "guan-yu", "text": "He went home because his house was on fire. Do not mistake one for the other."},
+    {"speaker": "tao-qian", "text": "Lord Liu, a man who will not leave a besieged city is a man who ought to keep it. I am old. Take the seals of Xuzhou, and let me die in my own bed."},
+    {"speaker": "liu-bei", "text": "I came to help you, not to take your house. I will not answer today, venerable sir. Ask me again when you are rested."},
+    {"speaker": "zhao-yun", "text": "Lord Gongsun needs me back, and I must go. But I saw who stood at that gate. If I am ever free to choose, Lord Liu, I will remember where I want to stand."},
+    {"speaker": "narrator", "text": "That night two of the governor's clerks, Mi Zhu and Sun Qian, are seen packing their baggage, to follow the man who held the gate."}
   ]
 }

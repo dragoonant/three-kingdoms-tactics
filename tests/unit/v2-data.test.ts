@@ -82,9 +82,10 @@ describe('v2 data: officers, stratagems, registry', () => {
 
   it('R2-DATA-2 stubs are marked, valid and playable; the real battles are not stubs', () => {
     const stubs = ARC.filter((id) => getBattleDef(id)!.stub)
-    expect(stubs).toEqual(ARC.slice(1))
+    // content builders replace stubs one battle at a time: the battle and its scene file stay in step
+    expect(stubs.every((id) => ARC.slice(1).includes(id))).toBe(true)
     expect(getBattleDef('daxing-hill')!.stub).toBeUndefined()
-    for (const id of stubs) expect(SCENES[id]!.stub, id).toBe(true)
+    for (const id of ARC.slice(1)) expect(!!SCENES[id]!.stub, id).toBe(!!getBattleDef(id)!.stub)
     expect(SCENES.prologue!.stub).toBe(true)
   })
 
@@ -162,7 +163,7 @@ describe('R2-DATA-4 validator catches content mistakes', () => {
   })
   it('objectives must reference existing units', () => {
     expect(mutated('qingzhou', (b) => { b.objectives!.win = [{ type: 'routUnits', units: ['nobody'] }] }).some((e) => /unknown unit nobody/.test(e))).toBe(true)
-    expect(mutated('xuzhou', (b) => { b.objectives!.lose.push({ type: 'unitLost', unit: 'tao-qian' }) }).some((e) => /unknown unit tao-qian/.test(e))).toBe(true)
+    expect(mutated('xuzhou', (b) => { b.objectives!.lose.push({ type: 'unitLost', unit: 'nobody' }) }).some((e) => /unknown unit nobody/.test(e))).toBe(true)
   })
   it('required officers must be deployable at that point of the arc, and playerStarts must cover deploySlots', () => {
     expect(mutated('qingzhou', (b) => { b.required!.push('zhuge-liang') }).some((e) => /zhuge-liang is not on the roster/.test(e))).toBe(true)

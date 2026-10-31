@@ -2,47 +2,110 @@
   "id": "xuzhou",
   "name": "Defence of Xuzhou",
   "year": 194,
-  "stub": true,
   "title": "The Defence of Xuzhou",
-  "place": "Xuzhou",
+  "place": "Xuzhou, on the Si River plain",
   "blurb": [
-    "[stub] Placeholder battle. A content builder will replace this file with the full design for Defence of Xuzhou."
+    "Cao Cao's father was murdered on the road through Xuzhou, and Cao Cao has come to answer for it with every soldier he can feed. Old Governor Tao Qian cannot hold the province alone, and he has sent to Liu Bei for help. Gongsun Zan has lent Zhao Yun and a small column, and Liu Bei has brought his brothers and Jian Yong to the city's east gate.",
+    "You are not here to beat Cao Cao; nobody in the province can do that this year. You are here to keep him out of the city until something else calls him away. Xuzhou's walls are old and uneven: the gate is yours and shut to him, but three sections have crumbled to ramparts a good infantryman can climb, and the sappers will bring the old south rampart down altogether before the week is out.",
+    "Hold the keep, keep the governor alive, and count the rounds. Walls reward the side that stands on them; the open field only rewards Cao Cao."
   ],
   "map": [
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    ".........."
+    "ff.TT.......TT",
+    "f..T..ff.....T",
+    "######..ff....",
+    "#....#ff..f.h.",
+    "#.vv.rff..f...",
+    "#.vv.G====....",
+    "#.vv.G====....",
+    "#....rff..f...",
+    "#....#ff...f..",
+    "###r##ff......",
+    "f..T..ff.....T",
+    "ff.TT.......TT"
   ],
-  "legend": {".": "plain"},
+  "legend": {".": "plain", "f": "farm", "T": "forest", "h": "hill", "v": "village", "=": "road", "#": "wall", "r": "rampart", "G": "gate"},
   "bridges": [],
   "turnLimit": 12,
   "onTimeout": "cao",
   "sideOrder": ["han", "cao"],
-  "sides": [{"id": "han", "name": "Han", "colourToken": "han"}, {"id": "cao", "name": "Cao Cao's army", "colourToken": "cao"}],
+  "sides": [{"id": "han", "name": "Xuzhou", "colourToken": "han"}, {"id": "cao", "name": "Cao Cao's army", "colourToken": "cao"}],
+  "gateOwner": "han",
   "wind": [
-    {"round": 1, "dir": null, "strength": "calm"}
+    {"round": 1, "dir": "E", "strength": "breeze"},
+    {"round": 5, "dir": null, "strength": "calm"},
+    {"round": 8, "dir": "W", "strength": "breeze"}
   ],
   "units": [
-    {"id": "cao-cao", "officer": "cao-cao", "side": "cao", "type": "cavalry", "x": 8, "y": 3, "facing": "W", "troops": 3000, "commander": true},
-    {"id": "xiahou-yuan", "officer": "xiahou-yuan", "side": "cao", "type": "archers", "x": 8, "y": 4, "facing": "W", "troops": 2000, "commander": false},
-    {"id": "cao-ren", "officer": "cao-ren", "side": "cao", "type": "infantry", "x": 7, "y": 2, "facing": "W", "troops": 2400, "commander": false}
+    {"id": "cao-cao", "officer": "cao-cao", "side": "cao", "type": "cavalry", "x": 13, "y": 3, "facing": "W", "troops": 2600, "commander": true},
+    {"id": "xiahou-yuan", "officer": "xiahou-yuan", "side": "cao", "type": "archers", "x": 11, "y": 5, "facing": "W", "troops": 1400, "commander": false},
+    {"id": "cao-ren", "officer": "cao-ren", "side": "cao", "type": "infantry", "x": 11, "y": 3, "facing": "W", "troops": 2000, "commander": false},
+    {"id": "yu-jin", "officer": "yu-jin", "side": "cao", "type": "infantry", "x": 11, "y": 8, "facing": "W", "troops": 1900, "commander": false},
+    {"id": "dian-wei", "officer": "dian-wei", "side": "cao", "type": "infantry", "x": 11, "y": 6, "facing": "W", "troops": 1900, "commander": false},
+    {"id": "xuzhou-vanguard", "officer": "xuzhou-vanguard", "side": "cao", "type": "infantry", "x": 10, "y": 4, "facing": "W", "troops": 1400, "commander": false},
+    {"id": "xuzhou-raider", "officer": "xuzhou-raider", "side": "cao", "type": "cavalry", "x": 8, "y": 0, "facing": "W", "troops": 1200, "commander": false}
+  ],
+  "guests": [
+    {"id": "zhao-yun", "officer": "zhao-yun", "side": "han", "type": "cavalry", "x": 4, "y": 6, "facing": "E", "troops": 2200, "commander": false},
+    {"id": "tao-qian", "officer": "tao-qian", "side": "han", "type": "infantry", "x": 1, "y": 5, "facing": "E", "troops": 1600, "commander": false}
   ],
   "playerStarts": [
-    {"x": 1, "y": 3, "facing": "E"},
-    {"x": 1, "y": 4, "facing": "E"},
-    {"x": 1, "y": 2, "facing": "E"},
-    {"x": 1, "y": 5, "facing": "E"},
-    {"x": 0, "y": 3, "facing": "E"}
+    {"x": 3, "y": 7, "facing": "E"},
+    {"x": 4, "y": 5, "facing": "E"},
+    {"x": 4, "y": 4, "facing": "E"},
+    {"x": 4, "y": 7, "facing": "E"}
   ],
-  "deploySlots": 5,
-  "required": ["liu-bei"],
+  "deploySlots": 4,
+  "required": ["liu-bei", "guan-yu", "zhang-fei"],
   "defaultDeploy": ["liu-bei", "guan-yu", "zhang-fei", "jian-yong"],
-  "par": 12,
-  "objectives": {"win": [{"type": "routCommander"}], "lose": [{"type": "commanderLost"}, {"type": "timeout", "round": 12}]},
-  "enemyBehaviour": {}
+  "par": 10,
+  "objectives": {
+    "win": [{"type": "survive", "round": 10, "label": "Hold Xuzhou until Cao Cao is called home"}],
+    "lose": [
+      {"type": "commanderLost"},
+      {"type": "unitLost", "unit": "tao-qian", "label": "Governor Tao Qian must not fall"},
+      {"type": "hold", "tiles": [[2, 4], [3, 4], [2, 5], [3, 5], [2, 6], [3, 6]], "label": "Keep the enemy out of the city's keep"}
+    ]
+  },
+  "reinforcements": [
+    {
+      "round": 4,
+      "side": "cao",
+      "units": [
+        {"id": "xuzhou-levy-a", "officer": "xuzhou-levy", "side": "cao", "type": "infantry", "x": 13, "y": 4, "facing": "W", "troops": 1200, "commander": false},
+        {"id": "xuzhou-levy-b", "officer": "xuzhou-levy", "side": "cao", "type": "infantry", "x": 13, "y": 7, "facing": "W", "troops": 1200, "commander": false}
+      ],
+      "entry": [[13, 4], [13, 7]]
+    }
+  ],
+  "timeline": [
+    {"round": 1, "phase": "start", "kind": "message", "text": "Cao Cao's banners fill the eastern road. He has sworn to leave no house in Xuzhou standing."},
+    {"round": 5, "phase": "start", "kind": "message", "text": "Sappers are tunnelling under the old south rampart. It will not stand past the end of round 6."},
+    {"round": 6, "phase": "end", "kind": "terrain", "tiles": [[3, 9]], "to": "plain"},
+    {"round": 7, "phase": "start", "kind": "message", "text": "The south rampart has fallen. A single gap lets the enemy into the city."},
+    {"round": 10, "phase": "start", "kind": "message", "text": "Riders bring word: Lu Bu has struck at Yanzhou. Cao Cao turns for home."}
+  ],
+  "enemyBehaviour": {
+    "cao-cao": "hold",
+    "xiahou-yuan": "advance",
+    "cao-ren": "advance",
+    "yu-jin": "advance",
+    "dian-wei": "advance",
+    "xuzhou-vanguard": "advance",
+    "xuzhou-raider": "ambush:5",
+    "xuzhou-levy-a": "advance",
+    "xuzhou-levy-b": "advance"
+  },
+  "joins": [
+    {"officer": "mi-zhu", "note": "Mi Zhu, Tao Qian's envoy and a rich merchant, follows Liu Bei out of Xuzhou."},
+    {"officer": "sun-qian", "note": "Sun Qian, Tao Qian's clerk and a gifted talker, takes a place at Liu Bei's side."}
+  ],
+  "departs": [
+    {"officer": "zhao-yun", "note": "Zhao Yun returns to Gongsun Zan's service for now."}
+  ],
+  "officers": [
+    {"id": "xuzhou-vanguard", "name": "Cao Vanguard Captain", "war": 68, "int": 38, "lead": 55, "cha": 35, "loyalty": 45, "bonds": [], "stratagems": ["twin-blades", "mob-rush"], "source": "invented", "type": "infantry", "invented": true},
+    {"id": "xuzhou-raider", "name": "Cao Raider Captain", "war": 62, "int": 30, "lead": 48, "cha": 30, "loyalty": 40, "bonds": [], "stratagems": ["torch-raid", "mob-rush"], "source": "invented", "type": "cavalry", "invented": true},
+    {"id": "xuzhou-levy", "name": "Conscript Spearmen", "war": 52, "int": 28, "lead": 42, "cha": 28, "loyalty": 50, "bonds": [], "stratagems": ["mob-rush"], "source": "invented", "type": "infantry", "invented": true}
+  ],
+  "stratagems": []
 }
