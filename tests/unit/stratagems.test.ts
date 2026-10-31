@@ -19,12 +19,12 @@ function cast(strats: string[], c: Partial<TU> = {}, e: Partial<TU> = {}, extra:
 describe('R-STRAT-1 stratagem definition', () => {
   it('R-STRAT-1 every stratagem has id, name, tag, cost, range, area, power, stat, follows', () => {
     const tags = ['Strike', 'Charge', 'Volley', 'Fire', 'Shout', 'Ruse', 'Command']
-    expect(ALL_STRATAGEMS).toHaveLength(14)
+    expect(ALL_STRATAGEMS).toHaveLength(27) // 14 Daxing Hill stratagems + 13 campaign ones (engine v2)
     for (const s of ALL_STRATAGEMS) {
       expect(tags).toContain(s.tag)
       expect(s.cost).toBeGreaterThan(0)
       expect(s.range.max).toBeGreaterThanOrEqual(s.range.min)
-      expect(['single', 'cross', 'sweep', 'adjacent', 'aura']).toContain(s.area)
+      expect(['single', 'cross', 'sweep', 'adjacent', 'aura', 'ring2', 'self']).toContain(s.area)
       expect(s.follows.every((f) => tags.includes(f))).toBe(true)
     }
     const arrow = ALL_STRATAGEMS.find((s) => s.id === 'arrow-rain')!

@@ -1,0 +1,50 @@
+{
+  "id": "bowang",
+  "name": "Bowang Slope",
+  "year": 207,
+  "stub": true,
+  "title": "The Valley of Bowang",
+  "place": "Bowang Slope",
+  "blurb": [
+    "[stub] Placeholder battle. A content builder will replace this file with the full design for Bowang Slope."
+  ],
+  "map": [
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    ".........."
+  ],
+  "legend": {".": "plain"},
+  "bridges": [],
+  "turnLimit": 12,
+  "onTimeout": "cao",
+  "sideOrder": ["han", "cao"],
+  "sides": [{"id": "han", "name": "Han", "colourToken": "han"}, {"id": "cao", "name": "Cao Cao's army", "colourToken": "cao"}],
+  "wind": [
+    {"round": 1, "dir": null, "strength": "calm"}
+  ],
+  "units": [
+    {"id": "xiahou-dun", "officer": "xiahou-dun", "side": "cao", "type": "cavalry", "x": 8, "y": 3, "facing": "W", "troops": 3000, "commander": true, "retreatAt": 0.5},
+    {"id": "yu-jin", "officer": "yu-jin", "side": "cao", "type": "infantry", "x": 8, "y": 4, "facing": "W", "troops": 2200, "commander": false},
+    {"id": "li-dian", "officer": "li-dian", "side": "cao", "type": "infantry", "x": 7, "y": 2, "facing": "W", "troops": 2200, "commander": false}
+  ],
+  "playerStarts": [
+    {"x": 1, "y": 3, "facing": "E"},
+    {"x": 1, "y": 4, "facing": "E"},
+    {"x": 1, "y": 2, "facing": "E"},
+    {"x": 1, "y": 5, "facing": "E"},
+    {"x": 0, "y": 3, "facing": "E"},
+    {"x": 0, "y": 4, "facing": "E"},
+    {"x": 0, "y": 2, "facing": "E"}
+  ],
+  "deploySlots": 7,
+  "required": ["liu-bei", "zhuge-liang", "zhao-yun"],
+  "defaultDeploy": ["liu-bei", "zhuge-liang", "zhao-yun", "guan-yu", "zhang-fei", "guan-ping", "jian-yong"],
+  "par": 10,
+  "objectives": {"win": [{"type": "routCommander"}], "lose": [{"type": "commanderLost"}, {"type": "timeout", "round": 12}]},
+  "enemyBehaviour": {}
+}

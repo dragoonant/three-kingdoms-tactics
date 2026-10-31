@@ -1,5 +1,5 @@
 // [R-SWAY-1..3]
-import { getUnit, officerOf } from './board'
+import { getUnit, officerOf, statOf } from './board'
 import { manhattan } from './geometry'
 import type { Roller } from './rng'
 import type { BattleState, GameEvent, SwayPreview, Unit } from './types'
@@ -22,7 +22,7 @@ export function swayReason(state: BattleState, caster: Unit, target: Unit): stri
 /** Chance in percent, 5..90. */
 export function swayPercent(state: BattleState, caster: Unit, target: Unit): number {
   const loyalty = officerOf(state, target).loyalty ?? 100
-  const v = officerOf(state, caster).cha - loyalty + 40 * (1 - target.troops / target.maxTroops) + (target.confused ? 10 : 0)
+  const v = statOf(state, caster, 'cha') - loyalty + 40 * (1 - target.troops / target.maxTroops) + (target.confused ? 10 : 0)
   return Math.max(5, Math.min(90, v))
 }
 

@@ -1,16 +1,27 @@
 // Engine types. BattleState is plain JSON-able data (plus a shared, read-only `data` table reference).
 // States are immutable by convention: step() returns a new object and never mutates its input.
 import type {
+  BuffStat,
+  CreateOptions,
+  DeployEntry,
+  EnemyBehaviour,
   Facing,
   GameData,
+  Objectives,
+  Cond,
+  ReinforcementDef,
   Side,
+  SideDef,
   StratTag,
   TerrainId,
+  TimelineEvent,
   TroopType,
+  UnitDef,
   WindStrength,
 } from '../data/types'
 
-export type { Facing, Side, TroopType, StratTag, WindStrength }
+export { PLAYER_SIDE } from '../data/types'
+export type { Facing, Side, TroopType, StratTag, WindStrength, BuffStat, CreateOptions, DeployEntry, Objectives, Cond, TimelineEvent, SideDef, UnitDef, ReinforcementDef }
 export type Terrain = TerrainId
 
 export interface Pos {
@@ -52,6 +63,30 @@ export interface Unit {
   done: boolean
   /** Where to return on undoMove; non-null only while moved && !done. */
   undo: { x: number; y: number; facing: Facing } | null
+  /** [R2-OBJ-2] retreat when troops <= retreatAt * maxTroops. */
+  retreatAt?: number
+  /** [R2-STRAT-2] active buffs. */
+  buffs?: Buff[]
+  /** [R2-STRAT-3] id of the unit this one is provoked by (cleared at the end of its side's phase). */
+  provoked?: string
+}
+
+export interface Buff {
+  /** Stratagem id that applied it. */
+  id: string
+  stat: BuffStat
+  amount: number
+  /** Expires at the end of the owner's phase of this round. */
+  until: number
+  by: string
+}
+
+/** A reinforcement wave that has not arrived yet (slot already resolved into a unit). */
+export interface PendingReinforcement {
+  round: number
+  side: Side
+  units: UnitDef[]
+  entry: [number, number][]
 }
 
 export interface Wind {
@@ -66,7 +101,7 @@ export interface WindScheduleEntry extends Wind {
 
 export type BattleResult = {
   winner: Side
-  reason: 'commander' | 'annihilation' | 'timeout'
+  reason: 'commander' | 'annihilation' | 'timeout' | 'objective'
 }
 
 export interface BattleState {
@@ -95,6 +130,27 @@ export interface BattleState {
   result: BattleResult | null
   /** Static tables (shared by reference, never mutated). */
   data: GameData
+
+  // ---- engine v2
+  /** [R2-SIDE-1] side ids, display names and banner colour tokens. */
+  sides: SideDef[]
+  /** Side that may pass gate tiles (null = nobody; gates are walls). */
+  gateOwner: Side | null
+  /** [R2-OBJ-1] null = the old rules (R-WIN-1/2). */
+  objectives: Objectives | null
+  /** Waves not yet arrived. */
+  reinforcements: PendingReinforcement[]
+  timeline: TimelineEvent[]
+  /** Ids of player units that escaped / units of any side that retreated, in order. */
+  escaped: string[]
+  retreated: string[]
+  /** Round at whose start the wind schedule resumes after a stratagem/timeline override (null = none). */
+  windUntil: number | null
+  /** Events produced while the battle was being created (round-1 timeline items). */
+  opening: GameEvent[]
+  /** Commander unit id per side (including commanders who have not arrived yet). */
+  commanders: Record<string, string>
+  enemyBehaviour: Record<string, EnemyBehaviour>
 }
 
 // ---------------------------------------------------------------- actions
@@ -106,6 +162,7 @@ export type Action =
   | { type: 'stratagem'; unit: string; strat: string; x: number; y: number; excludeFromChain: string[] }
   | { type: 'sway'; unit: string; target: string }
   | { type: 'wait'; unit: string; facing: Facing }
+  | { type: 'escape'; unit: string }
   | { type: 'endPhase' }
 
 export type RejectCode =
@@ -132,6 +189,8 @@ export type RejectCode =
   | 'cannotBeSwayed'
   | 'swayAlreadyTried'
   | 'badFacing'
+  | 'cannotEscape'
+  | 'provoked'
   | 'internalError'
 
 export type StepResult =
@@ -206,10 +265,37 @@ export type GameEvent =
   | { kind: 'ignited'; x: number; y: number; by: string; strat: string }
   | { kind: 'fireSpread'; from: Pos; to: Pos }
   | { kind: 'burnedOut'; x: number; y: number }
+  /** [R2-OBJ-2] the unit left the board at its retreat threshold (counts as routed for rout objectives). */
+  | { kind: 'retreated'; unit: string; side: Side; x: number; y: number; by?: string }
+  /** [R2-OBJ-1] a player unit left the board by an exit tile. */
+  | { kind: 'escaped'; unit: string; side: Side; x: number; y: number }
+  /** [R2-REIN-1] a unit arrived; the event carries everything needed to draw it. */
+  | {
+      kind: 'reinforced'
+      unit: string
+      officer: string
+      side: Side
+      type: TroopType
+      x: number
+      y: number
+      facing: Facing
+      troops: number
+      maxTroops: number
+      commander: boolean
+      round: number
+    }
+  /** [R2-TIME-1] tiles changed terrain (flood, gate opened, bridge destroyed, burnt deck). */
+  | { kind: 'terrainChanged'; tiles: Pos[]; to: Terrain; cause: 'timeline' | 'burnout' }
+  | { kind: 'timelineMessage'; text: string; round: number }
+  | { kind: 'buffed'; unit: string; by: string; strat: string; stat: BuffStat; amount: number; until: number }
+  | { kind: 'buffExpired'; unit: string; strat: string; stat: BuffStat }
+  | { kind: 'provoked'; unit: string; by: string }
+  /** [R2-OBJ-1] HUD tracker update; `current/target` are the numbers of query.objectives. */
+  | { kind: 'objectiveProgress'; side: 'win' | 'lose'; index: number; text: string; current: number; target: number }
   | { kind: 'healed'; unit: string; amount: number; source: 'village' | 'rally'; by?: string }
   | { kind: 'swayed'; unit: string; target: string; chance: number; side: Side }
   | { kind: 'swayFailed'; unit: string; target: string; chance: number }
-  | { kind: 'windChanged'; dir: Facing | null; strength: WindStrength; round: number }
+  | { kind: 'windChanged'; dir: Facing | null; strength: WindStrength; round: number; by?: string; strat?: string; rounds?: number }
   | { kind: 'phaseStarted'; side: Side; round: number }
   | { kind: 'roundStarted'; round: number }
   | { kind: 'battleEnded'; winner: Side; reason: BattleResult['reason'] }
@@ -219,6 +305,8 @@ export const EVENT_KINDS: EventKind[] = [
   'moved', 'turned', 'waited', 'attacked', 'countered', 'damaged', 'routed', 'stratagem', 'chainLink',
   'sawThrough', 'confused', 'recovered', 'ignited', 'fireSpread', 'burnedOut', 'healed', 'swayed',
   'swayFailed', 'windChanged', 'phaseStarted', 'roundStarted', 'battleEnded',
+  'retreated', 'escaped', 'reinforced', 'terrainChanged', 'timelineMessage', 'buffed', 'buffExpired', 'provoked',
+  'objectiveProgress',
 ]
 
 // ---------------------------------------------------------------- previews
@@ -278,6 +366,8 @@ export interface StratagemTargetPreview {
   foresightChance: number
   /** Percent chance of confusion (0 when the stratagem has none). */
   confuseChance: number
+  /** True when the stratagem provokes this target. */
+  provokes?: boolean
   routsAtMax: boolean
 }
 
@@ -305,6 +395,12 @@ export interface StratagemPreview {
   dashTo: Pos | null
   /** Whether the anchor tile would be set alight. */
   ignites: boolean
+  /** Every tile that would be set alight (multi-tile areas ignite all flammable tiles, R2-AREA-2). */
+  igniteTiles?: Pos[]
+  /** Allies that would be buffed (R2-STRAT-2). */
+  buffs?: { unit: string; stat: BuffStat; amount: number; rounds: number }[]
+  /** Wind the cast would create (R2-STRAT-1). */
+  wind?: { dir: Facing; strength: WindStrength; rounds: number }
   /** Allies healed (Command). */
   heals: { unit: string; amount: number }[]
   /** Planned chain assuming every link hits, opener first. */
@@ -339,4 +435,25 @@ export interface FireForecast {
 export interface WindInfo {
   current: Wind
   next: WindScheduleEntry | null
+}
+
+// ---------------------------------------------------------------- v2 queries
+
+export interface ObjectiveStatus {
+  side: 'win' | 'lose'
+  index: number
+  cond: Cond
+  text: string
+  /** Numeric progress, when the condition has one (round counters, escape counts). */
+  current: number | null
+  target: number | null
+  met: boolean
+}
+
+export interface TimelineItemPreview {
+  round: number
+  phase: 'start' | 'end'
+  kind: 'terrain' | 'wind' | 'message' | 'ignite' | 'reinforcement'
+  text: string
+  tiles: Pos[]
 }

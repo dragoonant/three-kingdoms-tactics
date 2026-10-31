@@ -1,0 +1,10 @@
+{
+  "stub": true,
+  "pre": [
+    {
+      "speaker": "narrator",
+      "text": "[stub] Scene text for prologue will be written by a content builder."
+    }
+  ],
+  "post": []
+}

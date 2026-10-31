@@ -6,7 +6,7 @@ import { linesFor, type LedgerEntry } from '../ledger'
 import { introBeats, planBeats, type Beat, type Speed } from '../presentation/beats'
 import { Director } from '../presentation/director'
 import { sceneFromState, type Scene } from '../presentation/scene'
-import { BOT_SIDE, canControl, EMPTY_UI, PLAYER_SIDE, type Mode, type UiState } from './orders'
+import { canControl, EMPTY_UI, isBotSide, PLAYER_SIDE, type Mode, type UiState } from './orders'
 
 export type Screen = 'title' | 'howto' | 'briefing' | 'battle' | 'end'
 export const BATTLE_ID = 'daxing-hill'
@@ -155,12 +155,12 @@ export const useGame = create<GameStore>((set, get) => {
     if (botTimer) clearTimeout(botTimer)
     botTimer = null
     const st = get()
-    if (st.screen !== 'battle' || st.state.result || st.state.side !== BOT_SIDE || st.playing) return
+    if (st.screen !== 'battle' || st.state.result || !isBotSide(st.state.side) || st.playing) return
     const delay = st.speed === 'full' ? 750 : st.speed === 'quick' ? 220 : 0
     botTimer = setTimeout(() => {
       botTimer = null
       const cur = get()
-      if (cur.screen !== 'battle' || cur.state.result || cur.state.side !== BOT_SIDE || cur.playing) return
+      if (cur.screen !== 'battle' || cur.state.result || !isBotSide(cur.state.side) || cur.playing) return
       let a: Action
       try {
         a = greedyAction(cur.state)
@@ -223,7 +223,7 @@ export const useGame = create<GameStore>((set, get) => {
         if (director.age > 25_000) director.skip()
         return
       }
-      if (st.state.side === BOT_SIDE && !st.state.result && !botTimer) scheduleBot()
+      if (isBotSide(st.state.side) && !st.state.result && !botTimer) scheduleBot()
     }, 2000)
   }
 
@@ -406,6 +406,6 @@ export const useGame = create<GameStore>((set, get) => {
   }
 })
 
-export function sideLabel(side: Side): string {
-  return side === PLAYER_SIDE ? 'Han' : 'Yellow Turban'
+export function sideLabel(state: BattleState, side: Side): string {
+  return state.sides.find((s) => s.id === side)?.name ?? side
 }

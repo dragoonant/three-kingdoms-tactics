@@ -1,5 +1,5 @@
 // [R-MOVE-1], [R-MOVE-2]: Dijkstra over terrain cost with zone of control.
-import { inEnemyZoc, isBurning, tileIndex, unitAt } from './board'
+import { inEnemyZoc, isBurning, terrainCostFor, tileIndex, unitAt } from './board'
 import { FACINGS, DIRS, stepFacing } from './geometry'
 import type { BattleState, Facing, MoveOption, Pos, Unit } from './types'
 
@@ -43,10 +43,11 @@ export function reach(state: BattleState, unit: Unit): Reach {
       const ni = tileIndex(g, nx, ny)
       if (done.has(ni)) continue
       const t = state.data.terrain[g.tiles[ni]!.terrain]
-      if (t.move === null) continue
+      const base = terrainCostFor(state, t, unit.side, unit.type)
+      if (base === null) continue
       const occ = unitAt(state, nx, ny)
       if (occ && occ.side !== unit.side) continue
-      const step = t.move[unit.type] + (isBurning(state, nx, ny) ? BURNING_ENTRY_COST : 0)
+      const step = base + (isBurning(state, nx, ny) ? BURNING_ENTRY_COST : 0)
       const nc = best + step
       if (nc > move) continue
       const old = cost.get(ni)

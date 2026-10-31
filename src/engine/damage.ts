@@ -1,7 +1,7 @@
 // The damage formula [R-ATK-2], shared by attacks, counters, stratagems and previews.
 import type { StratStat, TroopType } from '../data/types'
 import { ARC_MULT, arcOf } from './geometry'
-import { officerOf, terrainAt } from './board'
+import { statOf, terrainAt } from './board'
 import type { Arc, BattleState, DamageRange, Multiplier, Unit } from './types'
 
 export const BASE_DAMAGE = 150
@@ -42,11 +42,9 @@ export interface DamageCalc {
 
 export function calcDamage(state: BattleState, spec: DamageSpec): DamageCalc {
   const { attacker, defender } = spec
-  const ao = officerOf(state, attacker)
-  const dof = officerOf(state, defender)
   const base = (BASE_DAMAGE + attacker.troops * BASE_PER_TROOP) * spec.power
   const multipliers: Multiplier[] = []
-  const statRatio = (100 + ao[spec.stat]) / (100 + dof.lead)
+  const statRatio = (100 + statOf(state, attacker, spec.stat)) / (100 + statOf(state, defender, 'lead'))
   multipliers.push({
     id: 'stat',
     name: spec.stat === 'war' ? 'War vs Leadership' : 'Intellect vs Leadership',

@@ -1,0 +1,79 @@
+{
+  "id": "proving-ground",
+  "name": "Proving Ground",
+  "year": 184,
+  "title": "The Proving Ground",
+  "place": "A drill field (tests only; not part of the campaign)",
+  "blurb": [
+    "A drill field that uses every engine v2 mechanic: a wall with a gate and ramparts, a reinforcement wave, a flood, an exit, a unit that retreats, a burnable fleet and a storm priest."
+  ],
+  "map": [
+    "........#.......",
+    "....v...#.......",
+    "........r.......",
+    "..TT....#.......",
+    "........r.......",
+    "........G..==...",
+    ".....ff.r.......",
+    "........#..wwbww",
+    "...h....r.......",
+    "....ee..#...ddww",
+    "....ee..#...ddww",
+    "........#...wwww"
+  ],
+  "legend": {".": "plain", "f": "farm", "T": "forest", "h": "hill", "v": "village", "=": "road", "#": "wall", "r": "rampart", "G": "gate", "s": "shallows", "e": "reeds", "d": "deck", "w": "water", "b": "bridge"},
+  "bridges": [{"x": 13, "y": 7}],
+  "turnLimit": 12,
+  "onTimeout": "cao",
+  "sideOrder": ["han", "cao"],
+  "sides": [{"id": "han", "name": "Han", "colourToken": "han"}, {"id": "cao", "name": "Cao Cao's army", "colourToken": "cao"}],
+  "gateOwner": "cao",
+  "wind": [
+    {"round": 1, "dir": "E", "strength": "breeze"},
+    {"round": 6, "dir": null, "strength": "calm"}
+  ],
+  "units": [
+    {"id": "xiahou-dun", "officer": "xiahou-dun", "side": "cao", "type": "cavalry", "x": 13, "y": 5, "facing": "W", "troops": 3000, "commander": true},
+    {"id": "lu-bu", "officer": "lu-bu", "side": "cao", "type": "cavalry", "x": 11, "y": 4, "facing": "W", "troops": 3000, "commander": false, "retreatAt": 0.5},
+    {"id": "pg-archer-n", "officer": "pg-archer", "side": "cao", "type": "archers", "x": 8, "y": 2, "facing": "W", "troops": 1200, "commander": false},
+    {"id": "pg-archer-s", "officer": "pg-archer", "side": "cao", "type": "archers", "x": 8, "y": 8, "facing": "W", "troops": 1200, "commander": false},
+    {"id": "pg-priest", "officer": "pg-priest", "side": "cao", "type": "archers", "x": 14, "y": 6, "facing": "W", "troops": 1200, "commander": false},
+    {"id": "pg-marine", "officer": "pg-marine", "side": "cao", "type": "infantry", "x": 12, "y": 10, "facing": "W", "troops": 1500, "commander": false}
+  ],
+  "guests": [
+    {"id": "zou-jing", "officer": "zou-jing", "side": "han", "type": "archers", "x": 2, "y": 5, "facing": "E", "troops": 2500, "commander": false}
+  ],
+  "playerStarts": [
+    {"x": 1, "y": 5, "facing": "E"},
+    {"x": 2, "y": 4, "facing": "E"},
+    {"x": 2, "y": 6, "facing": "E"},
+    {"x": 1, "y": 3, "facing": "E", "ambush": true},
+    {"x": 1, "y": 7, "facing": "E"},
+    {"x": 3, "y": 9, "facing": "E", "arrivesRound": 3}
+  ],
+  "deploySlots": 6,
+  "required": ["liu-bei"],
+  "defaultDeploy": ["liu-bei", "guan-yu", "zhang-fei", "zhuge-liang", "jian-yong", "guan-ping"],
+  "par": 8,
+  "objectives": {"win": [{"type": "routCommander"}, {"type": "escape", "units": ["liu-bei"], "count": 2, "tiles": [[0, 0], [0, 1]], "label": "Reach the north-west exit"}], "lose": [{"type": "commanderLost"}, {"type": "timeout", "round": 12}, {"type": "hold", "tiles": [[0, 11]], "round": 2, "label": "Keep the enemy out of the south-west corner"}]},
+  "reinforcements": [
+    {"round": 3, "side": "cao", "units": [{"id": "pg-raider-a", "officer": "pg-raider", "side": "cao", "type": "cavalry", "x": 15, "y": 2, "facing": "W", "troops": 1500, "commander": false}, {"id": "pg-raider-b", "officer": "pg-raider", "side": "cao", "type": "cavalry", "x": 15, "y": 3, "facing": "W", "troops": 1500, "commander": false}], "entry": [[15, 2], [15, 3]]},
+    {"round": 4, "side": "han", "slot": 4, "units": [], "entry": [[0, 9], [0, 10]]}
+  ],
+  "timeline": [
+    {"round": 1, "phase": "start", "kind": "message", "text": "The proving ground is open."},
+    {"round": 3, "phase": "end", "kind": "terrain", "tiles": [[10, 10], [11, 10], [10, 11], [11, 11]], "to": "shallows"},
+    {"round": 4, "phase": "end", "kind": "terrain", "tiles": [[8, 5]], "to": "road"},
+    {"round": 5, "phase": "start", "kind": "wind", "dir": "W", "strength": "gale"},
+    {"round": 6, "phase": "end", "kind": "terrain", "tiles": [[13, 7]], "to": "water"},
+    {"round": 6, "phase": "start", "kind": "message", "text": "The drill sergeant calls a rest; the wind drops."},
+    {"round": 8, "phase": "start", "kind": "ignite", "tiles": [[4, 9]]}
+  ],
+  "enemyBehaviour": {"xiahou-dun": "hold", "lu-bu": "pursue:liu-bei", "pg-archer-n": "guard:8,2", "pg-archer-s": "guard:8,8", "pg-marine": "ambush:3", "pg-priest": "hold"},
+  "officers": [
+    {"id": "pg-archer", "name": "Rampart Archer", "war": 45, "int": 40, "lead": 42, "cha": 30, "loyalty": 50, "bonds": [], "stratagems": ["massed-arrows"], "source": "invented", "type": "archers", "invented": true},
+    {"id": "pg-priest", "name": "Storm Priest", "war": 30, "int": 70, "lead": 40, "cha": 55, "loyalty": 55, "bonds": [], "stratagems": ["call-the-storm", "yellow-sky-hex"], "source": "invented", "type": "archers", "invented": true},
+    {"id": "pg-marine", "name": "Fleet Marine", "war": 55, "int": 30, "lead": 50, "cha": 30, "loyalty": 45, "bonds": [], "stratagems": ["mob-rush", "bridge-roar"], "source": "invented", "type": "infantry", "invented": true},
+    {"id": "pg-raider", "name": "Cavalry Raider", "war": 55, "int": 25, "lead": 40, "cha": 20, "loyalty": 35, "bonds": [], "stratagems": ["torch-raid", "mob-rush"], "source": "invented", "type": "cavalry", "invented": true}
+  ]
+}

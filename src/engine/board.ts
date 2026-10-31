@@ -1,5 +1,5 @@
 // Board and lookup helpers shared by every module. Pure; nothing here mutates a state.
-import type { OfficerDef, StratagemDef, TerrainDef } from '../data/types'
+import type { BuffStat, OfficerDef, StratagemDef, TerrainDef, TroopType } from '../data/types'
 import type { BattleState, Grid, Pos, Side, Terrain, Unit } from './types'
 import { neighbors } from './geometry'
 
@@ -47,6 +47,24 @@ export function officerOf(state: BattleState, unit: Unit): OfficerDef {
   return state.data.officers[unit.officer]!
 }
 
+/** A stat after active buffs [R2-STRAT-2]; not capped above 100 + buffs (the base is capped at 100 when deployed). */
+export function statOf(state: BattleState, unit: Unit, stat: BuffStat): number {
+  let v = state.data.officers[unit.officer]![stat]
+  for (const b of unit.buffs ?? []) if (b.stat === stat) v += b.amount
+  return v
+}
+
+/** Move cost of entering `terrain` for a unit of this side/type, or null when it cannot enter (walls, water, gates of the other side, rampart for cavalry). */
+export function terrainCostFor(state: BattleState, terrain: TerrainDef, side: Side, type: TroopType): number | null {
+  if (terrain.move === null) return null
+  if (terrain.gate && side !== state.gateOwner) return null
+  return terrain.move[type]
+}
+
+export function canStandOn(state: BattleState, x: number, y: number, side: Side, type: TroopType): boolean {
+  return terrainCostFor(state, terrainAt(state, x, y), side, type) !== null
+}
+
 export function stratagemById(state: BattleState, id: string): StratagemDef | undefined {
   return state.data.stratagems[id]
 }
@@ -82,8 +100,15 @@ export function cloneWork(state: BattleState): BattleState {
     ...state,
     rng: [...state.rng] as BattleState['rng'],
     burn: state.burn.slice(),
-    units: state.units.map((u) => ({ ...u, undo: u.undo ? { ...u.undo } : null })),
+    units: state.units.map((u) => {
+      const c: Unit = { ...u, undo: u.undo ? { ...u.undo } : null }
+      if (u.buffs) c.buffs = u.buffs.map((b) => ({ ...b }))
+      return c
+    }),
     defeated: state.defeated.slice(),
+    escaped: state.escaped.slice(),
+    retreated: state.retreated.slice(),
+    reinforcements: state.reinforcements.slice(),
     sideOrder: state.sideOrder.slice(),
     wind: { ...state.wind },
     swayTried: state.swayTried.slice(),

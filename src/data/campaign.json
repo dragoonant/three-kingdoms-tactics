@@ -1,0 +1,61 @@
+{
+  "arc": [
+    "daxing-hill",
+    "qingzhou",
+    "guangzong",
+    "hulao-gate",
+    "xuzhou",
+    "xiapi",
+    "bowang",
+    "changban",
+    "red-cliffs"
+  ],
+  "startRoster": [
+    {
+      "officerId": "liu-bei",
+      "level": 3
+    },
+    {
+      "officerId": "guan-yu",
+      "level": 3
+    },
+    {
+      "officerId": "zhang-fei",
+      "level": 3
+    }
+  ],
+  "startProvisions": 0,
+  "story": {
+    "daxing-hill": {
+      "joins": [
+        "jian-yong"
+      ],
+      "departs": []
+    },
+    "qingzhou": {
+      "joins": [],
+      "departs": [
+        "zou-jing"
+      ]
+    },
+    "xuzhou": {
+      "joins": [
+        "mi-zhu",
+        "sun-qian"
+      ],
+      "departs": [
+        "zhao-yun"
+      ]
+    },
+    "xiapi": {
+      "joins": [
+        "zhuge-liang",
+        "zhao-yun",
+        "guan-ping"
+      ],
+      "departs": []
+    }
+  },
+  "prologue": "prologue",
+  "epilogue": "epilogue"
+}
