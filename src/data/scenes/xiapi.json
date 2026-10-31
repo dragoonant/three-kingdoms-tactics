@@ -1,15 +1,54 @@
 {
-  "stub": true,
   "pre": [
     {
       "speaker": "narrator",
-      "text": "[stub] Scene text for xiapi will be written by a content builder."
+      "text": "Xiapi, in the winter of the Jian'an years. Lu Bu sits behind a square of brick on the low ground where the Si and the Yi meet, and Cao Cao's engineers have spent a month with spades."
+    },
+    {
+      "speaker": "cao-cao",
+      "text": "Two rivers, Liu Bei, and one man who will not come out to either. I did not have to climb his wall. I only had to teach the water where to go."
+    },
+    {
+      "speaker": "zhang-fei",
+      "text": "Water! I have waited since Xuzhou to put a spear in that fellow, and you want to drown him like a rat."
+    },
+    {
+      "speaker": "cao-cao",
+      "text": "At the end of the third day the outer fields go under, at the end of the fifth the next ring, at the end of the seventh the foot of the wall. Outermost first. Whatever stands in them then will be wading."
+    },
+    {
+      "speaker": "guan-yu",
+      "text": "Mark it, brother. The fields will be shallows before we reach the gate, and the dyke road is the only dry way in."
+    },
+    {
+      "speaker": "liu-bei",
+      "text": "Lu Bu once gave me a roof when I had none, and I do not enjoy this. Let us hold the high ground, let the water work, and finish it cleanly. Watch the west gate. I am told not everyone inside loves the man in the middle."
     }
   ],
   "post": [
     {
       "speaker": "narrator",
-      "text": "[stub] Closing scene for xiapi."
+      "text": "The water stands knee-deep in the streets of Xiapi, and the halberd that three brothers could not quite beat at Hulao Gate lies in the mud."
+    },
+    {
+      "speaker": "cao-cao",
+      "text": "He asks to be spared, Liu Bei, and says he will serve us both. You knew him longer than I did. Tell me what he is."
+    },
+    {
+      "speaker": "liu-bei",
+      "text": "A tiger that bites whoever feeds it. I cannot say it kindly, and I cannot say that I am glad."
+    },
+    {
+      "speaker": "narrator",
+      "text": "The captains who wish to live are offered a place, and in Liu Bei's camp the offer is not a trick. Some of the cleverest men in that town have not yet decided what to answer."
+    },
+    {
+      "speaker": "liu-bei",
+      "text": "We won today with another man's rivers, Yunchang. I would like, once, to win with our own heads."
+    },
+    {
+      "speaker": "guan-yu",
+      "text": "Then find us a better head, brother. I will not mind being outthought if it keeps the men alive."
     }
   ]
 }

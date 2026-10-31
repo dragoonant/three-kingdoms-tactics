@@ -2,47 +2,342 @@
   "id": "xiapi",
   "name": "Xiapi",
   "year": 198,
-  "stub": true,
   "title": "The Siege of Xiapi",
-  "place": "Xiapi",
+  "place": "Xiapi, on the lower Si",
   "blurb": [
-    "[stub] Placeholder battle. A content builder will replace this file with the full design for Xiapi."
+    "Lu Bu has run out of friends. Cao Cao and Liu Bei have driven him into Xiapi, a walled town on the low ground where the Si and the Yi come together, and the siege is two months old. Cao Cao's engineers have cut the dykes upstream.",
+    "The water will come in three tides, outermost fields first, and every field it covers becomes shallows: slow to cross, easy to strike a man standing in. The old dyke road is the only dry way to the west gate. Get the army onto it, or onto the ridge behind it, before the water decides for you."
   ],
   "map": [
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    ".........."
+    "~~~~~~~~~~~~~~~",
+    "TT..eeeeeeeeeee",
+    "T....fffwwwww..",
+    ".hh..fff#r#r#..",
+    ".hh..fff#...#..",
+    ".hh=====#...#..",
+    ".hh..fff#.v.#..",
+    ".hh..fff#...#..",
+    ".hh..fff#r#r#..",
+    "T....fffwwwww..",
+    "TT..eeeeeeeeeee",
+    "~~~~~~~~~~~~~~~"
   ],
-  "legend": {".": "plain"},
+  "legend": {
+    ".": "plain",
+    "f": "farm",
+    "e": "reeds",
+    "T": "forest",
+    "h": "hill",
+    "v": "village",
+    "=": "road",
+    "~": "river",
+    "w": "water",
+    "#": "wall",
+    "r": "rampart",
+    "s": "shallows"
+  },
   "bridges": [],
   "turnLimit": 14,
   "onTimeout": "lu",
   "sideOrder": ["han", "lu"],
-  "sides": [{"id": "han", "name": "Han", "colourToken": "han"}, {"id": "lu", "name": "Lu Bu's army", "colourToken": "lu"}],
+  "sides": [
+    {
+      "id": "han",
+      "name": "Han",
+      "colourToken": "han"
+    },
+    {
+      "id": "lu",
+      "name": "Lu Bu's army",
+      "colourToken": "lu"
+    }
+  ],
   "wind": [
-    {"round": 1, "dir": null, "strength": "calm"}
+    {
+      "round": 1,
+      "dir": "E",
+      "strength": "breeze"
+    },
+    {
+      "round": 5,
+      "dir": null,
+      "strength": "calm"
+    }
   ],
   "units": [
-    {"id": "lu-bu", "officer": "lu-bu", "side": "lu", "type": "cavalry", "x": 8, "y": 3, "facing": "W", "troops": 3200, "commander": true},
-    {"id": "chen-gong", "officer": "chen-gong", "side": "lu", "type": "archers", "x": 8, "y": 4, "facing": "W", "troops": 1500, "commander": false},
-    {"id": "gao-shun", "officer": "gao-shun", "side": "lu", "type": "infantry", "x": 7, "y": 2, "facing": "W", "troops": 2200, "commander": false}
+    {
+      "id": "lu-bu",
+      "officer": "lu-bu",
+      "side": "lu",
+      "type": "cavalry",
+      "x": 10,
+      "y": 5,
+      "facing": "W",
+      "troops": 3600,
+      "commander": true
+    },
+    {
+      "id": "chen-gong",
+      "officer": "chen-gong",
+      "side": "lu",
+      "type": "archers",
+      "x": 9,
+      "y": 3,
+      "facing": "N",
+      "troops": 1900,
+      "commander": false
+    },
+    {
+      "id": "gao-shun",
+      "officer": "gao-shun",
+      "side": "lu",
+      "type": "infantry",
+      "x": 9,
+      "y": 5,
+      "facing": "W",
+      "troops": 2800,
+      "commander": false
+    },
+    {
+      "id": "zhang-liao",
+      "officer": "zhang-liao",
+      "side": "lu",
+      "type": "cavalry",
+      "x": 7,
+      "y": 3,
+      "facing": "W",
+      "troops": 3000,
+      "commander": false
+    },
+    {
+      "id": "xiapi-picket",
+      "officer": "xiapi-picket",
+      "side": "lu",
+      "type": "infantry",
+      "x": 7,
+      "y": 8,
+      "facing": "W",
+      "troops": 2200,
+      "commander": false
+    },
+    {
+      "id": "xiapi-bowman-n",
+      "officer": "xiapi-bowman",
+      "side": "lu",
+      "type": "archers",
+      "x": 11,
+      "y": 3,
+      "facing": "N",
+      "troops": 1600,
+      "commander": false
+    },
+    {
+      "id": "xiapi-bowman-s",
+      "officer": "xiapi-bowman",
+      "side": "lu",
+      "type": "archers",
+      "x": 9,
+      "y": 8,
+      "facing": "S",
+      "troops": 1600,
+      "commander": false
+    },
+    {
+      "id": "xiapi-guard",
+      "officer": "xiapi-guard",
+      "side": "lu",
+      "type": "infantry",
+      "x": 10,
+      "y": 4,
+      "facing": "W",
+      "troops": 2800,
+      "commander": false
+    }
+  ],
+  "guests": [
+    {
+      "id": "cao-cao",
+      "officer": "cao-cao",
+      "side": "han",
+      "type": "cavalry",
+      "x": 3,
+      "y": 2,
+      "facing": "E",
+      "troops": 2800,
+      "commander": false
+    },
+    {
+      "id": "xiahou-dun",
+      "officer": "xiahou-dun",
+      "side": "han",
+      "type": "cavalry",
+      "x": 3,
+      "y": 8,
+      "facing": "E",
+      "troops": 2400,
+      "commander": false
+    }
   ],
   "playerStarts": [
-    {"x": 1, "y": 3, "facing": "E"},
-    {"x": 1, "y": 4, "facing": "E"},
-    {"x": 1, "y": 2, "facing": "E"},
-    {"x": 1, "y": 5, "facing": "E"},
-    {"x": 0, "y": 3, "facing": "E"}
+    {
+      "x": 2,
+      "y": 5,
+      "facing": "E"
+    },
+    {
+      "x": 3,
+      "y": 4,
+      "facing": "E"
+    },
+    {
+      "x": 3,
+      "y": 6,
+      "facing": "E"
+    },
+    {
+      "x": 2,
+      "y": 3,
+      "facing": "E"
+    },
+    {
+      "x": 2,
+      "y": 7,
+      "facing": "E"
+    }
   ],
   "deploySlots": 5,
   "required": ["liu-bei"],
   "defaultDeploy": ["liu-bei", "guan-yu", "zhang-fei", "jian-yong", "mi-zhu"],
-  "par": 12,
-  "objectives": {"win": [{"type": "routCommander"}], "lose": [{"type": "commanderLost"}, {"type": "timeout", "round": 14}]},
-  "enemyBehaviour": {}
+  "par": 11,
+  "objectives": {
+    "win": [
+      {
+        "type": "routCommander",
+        "label": "Rout Lu Bu"
+      }
+    ],
+    "lose": [
+      {
+        "type": "commanderLost"
+      },
+      {
+        "type": "timeout",
+        "round": 14
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "round": 1,
+      "phase": "start",
+      "kind": "message",
+      "text": "Cao Cao's engineers have cut the dykes. The water will rise at the end of rounds 3, 5 and 7, outermost fields first."
+    },
+    {
+      "round": 3,
+      "phase": "end",
+      "kind": "terrain",
+      "tiles": [[4, 1], [5, 1], [4, 2], [5, 2], [4, 3], [5, 3], [4, 4], [5, 4], [4, 6], [5, 6], [4, 7], [5, 7], [4, 8], [5, 8], [4, 9], [5, 9], [4, 10], [5, 10]],
+      "to": "shallows"
+    },
+    {
+      "round": 3,
+      "phase": "end",
+      "kind": "message",
+      "text": "The first tide: the outer fields and the river banks go under."
+    },
+    {
+      "round": 5,
+      "phase": "end",
+      "kind": "terrain",
+      "tiles": [[6, 1], [7, 1], [8, 1], [9, 1], [10, 1], [11, 1], [12, 1], [13, 1], [14, 1], [6, 2], [14, 2], [6, 3], [14, 3], [6, 4], [14, 4], [14, 5], [6, 6], [14, 6], [6, 7], [14, 7], [6, 8], [14, 8], [6, 9], [14, 9], [6, 10], [7, 10], [8, 10], [9, 10], [10, 10], [11, 10], [12, 10], [13, 10], [14, 10]],
+      "to": "shallows"
+    },
+    {
+      "round": 5,
+      "phase": "end",
+      "kind": "message",
+      "text": "The second tide: the water reaches the foot of the town."
+    },
+    {
+      "round": 7,
+      "phase": "end",
+      "kind": "terrain",
+      "tiles": [[7, 2], [13, 2], [7, 3], [13, 3], [7, 4], [13, 4], [13, 5], [7, 6], [13, 6], [7, 7], [13, 7], [7, 8], [13, 8], [7, 9], [13, 9]],
+      "to": "shallows"
+    },
+    {
+      "round": 7,
+      "phase": "end",
+      "kind": "message",
+      "text": "The third tide: Xiapi is an island. Only the dyke road is dry."
+    },
+    {
+      "round": 8,
+      "phase": "start",
+      "kind": "terrain",
+      "tiles": [[8, 5]],
+      "to": "road"
+    },
+    {
+      "round": 8,
+      "phase": "start",
+      "kind": "message",
+      "text": "Lu Bu's own captains, sick of his temper and the water, draw the bolts of the west gate."
+    }
+  ],
+  "enemyBehaviour": {
+    "xiapi-guard": "guard:10,5",
+    "lu-bu": "pursue:liu-bei",
+    "chen-gong": "hold",
+    "gao-shun": "advance",
+    "zhang-liao": "advance",
+    "xiapi-picket": "guard:7,8",
+    "xiapi-bowman-n": "hold",
+    "xiapi-bowman-s": "hold"
+  },
+  "officers": [
+    {
+      "id": "xiapi-picket",
+      "name": "Xiapi Picket Captain",
+      "war": 62,
+      "int": 35,
+      "lead": 55,
+      "cha": 30,
+      "loyalty": 75,
+      "bonds": [],
+      "stratagems": ["twin-blades"],
+      "source": "invented",
+      "invented": true,
+      "type": "infantry"
+    },
+    {
+      "id": "xiapi-guard",
+      "name": "Lu Bu's Household Guard",
+      "war": 74,
+      "int": 30,
+      "lead": 70,
+      "cha": 30,
+      "loyalty": 85,
+      "bonds": [],
+      "stratagems": ["crescent-sweep"],
+      "source": "invented",
+      "invented": true,
+      "type": "infantry"
+    },
+    {
+      "id": "xiapi-bowman",
+      "name": "Wall Bowman",
+      "war": 50,
+      "int": 40,
+      "lead": 45,
+      "cha": 30,
+      "loyalty": 80,
+      "bonds": [],
+      "stratagems": ["massed-arrows"],
+      "source": "invented",
+      "invented": true,
+      "type": "archers"
+    }
+  ]
 }

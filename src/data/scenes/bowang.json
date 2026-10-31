@@ -1,15 +1,54 @@
 {
-  "stub": true,
   "pre": [
     {
       "speaker": "narrator",
-      "text": "[stub] Scene text for bowang will be written by a content builder."
+      "text": "Bowang, in the ninth year after Xiapi. Xiahou Dun is coming south with Cao Cao's vanguard, and Liu Bei has a new adviser who has never led a company in his life."
+    },
+    {
+      "speaker": "zhang-fei",
+      "text": "So the scholar gets the seals, and I go where he points. Fine. Once. If it goes wrong I will say what I think of it, loudly."
+    },
+    {
+      "speaker": "zhuge-liang",
+      "text": "I expect nothing less, General Zhang. Listen. Bowang is a cleft of reeds between two wooded slopes, narrowing to a neck before our camp. General Guan will take the western slope, General Zhang the eastern one."
+    },
+    {
+      "speaker": "zhao-yun",
+      "text": "And I am the bait. I have been called worse. Where do I stand?"
+    },
+    {
+      "speaker": "zhuge-liang",
+      "text": "In the neck, where the reeds are thickest, and you will let Xiahou Dun think you are afraid. He will come down the valley after you. He is a man who follows what he is angry at."
+    },
+    {
+      "speaker": "guan-yu",
+      "text": "Reeds burn. But not before the wind is right, or we cook our own."
+    },
+    {
+      "speaker": "zhuge-liang",
+      "text": "At dusk of the fourth day the wind turns off the pass and runs south along the valley. Until then, patience. After it, the reeds are my business."
     }
   ],
   "post": [
     {
       "speaker": "narrator",
-      "text": "[stub] Closing scene for bowang."
+      "text": "The reeds burned all night, and the valley of Bowang smelled of smoke for a week. Xiahou Dun rode north with a third of the men he brought."
+    },
+    {
+      "speaker": "zhang-fei",
+      "text": "The wind was where he said it would be. I would like it noted that I was not worried. Not very."
+    },
+    {
+      "speaker": "guan-yu",
+      "text": "It is noted. He has earned the seals, brother."
+    },
+    {
+      "speaker": "liu-bei",
+      "text": "Master Zhuge, you have given us a victory when I had nothing to give you but a hut's welcome. I do not forget it."
+    },
+    {
+      "speaker": "zhuge-liang",
+      "text": "It was a small valley and a small army, my lord. Cao Cao will not take it quietly. The first order is always the easy one."
     }
   ]
 }
