@@ -137,7 +137,7 @@ describe('Red Cliffs (battle 9)', () => {
     expect(s.round).toBe(10)
     expect(countDecks(s)).toBeLessThan(decksAtStart * 0.5)
     // the units that stood on the burning fleet have been scorched
-    expect(u(s, 'xu-chu').troops).toBeLessThan(2400)
+    expect(u(s, 'xu-chu').troops).toBeLessThan(3000)
     expect(s.result).toBeNull() // fire alone does not break Cao Cao this early; the Han still have to finish it
   })
 
@@ -169,9 +169,10 @@ describe('Red Cliffs (battle 9)', () => {
 
   it('Cao Cao retreats at half strength, which wins the battle', () => {
     let s = createBattle('red-cliffs', 1)
-    expect(u(s, 'cao-cao').troops).toBe(3000)
-    s = patch(s, 'cao-cao', { troops: 1520 })
-    s = patch(s, 'gan-ning', { x: 7, y: 4, facing: 'N' }) // a test arrangement: the cavalryman has reached the flagship
+    expect(u(s, 'cao-cao').troops).toBe(5400)
+    s = patch(s, 'cao-cao', { troops: 2720 }) // the line is half of 5400 = 2700
+    s = patch(s, 'cai-mao', { x: 5, y: 3 }) // a test arrangement: the guard ring on the flagship (7,1) is opened...
+    s = patch(s, 'gan-ning', { x: 7, y: 2, facing: 'N' }) // ...and the cavalryman has reached the flagship
     const r = act(s, { type: 'attack', unit: 'gan-ning', target: 'cao-cao' })
     expect(ev(r.events, 'retreated').map((e) => e.unit)).toEqual(['cao-cao'])
     expect(ev(r.events, 'routed').map((e) => e.unit)).not.toContain('cao-cao')

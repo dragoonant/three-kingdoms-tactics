@@ -61,9 +61,9 @@ Numbers for shared officers come from 14-campaign-battles.md. Troops for the coa
 | gongsun-zan | Gongsun Zan (guest) | han | cavalry | 2400 | 80/60/78/70 | — | — | thundering-charge, crescent-sweep | (3,5) E |
 | lu-bu | Lu Bu (**retreatAt 0.5**) | dong | cavalry | 3200 | 100/28/90/40 | — | — | thundering-charge, crescent-sweep, thunder-roar | (11,5) W |
 | li-jue | Li Jue (commander) | dong | cavalry | 2000 | 76/32/60/30 | — | — | thundering-charge, mob-rush | (13,6) W |
-| guo-si | Guo Si | dong | cavalry | 1800 | 74/30/58/28 | — | — | thundering-charge, mob-rush | (11,6) W |
-| zhang-liao | Zhang Liao | dong | cavalry | 2200 | 93/78/94/76 | — | — | thundering-charge, crescent-sweep | (7,3) W |
-| hulao-gate-guard | Gate Spearman* | dong | infantry | 1600 | 60/30/55/30 | 45 | — | mob-rush | (8,5) W |
+| guo-si | Guo Si | dong | cavalry | 1700 | 74/30/58/28 | — | — | thundering-charge, mob-rush | (11,6) W |
+| zhang-liao | Zhang Liao | dong | cavalry | 1900 | 93/78/94/76 | — | — | thundering-charge, crescent-sweep | (7,3) W |
+| hulao-gate-guard | Gate Spearman* | dong | infantry | 1500 | 60/30/55/30 | 45 | — | mob-rush | (8,5) W |
 | hulao-gate-archer-n | Rampart Archer* | dong | archers | 1200 | 52/40/45/30 | 50 | — | massed-arrows | (10,3) W |
 | hulao-gate-archer-s | Rampart Archer* | dong | archers | 1200 | 52/40/45/30 | 50 | — | massed-arrows | (10,9) W |
 | hulao-gate-firebow | Fire-Arrow Captain* | dong | archers | 1200 | 48/58/42/32 | 55 | — | massed-arrows, fire-attack | (10,7) W |
@@ -114,6 +114,8 @@ Hulao Gate is the first battle where the ground itself says no. The coalition ca
 
 ## Balance notes
 Sim: 100 random-policy games, 0 invariant failures, every game ends, both sides win (see below). ai-bench uses a copy of `tools/ai-bench.ts` generalised for non-`yellow` enemy sides (the shipped bench hard-codes `yellow` and counts a retreat as unit-count drift; the copy uses `unitBudget`); results are under "Bench" below. Lu Bu was tuned 3000 → 3200 troops after the chain test (at 3000, a clean bonded chain left him near 1,000 troops, 500 under the line, which was too forgiving). In AI-vs-AI games Lu Bu usually sallies in round 2–3 against units that walked into bowshot; the normal AI does not yet bait him out of range deliberately.
+- **Campaign-balance pass (AI v2, battles 2-9).** With the improved AI the bench (normal vs normal, roster officers at 2000 troops) had Han at **37%** / 11.2 rounds, under the 40-65% wanted for battle 4. Changes, all in `hulao-gate.json`, troops only: Zhang Liao 2200 -> 1900, Guo Si 1800 -> 1700, Gate Spearman 1600 -> 1500. **Lu Bu stays at 3200** because the chain tests (`battle-hulao-gate.test.ts`) are calibrated to it (a lowering to 3000 broke two of them and was reverted). The wall, ramparts, gate timeline and ambush hints are untouched.
+  Result (normal vs normal, 30 games): seeds 5000-5029 **37% -> 50%**, 10.0 rounds (11 timeouts); holdout seeds 7000-7039 **40%**, 10.4 rounds (22 timeouts). random(han) 0%. 0 fallbacks / illegal / invariants. No test changed. Note this battle sits at the low edge of the band on the holdout: roughly half of games end by the round-12 timeout, because the AI will not bait Lu Bu out.
 
 ## Bench
 `npx tsx tools/ai-bench.ts --battle hulao-gate --games 30 --pairs normal:normal,random:normal,normal:random --jobs 4` (generalised copy; seeds 5000–5029, 300 ms frozen clock). A = the first-named tier, seat in brackets.

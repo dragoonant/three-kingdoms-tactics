@@ -20,7 +20,7 @@ describe('battle qingzhou: feigned retreat, ridge reinforcements, the governor s
   it('R2-REIN-1 only Liu Bei, Jian Yong and Zou Jing start on the board; the brothers are held back for round 3', () => {
     const s = createBattle('qingzhou', 1)
     expect(s.units.filter((x) => x.side === 'han').map((x) => x.id).sort()).toEqual(['jian-yong', 'liu-bei', 'zou-jing'])
-    expect(s.units.filter((x) => x.side === 'yellow')).toHaveLength(8)
+    expect(s.units.filter((x) => x.side === 'yellow')).toHaveLength(10)
     const waves = s.reinforcements.filter((r) => r.side === 'han').map((r) => [r.round, r.units.map((x) => x.id)])
     expect(waves).toEqual([[3, ['guan-yu']], [3, ['zhang-fei']], [5, ['gong-jing']]])
   })

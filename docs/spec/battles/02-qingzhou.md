@@ -5,7 +5,7 @@
 **Cast liberties / alt-history flags:**
 - Gong Jing and Zou Jing are the novel's figures. Their stats come from the shared table in `14-campaign-battles.md`.
 - Jian Yong fights here as a roster officer (he joined after battle 1: cast liberty from Daxing Hill, flagged there).
-- The rebel units are all invented (`invented: true`, ids `qz-*`): a Rebel Chief, two raiders, two captains, two bowmen and a Taiping adept. None is recruitable.
+- The rebel units are all invented (`invented: true`, ids `qz-*`): a Rebel Chief, three raiders, three captains, two bowmen and a Taiping adept. None is recruitable.
 - Mechanically the ambush is an engine reinforcement, not a hidden-unit rule. The arrival is open information (`query.timelinePreview` lists it).
 
 ## Objective
@@ -62,14 +62,16 @@ Shared officers use `14-campaign-battles.md` numbers exactly. `*` invented.
 | zhang-fei | Zhang Fei | han | infantry | roster | 98/30/85/45 | — | serpent-thrust, thunder-roar | arrives round 3 at (6,10) N |
 | zou-jing | Zou Jing (guest) | han | archers | 2500 | 55/60/70/60 | — | arrow-rain | (2,7) E |
 | gong-jing | Gong Jing (guest, reinforcement) | han | infantry | 2000 | 50/55/60/60 | — | twin-blades | arrives round 5 at the gate (12,6) W |
-| qz-rebel-chief | Rebel Chief* (commander) | yellow | infantry | 3200 | 62/35/55/30 | — | mob-rush, rebel-war-cry | (11,5) W |
-| qz-raider-a | Raider Hu* | yellow | cavalry | 1700 | 55/25/40/20 | 35 | torch-raid | (10,3) W |
-| qz-raider-b | Raider Bo* | yellow | cavalry | 1700 | 54/25/40/20 | 38 | mob-rush | (10,8) W |
-| qz-spearman-a | Captain Du* | yellow | infantry | 2100 | 50/30/45/25 | 45 | mob-rush | (9,4) W |
-| qz-spearman-b | Captain Lei* | yellow | infantry | 2100 | 50/32/44/28 | 42 | mob-rush | (9,7) W |
-| qz-bowman-a | Bowman Kuang* | yellow | archers | 1300 | 46/38/40/28 | 50 | massed-arrows | (10,4) W |
-| qz-bowman-b | Bowman Ning* | yellow | archers | 1300 | 46/36/40/26 | 48 | massed-arrows | (10,7) W |
-| qz-adept | Taiping Adept Shan* | yellow | archers | 1200 | 30/66/38/50 | 55 | yellow-sky-hex | (11,6) W |
+| qz-rebel-chief | Rebel Chief* (commander) | yellow | infantry | 3600 | 62/35/55/30 | — | mob-rush, rebel-war-cry | (11,5) W |
+| qz-raider-a | Raider Hu* | yellow | cavalry | 2000 | 55/25/40/20 | 35 | torch-raid | (10,3) W |
+| qz-raider-b | Raider Bo* | yellow | cavalry | 2000 | 54/25/40/20 | 38 | mob-rush | (10,8) W |
+| qz-spearman-a | Captain Du* | yellow | infantry | 2400 | 50/30/45/25 | 45 | mob-rush | (9,4) W |
+| qz-spearman-b | Captain Lei* | yellow | infantry | 2400 | 50/32/44/28 | 42 | mob-rush | (9,7) W |
+| qz-spearman-c | Captain Gao* | yellow | infantry | 1600 | 51/30/44/24 | 44 | mob-rush | (9,5) W |
+| qz-raider-c | Raider Kun* | yellow | cavalry | 1200 | 54/24/40/20 | 36 | mob-rush | (9,6) W |
+| qz-bowman-a | Bowman Kuang* | yellow | archers | 1500 | 46/38/40/28 | 50 | massed-arrows | (10,4) W |
+| qz-bowman-b | Bowman Ning* | yellow | archers | 1500 | 46/36/40/26 | 48 | massed-arrows | (10,7) W |
+| qz-adept | Taiping Adept Shan* | yellow | archers | 1300 | 30/66/38/50 | 55 | yellow-sky-hex | (11,6) W |
 
 No battle-local stratagems: every stratagem used is in `stratagems.json` (Daxing Hill's rebel set).
 
@@ -92,7 +94,7 @@ No battle-local stratagems: every stratagem used is in `stratagems.json` (Daxing
 |---|---|---|
 | qz-rebel-chief | `pursue:liu-bei` | The chief takes the bait and chases the commander out of the camp into the pocket. |
 | qz-raider-a, qz-raider-b | `advance` | Cavalry sweeps toward the nearest foe and arrives first, so Liu Bei meets it before the chief. |
-| qz-spearman-a, qz-spearman-b | `advance` | The rebel line follows the chief west. |
+| qz-spearman-a, qz-spearman-b, qz-spearman-c, qz-raider-c | `advance` | The rebel line follows the chief west. |
 | qz-bowman-a, qz-bowman-b, qz-adept | `guard:12,6` | The siege is still on: the shooters stay near the gate until they are drawn off, and Gong Jing's sally meets them. |
 
 ## Intended play (a design check, not a script)
@@ -105,7 +107,10 @@ This is the "do not charge forward" battle. Daxing Hill rewards striking early; 
 ## Balance notes
 - `npm run sim -- --battle qingzhou --games 100` (random policy): han 17, yellow 83, avg 13.0 rounds, 0 invariant failures; the round-3 and round-5 reinforcements fire (294 `reinforced` events over the 100 games).
 - `ai-bench --games 30` (seeds 5000–5029), normal(han) vs normal(yellow): han 18/30 = 60%, average 7.0 rounds, 0 timeouts. random(han) vs normal: 0%. normal(han) vs random(yellow): 100%. Within the aim (35–85%, ≥ 5 rounds).
-- First draft (14 wide, weaker chief) gave 93% / 6.5 rounds, and a draft with stronger troops but the camp 2 tiles closer gave 100% / 4.3 rounds because the pursuing chief ran into Zou Jing's Arrow Rain in round 3. Widening the map by two tiles delayed contact until the brothers had landed and gave the current numbers. Not tuned further.
+- First draft (14 wide, weaker chief) gave 93% / 6.5 rounds, and a draft with stronger troops but the camp 2 tiles closer gave 100% / 4.3 rounds because the pursuing chief ran into Zou Jing's Arrow Rain in round 3. Widening the map by two tiles delayed contact until the brothers had landed and gave the 60% above.
+- **Campaign-balance pass (AI v2, battles 2-9).** With the improved AI the bench (normal vs normal, roster officers at 2000 troops) had Han at **100%** / 8.7 rounds, above the 60-80% wanted for battle 2 (a human with levelled officers does better than the AI). Changes, all in `qingzhou.json`: enemy troops raised (chief 3200 -> 3600, raiders 1700 -> 2000, captains 2100 -> 2400, bowmen 1300 -> 1500, adept 1200 -> 1300) and **two extra rebel units** in the camp, Captain Gao (infantry, 1600, (9,5)) and Raider Kun (cavalry, 1200, (9,6)), both `advance`, invented and unrecruitable. Troops alone only reached 87-93%; the extra bodies are what moved it. The brothers' round-3 arrival, Gong Jing's round-5 sally and the chief's `pursue:liu-bei` are untouched.
+  Result (normal vs normal, 30 games): seeds 5000-5029 **100% -> 67%**, 10.6 rounds (6 timeouts); holdout seeds 7000-7039 **75%**, 10.2 rounds. random(han) 0% on both. 0 fallbacks / illegal / invariants.
+  Test change: `battle-qingzhou.test.ts` now expects 10 yellow units at the start (was 8).
 
 ## Rulings
 - **Fixed deploy order:** `required` lists all four roster officers in the order Liu Bei, Jian Yong, Guan Yu, Zhang Fei so that slots 2 and 3 are the brothers (R2-SLOT-1 uses deploy-list indices). If an officer is fallen (Iron Oath) the list shifts up and the missing slot just does not arrive.

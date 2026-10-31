@@ -62,13 +62,13 @@ Shared officers use `14-campaign-battles.md` numbers exactly. `*` invented.
 | gz-imperial-spears | Imperial Captain Ren* (guest) | han | infantry | 1800 | 60/40/62/50 | — | twin-blades | (2,3) E |
 | gz-imperial-bows | Imperial Crossbow Captain Shi* (guest) | han | archers | 1500 | 52/48/55/50 | — | arrow-rain | (2,9) E |
 | zhang-liang | Zhang Liang (commander) | yellow | infantry | 3000 | 80/60/72/66 | — | crescent-sweep, rebel-war-cry | (13,5) W |
-| zhang-bao | Zhang Bao | yellow | archers | 1600 | 70/78/62/60 | — | yellow-sky-hex, call-the-storm | (10,1) W |
-| gz-guard | Altar Warden Pei* | yellow | infantry | 1800 | 58/34/52/30 | 50 | mob-rush, rebel-war-cry | (9,2) W |
-| gz-vanguard-a | Captain Zhou* | yellow | infantry | 1800 | 52/30/46/26 | 42 | mob-rush | (8,4) W |
-| gz-vanguard-b | Captain Qin* | yellow | infantry | 1800 | 52/32/46/26 | 44 | mob-rush | (8,8) W |
-| gz-horse | Raider Meng* | yellow | cavalry | 1500 | 56/26/42/22 | 38 | torch-raid | (9,6) W |
-| gz-bowman-a | Palisade Archer Yan* | yellow | archers | 1300 | 48/38/42/28 | 50 | massed-arrows | (11,4) W (on the palisade) |
-| gz-bowman-b | Palisade Archer Feng* | yellow | archers | 1300 | 48/36/42/28 | 48 | massed-arrows | (11,7) W (on the palisade) |
+| zhang-bao | Zhang Bao | yellow | archers | 1800 | 70/78/62/60 | — | yellow-sky-hex, call-the-storm | (10,1) W |
+| gz-guard | Altar Warden Pei* | yellow | infantry | 2200 | 58/34/52/30 | 50 | mob-rush, rebel-war-cry | (9,2) W |
+| gz-vanguard-a | Captain Zhou* | yellow | infantry | 2300 | 52/30/46/26 | 42 | mob-rush | (8,4) W |
+| gz-vanguard-b | Captain Qin* | yellow | infantry | 2300 | 52/32/46/26 | 44 | mob-rush | (8,8) W |
+| gz-horse | Raider Meng* | yellow | cavalry | 1900 | 56/26/42/22 | 38 | torch-raid | (9,6) W |
+| gz-bowman-a | Palisade Archer Yan* | yellow | archers | 1500 | 48/38/42/28 | 50 | massed-arrows | (11,4) W (on the palisade) |
+| gz-bowman-b | Palisade Archer Feng* | yellow | archers | 1500 | 48/36/42/28 | 48 | massed-arrows | (11,7) W (on the palisade) |
 
 Zhang Liang and Zhang Bao have `loyalty: null` in `officers.json` (they cannot be swayed).
 
@@ -112,6 +112,8 @@ Daxing Hill taught "light the millet when they cross". Guangzong teaches the oth
 - `ai-bench --games 30` (seeds 5000–5029), normal(han) vs normal(yellow): han 14/30 = 47%, average 12.0 rounds, 9 timeouts. random(han) vs normal: 0%. normal(han) vs random(yellow): 100%. Within the aim.
 - **Known gap:** the current utility AI never casts `call-the-storm` (Command stratagems other than heals score zero in `src/ai/evaluate.ts`; confirmed over a sample of normal-vs-normal games). The numbers above are therefore without the storm. When the AI is made objective-aware it should value a wind cast when (a) burning tiles exist on its side's front, (b) the reversed wind would burn more enemy than friendly value. Re-run the bench after that change; the Han win rate is expected to drop.
 - Not tuned further.
+- **Campaign-balance pass (AI v2, battles 2-9).** With the improved AI the bench (normal vs normal, roster officers at 2000 troops) had Han at **90%** / 9.6 rounds, above the 60-80% wanted for battle 3. Changes, all in `guangzong.json` and troops only: Zhang Bao 1600 -> 1800, Altar Warden Pei 1800 -> 2200, the two vanguard captains 1800 -> 2300, Raider Meng 1500 -> 1900, the palisade archers 1300 -> 1500. Zhang Liang (the commander, 3000) is unchanged: raising him to 3300-3600 pushed Han to 50-63% with 13-24 of 60 games timing out, so the thickened outer ring is the lever, not the commander. Positions, behaviours, wind and timeline untouched; the sortie still crosses the Han millet and the altar is still reachable across the north ford.
+  Result (normal vs normal, 30 games): seeds 5000-5029 **90% -> 77%**, 11.4 rounds (7 timeouts); holdout seeds 7000-7039 **65%**, 12.1 rounds (14 timeouts). random(han) 0%. 0 fallbacks / illegal / invariants. No test needed changing.
 
 ## Rulings
 - **Imperial guests** (`gz-imperial-*`) are invented fixed player-side units. Brief 14 lists no guests for battle 3; they were added so the Han line is not four units against eight. They never earn campaign XP.

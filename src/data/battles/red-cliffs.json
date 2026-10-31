@@ -37,16 +37,16 @@
       "side": "cao",
       "type": "cavalry",
       "x": 7,
-      "y": 3,
+      "y": 1,
       "facing": "S",
-      "troops": 3000,
+      "troops": 5400,
       "commander": true,
       "retreatAt": 0.5
     },
-    {"id": "cai-mao", "officer": "cai-mao", "side": "cao", "type": "archers", "x": 7, "y": 2, "facing": "S", "troops": 2000, "commander": false},
-    {"id": "cao-ren", "officer": "cao-ren", "side": "cao", "type": "infantry", "x": 4, "y": 4, "facing": "S", "troops": 2400, "commander": false},
-    {"id": "xu-chu", "officer": "xu-chu", "side": "cao", "type": "infantry", "x": 11, "y": 4, "facing": "S", "troops": 2400, "commander": false},
-    {"id": "zhang-liao", "officer": "zhang-liao", "side": "cao", "type": "cavalry", "x": 9, "y": 5, "facing": "S", "troops": 2400, "commander": false},
+    {"id": "cai-mao", "officer": "cai-mao", "side": "cao", "type": "archers", "x": 7, "y": 2, "facing": "S", "troops": 2600, "commander": false},
+    {"id": "cao-ren", "officer": "cao-ren", "side": "cao", "type": "infantry", "x": 4, "y": 4, "facing": "S", "troops": 3000, "commander": false},
+    {"id": "xu-chu", "officer": "xu-chu", "side": "cao", "type": "infantry", "x": 11, "y": 4, "facing": "S", "troops": 3000, "commander": false},
+    {"id": "zhang-liao", "officer": "zhang-liao", "side": "cao", "type": "cavalry", "x": 9, "y": 5, "facing": "S", "troops": 3000, "commander": false},
     {
       "id": "red-cliffs-marine-a",
       "officer": "red-cliffs-marine-a",
@@ -79,7 +79,9 @@
       "facing": "S",
       "troops": 1500,
       "commander": false
-    }
+    },
+    {"id": "red-cliffs-guard-a", "officer": "red-cliffs-guard-a", "side": "cao", "type": "infantry", "x": 6, "y": 1, "facing": "S", "troops": 2400, "commander": false},
+    {"id": "red-cliffs-guard-b", "officer": "red-cliffs-guard-b", "side": "cao", "type": "infantry", "x": 8, "y": 1, "facing": "S", "troops": 2400, "commander": false}
   ],
   "guests": [
     {"id": "zhou-yu", "officer": "zhou-yu", "side": "han", "type": "archers", "x": 6, "y": 8, "facing": "N", "troops": 2200, "commander": false},
@@ -174,7 +176,9 @@
     "red-cliffs-marine-a": "advance",
     "red-cliffs-marine-b": "guard:cao-cao",
     "red-cliffs-crossbow": "hold",
-    "red-cliffs-reserve": "advance"
+    "red-cliffs-reserve": "advance",
+    "red-cliffs-guard-a": "guard:cao-cao",
+    "red-cliffs-guard-b": "guard:cao-cao"
   },
   "officers": [
     {
@@ -218,6 +222,34 @@
       "source": "invented",
       "invented": true,
       "type": "archers"
+    },
+    {
+      "id": "red-cliffs-guard-a",
+      "name": "Flagship Guard Captain Lu",
+      "war": 70,
+      "int": 38,
+      "lead": 58,
+      "cha": 36,
+      "loyalty": 60,
+      "bonds": [],
+      "stratagems": ["twin-blades"],
+      "source": "invented",
+      "invented": true,
+      "type": "infantry"
+    },
+    {
+      "id": "red-cliffs-guard-b",
+      "name": "Flagship Guard Captain Xun",
+      "war": 68,
+      "int": 40,
+      "lead": 58,
+      "cha": 36,
+      "loyalty": 60,
+      "bonds": [],
+      "stratagems": ["serpent-thrust"],
+      "source": "invented",
+      "invented": true,
+      "type": "infantry"
     },
     {
       "id": "red-cliffs-reserve",
