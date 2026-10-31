@@ -1,15 +1,18 @@
 {
-  "stub": true,
   "pre": [
-    {
-      "speaker": "narrator",
-      "text": "[stub] Scene text for red-cliffs will be written by a content builder."
-    }
+    {"speaker": "narrator", "text": "The river at Chibi is a mile across, and on its northern half there is hardly any water to be seen, only ships, lashed bow to stern so the northern soldiers will not sicken on the swell."},
+    {"speaker": "zhou-yu", "text": "He thinks the chains make his fleet a mountain. A mountain cannot turn and it cannot run. All it needs is a spark and a wind that cooperates."},
+    {"speaker": "zhuge-liang", "text": "The wind will cooperate. A south-east gale comes on the fifth watch; the cranes have been telling me so for days. Until then every spark we make flies back onto our own reeds. Light nothing early."},
+    {"speaker": "huang-gai", "text": "I will bring a dozen hulls packed with brush and oil, under a white flag and a letter of surrender. Cao Cao's sentries will cheer us in."},
+    {"speaker": "zhang-fei", "text": "I would rather hit something than wait for weather."},
+    {"speaker": "liu-bei", "text": "You will have your chance. Cao Cao's marines will land at the reed beds long before the wind turns. Hold the shore, and keep Zhou Yu's archers alive."},
+    {"speaker": "zhou-yu", "text": "Cao Cao himself sits in the middle of that fleet, beyond any spear. We cannot reach him with steel. We can reach him with the river."}
   ],
   "post": [
-    {
-      "speaker": "narrator",
-      "text": "[stub] Closing scene for red-cliffs."
-    }
+    {"speaker": "narrator", "text": "By the third watch the river is lit from bank to bank. Ships that cannot be cut loose burn where they lie, and those that can drift on to set their neighbours alight. Cao Cao's flagship slips away north, a small boat in the dark."},
+    {"speaker": "zhou-yu", "text": "He will run for Jiangling by the Huarong road. We have not the men to bar every road at once."},
+    {"speaker": "zhuge-liang", "text": "Someone is already waiting on it."},
+    {"speaker": "liu-bei", "text": "Then he is only delayed, not finished. Still, tonight the north has learned that it can be stopped."},
+    {"speaker": "zhang-fei", "text": "Next time I am lighting something myself."}
   ]
 }
