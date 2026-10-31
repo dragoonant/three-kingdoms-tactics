@@ -93,3 +93,4 @@ RULING: test | tests/unit/stratagems.test.ts counted 14 stratagems and listed fi
 - **Stand-in art.** Each figure is two merged meshes (body, banner) with baked vertex colours, so a figure costs a handful of draw calls; the facing notch, back banner and weapon make facing readable. Replace with the M5 GLBs behind the same `Figure` props.
 - Polish: chain seal row should read left-to-right in link order (opener first); M3 screenshot showed it reversed.
 RULING: R-SWAY-3 | A unit swayed while on a tile its new side cannot stand on (its old side's gate) steps to the nearest free standable tile (moved event, cost 0) | found by the Hulao Gate bench (seed 5020); mirrors R2-TIME-1 displacement
+RULING: R2-STRAT-3 | A provoke ends when its provoker leaves the board (routed, retreated or escaped) | the invariant 'provoked by a unit that is gone' fired for every policy; legalActions already ignored a missing provoker

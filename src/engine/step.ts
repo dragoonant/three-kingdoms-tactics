@@ -7,7 +7,7 @@ import { emitProgress } from './turn'
 import { PLAYER_SIDE } from '../data/types'
 import { FACINGS, manhattan } from './geometry'
 import { pathTo } from './movement'
-import { turnUnit } from './ops'
+import { dropProvokesBy, turnUnit } from './ops'
 import { rngRoller } from './rng'
 import { dashDestination, isDash, legalAnchors, runStratagem } from './stratagems'
 import { resolveSway, swayReason } from './sway'
@@ -195,6 +195,7 @@ function stepInner(state: BattleState, action: Action): StepResult {
       if (pv) return { ok: false, ...pv }
       if (u.side !== PLAYER_SIDE || !isExitTile(w, u.x, u.y)) return { ok: false, ...rej('cannotEscape', `${u.id} is not on an exit tile`) }
       w.units = w.units.filter((x) => x.id !== u.id)
+      dropProvokesBy(w, u.id)
       w.escaped.push(u.id)
       ev.push({ kind: 'escaped', unit: u.id, side: u.side, x: u.x, y: u.y })
       emitProgress(w, ev)

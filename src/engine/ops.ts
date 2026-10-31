@@ -38,8 +38,14 @@ export function turnUnit(ev: GameEvent[], u: Unit, to: Facing): void {
   u.facing = to
 }
 
+/** [R2-STRAT-3] A provoke ends when its provoker leaves the board (routed, retreated or escaped). */
+export function dropProvokesBy(w: BattleState, id: string): void {
+  for (const x of w.units) if (x.provoked === id) delete x.provoked
+}
+
 export function removeUnit(w: BattleState, ev: GameEvent[], u: Unit, by?: string): void {
   w.units = w.units.filter((x) => x.id !== u.id)
+  dropProvokesBy(w, u.id)
   w.defeated.push(u.id)
   const e: GameEvent = { kind: 'routed', unit: u.id, side: u.side }
   if (by !== undefined) e.by = by
@@ -49,6 +55,7 @@ export function removeUnit(w: BattleState, ev: GameEvent[], u: Unit, by?: string
 /** [R2-OBJ-2] The unit leaves the board without being routed. */
 export function retreatUnit(w: BattleState, ev: GameEvent[], u: Unit, by?: string): void {
   w.units = w.units.filter((x) => x.id !== u.id)
+  dropProvokesBy(w, u.id)
   w.retreated.push(u.id)
   const e: GameEvent = { kind: 'retreated', unit: u.id, side: u.side, x: u.x, y: u.y }
   if (by !== undefined) e.by = by

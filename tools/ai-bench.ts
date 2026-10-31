@@ -108,9 +108,7 @@ function playGame(cfg: Config, seed: number, hanP: Player, foeP: Player): GameRe
       if (e.kind === 'swayed' || e.kind === 'swayFailed') seat.swayTries++
     }
     s = r.state
-    // Engine finding, not an AI one: a provoke outlives its provoker when the provoker is routed mid-phase, and
-    // tools/invariants.ts flags that for every policy (even `random`). It is left out of the count here.
-    seat.invariants += checkInvariants(s, total).filter((m) => !m.endsWith('provoked by a unit that is gone')).length
+    seat.invariants += checkInvariants(s, total).length
   }
   return {
     seed,
