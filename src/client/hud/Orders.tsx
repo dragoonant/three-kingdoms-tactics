@@ -22,7 +22,8 @@ export function ActionFan() {
     const sway = query.swayTargets(state, sel.id)
     const strat = query.stratagemOptions(state, sel.id)
     const canUndo = legalActions(state).some((a) => a.type === 'undoMove' && a.unit === sel.id)
-    return { attack, sway, strat, canUndo }
+    const canEscape = query.canEscape(state, sel.id)
+    return { attack, sway, strat, canUndo, canEscape }
   }, [state, sel])
   if (!sel || !info || playing) return null
   const anyStrat = info.strat.some((o) => o.usable)
@@ -50,6 +51,17 @@ export function ActionFan() {
           {!s.ok && <span className="fan-why">{s.why}</span>}
         </button>
       ))}
+      {info.canEscape && (
+        <button
+          type="button"
+          className={`fan-slip escape${ui.mode === 'escape' ? ' picked' : ''}`}
+          data-testid="act-escape"
+          aria-pressed={ui.mode === 'escape'}
+          onClick={() => setMode(ui.mode === 'escape' ? 'none' : 'escape')}
+        >
+          <span className="fan-label">Escape</span>
+        </button>
+      )}
       {info.canUndo && (
         <button type="button" className="fan-slip undo" data-testid="act-undo" onClick={undo}>
           <span className="fan-label">Undo move</span>
@@ -132,6 +144,18 @@ export function OrdersCard() {
           <span className="compass-centre" aria-hidden="true" />
         </div>
       </div>
+    )
+  } else if (ui.mode === 'escape') {
+    const progress = query
+      .objectives(state)
+      .filter((o) => o.cond.type === 'escape')
+      .map((o) => o.text)
+    body = (
+      <>
+        <h3>Escape — {nm(sel.id)}</h3>
+        <p>{nm(sel.id)} slips off the table by this exit. They leave the battle at once and count toward the objective.</p>
+        {progress.length > 0 && <p className="muted">{progress.join(' · ')}</p>}
+      </>
     )
   } else if (ui.mode === 'attack') {
     const pv = order?.preview?.attack

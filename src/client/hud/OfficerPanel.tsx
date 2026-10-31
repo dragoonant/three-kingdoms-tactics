@@ -1,7 +1,10 @@
 import { useMemo } from 'react'
+import { PLAYER_SIDE } from '../../data/types'
 import { query, type Unit } from '../../engine'
 import { num } from '../ledger'
-import { shortName, sideName } from '../names'
+import { buffChips, isGuestUnit, lyingInWait, retreatText } from '../campaign/helpers'
+import { sideToken } from '../board/layout'
+import { nameOfUnit, shortName, sideName } from '../names'
 import { useGame } from '../store/game'
 import { canControl } from '../store/orders'
 import { BrushBar, Coins, Cord, Portrait } from './parts'
@@ -19,13 +22,17 @@ export function OfficerPanel() {
   const vis = scene.units.find((u) => u.id === ui.selectedId)
   const options = useMemo(() => (live ? query.stratagemOptions(state, live.id) : []), [state, live])
   if (!live || !vis) return null
+  const provoker = query.provokedBy(state, live.id)
+  const chips = buffChips(state, live)
+  const retreat = retreatText(live)
+  const waiting = lyingInWait(state, live)
   const off = state.data.officers[live.officer]
   if (!off) return null
   const mine = canControl(state, live) && !playing
   const acted = live.done
   const stratMode = ui.mode === 'stratagem'
   return (
-    <aside className={`officer ${live.side}`} data-testid="officer-panel" aria-label={`Officer ${off.name}`}>
+    <aside className={`officer ${sideToken(live.side)}`} data-testid="officer-panel" aria-label={`Officer ${off.name}`}>
       <Cord top />
       <Cord />
       <header>
@@ -70,6 +77,15 @@ export function OfficerPanel() {
         {acted && !live.confused && <span className="chip">Acted</span>}
         {live.moved && !acted && <span className="chip">Moved</span>}
         {off.loyalty !== null && <span className="chip">Loyalty {off.loyalty}</span>}
+        {isGuestUnit(state, live) && <span className="chip guest" data-testid="chip-guest">Guest</span>}
+        {provoker && <span className="chip bad" data-testid="chip-provoked">Provoked by {shortName(nameOfUnit(state, provoker))}</span>}
+        {chips.map((c) => (
+          <span key={c} className="chip buff" data-testid="chip-buff">
+            {c}
+          </span>
+        ))}
+        {retreat && <span className="chip retreat" data-testid="chip-retreat">{retreat}</span>}
+        {waiting && <span className="chip wait" data-testid="chip-wait">Lying in wait</span>}
       </div>
       <ul className="strats" aria-label="Stratagems">
         {options.map((o) => {
@@ -95,7 +111,7 @@ export function OfficerPanel() {
         })}
         {options.length === 0 && <li className="strat-none">No stratagems</li>}
       </ul>
-      {live.side !== 'han' && <p className="readonly">Enemy officer. Select one of your own units, then hover this one to read the strike numbers.</p>}
+      {live.side !== PLAYER_SIDE && <p className="readonly">Enemy officer. Select one of your own units, then hover this one to read the strike numbers.</p>}
     </aside>
   )
 }

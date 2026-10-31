@@ -4,7 +4,8 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import { PerspectiveCamera, Vector3 } from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three/examples/jsm/controls/OrbitControls.js'
-import { BOARD_H, BOARD_W, tileX, tileZ, viewApi } from './layout'
+import { frameCorners, panLimits } from './frame'
+import { tileX, tileZ, viewApi } from './layout'
 
 export interface Insets {
   left: number
@@ -13,19 +14,23 @@ export interface Insets {
   bottom: number
 }
 
-export function insetsFor(width: number, height: number, mode: 'title' | 'battle'): Insets {
+export type CamMode = 'title' | 'battle' | 'scene' | 'backdrop' | 'deploy'
+
+/** Pixels of the window the HUD leaves for the board, per screen. Pure, so the framing is unit-tested. */
+export function insetsFor(width: number, height: number, mode: CamMode): Insets {
   if (mode === 'title') {
     return width >= 800 ? { left: width * 0.34, right: 20, top: 30, bottom: 30 } : { left: 8, right: 8, top: height * 0.42, bottom: 20 }
   }
-  if (width >= 800) return { left: 12, right: 312, top: 132, bottom: 196 }
-  return { left: 6, right: 6, top: 118, bottom: Math.round(height * 0.4) }
+  if (mode === 'scene') return width >= 800 ? { left: 40, right: 40, top: 30, bottom: 250 } : { left: 8, right: 8, top: 40, bottom: Math.round(height * 0.42) }
+  if (mode === 'backdrop') return { left: 20, right: 20, top: 20, bottom: 20 }
+  if (mode === 'deploy') return width >= 800 ? { left: 20, right: 400, top: 80, bottom: 70 } : { left: 6, right: 6, top: 60, bottom: Math.round(height * 0.5) }
+  if (width >= 800) return { left: 12, right: 312, top: 140, bottom: 196 }
+  return { left: 6, right: 6, top: 156, bottom: Math.round(height * 0.4) }
 }
 
 const POLAR = 0.78 // radians from straight down
-const CORNERS: [number, number, number][] = []
-for (const sx of [-1, 1]) for (const sz of [-1, 1]) for (const y of [0, 1.5]) CORNERS.push([sx * (BOARD_W / 2 + 0.55), y, sz * (BOARD_H / 2 + 0.55)])
 
-function projectedBounds(cam: PerspectiveCamera, dist: number, az: number): { minx: number; maxx: number; miny: number; maxy: number } {
+function projectedBounds(cam: PerspectiveCamera, dist: number, az: number, corners: [number, number, number][]): { minx: number; maxx: number; miny: number; maxy: number } {
   const dir = new Vector3(Math.sin(az) * Math.sin(POLAR), Math.cos(POLAR), Math.cos(az) * Math.sin(POLAR))
   cam.position.copy(dir).multiplyScalar(dist)
   cam.lookAt(0, 0, 0)
@@ -36,7 +41,7 @@ function projectedBounds(cam: PerspectiveCamera, dist: number, az: number): { mi
   let miny = Infinity
   let maxy = -Infinity
   const v = new Vector3()
-  for (const c of CORNERS) {
+  for (const c of corners) {
     v.set(c[0], c[1], c[2]).project(cam)
     minx = Math.min(minx, v.x)
     maxx = Math.max(maxx, v.x)
@@ -47,7 +52,8 @@ function projectedBounds(cam: PerspectiveCamera, dist: number, az: number): { mi
 }
 
 /** Distance and pixel shift that place the board inside the inset rectangle. */
-export function fitBoard(fov: number, w: number, h: number, ins: Insets, az: number): { dist: number; shiftX: number; shiftY: number } {
+export function fitBoard(fov: number, w: number, h: number, ins: Insets, az: number, bw = 14, bh = 12): { dist: number; shiftX: number; shiftY: number } {
+  const corners = frameCorners(bw, bh)
   const cam = new PerspectiveCamera(fov, w / h, 0.5, 200)
   const freeW = Math.max(120, w - ins.left - ins.right)
   const freeH = Math.max(120, h - ins.top - ins.bottom)
@@ -55,14 +61,14 @@ export function fitBoard(fov: number, w: number, h: number, ins: Insets, az: num
   let hi = 90
   for (let i = 0; i < 28; i++) {
     const mid = (lo + hi) / 2
-    const b = projectedBounds(cam, mid, az)
+    const b = projectedBounds(cam, mid, az, corners)
     const pw = ((b.maxx - b.minx) / 2) * w
     const ph = ((b.maxy - b.miny) / 2) * h
     if (pw <= freeW && ph <= freeH) hi = mid
     else lo = mid
   }
   const dist = hi
-  const b = projectedBounds(cam, dist, az)
+  const b = projectedBounds(cam, dist, az, corners)
   const cx = w / 2 + ((b.minx + b.maxx) / 2) * (w / 2)
   const cy = h / 2 - ((b.miny + b.maxy) / 2) * (h / 2)
   const wantX = ins.left + freeW / 2
@@ -70,7 +76,7 @@ export function fitBoard(fov: number, w: number, h: number, ins: Insets, az: num
   return { dist, shiftX: wantX - cx, shiftY: wantY - cy }
 }
 
-export function CameraRig({ mode, tops, unitPos }: { mode: 'title' | 'battle'; tops: (x: number, y: number) => number; unitPos: (id: string) => { x: number; y: number } | null }) {
+export function CameraRig({ mode, width, height, tops, unitPos }: { mode: CamMode; width: number; height: number; tops: (x: number, y: number) => number; unitPos: (id: string) => { x: number; y: number } | null }) {
   const controls = useRef<OrbitControlsImpl | null>(null)
   const { camera, size, gl } = useThree()
   const az = useRef(0)
@@ -79,7 +85,7 @@ export function CameraRig({ mode, tops, unitPos }: { mode: 'title' | 'battle'; t
   useEffect(() => {
     const cam = camera as PerspectiveCamera
     const ins = insetsFor(size.width, size.height, mode)
-    const fit = fitBoard(cam.fov, size.width, size.height, ins, az.current)
+    const fit = fitBoard(cam.fov, size.width, size.height, ins, az.current, width, height)
     dist0.current = fit.dist
     const dir = new Vector3(Math.sin(az.current) * Math.sin(POLAR), Math.cos(POLAR), Math.cos(az.current) * Math.sin(POLAR))
     cam.position.copy(dir).multiplyScalar(fit.dist)
@@ -93,7 +99,7 @@ export function CameraRig({ mode, tops, unitPos }: { mode: 'title' | 'battle'; t
       c.maxDistance = fit.dist * 1.35
       c.update()
     }
-  }, [camera, size.width, size.height, mode])
+  }, [camera, size.width, size.height, mode, width, height])
 
   useEffect(() => {
     const project = (x: number, y: number, z: number): { x: number; y: number } | null => {
@@ -127,8 +133,9 @@ export function CameraRig({ mode, tops, unitPos }: { mode: 'title' | 'battle'; t
     if (!c) return
     // keep the pan target over the board
     const t = c.target
-    const cx = Math.max(-5, Math.min(5, t.x))
-    const cz = Math.max(-4.5, Math.min(4.5, t.z))
+    const lim = panLimits(width, height)
+    const cx = Math.max(-lim.x, Math.min(lim.x, t.x))
+    const cz = Math.max(-lim.z, Math.min(lim.z, t.z))
     if (cx !== t.x || cz !== t.z) {
       camera.position.x += cx - t.x
       camera.position.z += cz - t.z
@@ -151,8 +158,8 @@ export function CameraRig({ mode, tops, unitPos }: { mode: 'title' | 'battle'; t
     <OrbitControls
       ref={controls as never}
       makeDefault
-      enabled={mode === 'battle'}
-      autoRotate={mode === 'title'}
+      enabled={mode === 'battle' || mode === 'deploy'}
+      autoRotate={mode === 'title' || mode === 'scene' || mode === 'backdrop'}
       autoRotateSpeed={0.5}
       enableDamping
       dampingFactor={0.12}

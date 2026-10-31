@@ -1,12 +1,13 @@
 // Small shared HUD pieces.
 import type { CSSProperties, ReactNode } from 'react'
 import type { Facing } from '../../engine'
+import { sideToken } from '../board/layout'
 import { surname } from '../names'
 
 export function Portrait({ name, side, size = 56 }: { name: string; side: string; size?: number }) {
   const style: CSSProperties = { width: size, height: size, fontSize: size * 0.62 }
   return (
-    <span className={`portrait ${side}`} style={style} aria-hidden="true">
+    <span className={`portrait ${sideToken(side)}`} style={style} aria-hidden="true">
       <span>{surname(name)}</span>
     </span>
   )
@@ -26,7 +27,7 @@ export function BrushBar({ value, max, side }: { value: number; max: number; sid
   const pct = Math.max(0, Math.min(100, (value / max) * 100))
   return (
     <span className="brushbar" aria-hidden="true">
-      <span className={`brushfill ${side}${pct < 30 ? ' low' : ''}`} style={{ width: `${pct}%` }} />
+      <span className={`brushfill ${sideToken(side)}${pct < 30 ? ' low' : ''}`} style={{ width: `${pct}%` }} />
     </span>
   )
 }

@@ -5,9 +5,12 @@ import { BoardCanvas } from './board/BoardCanvas'
 import { viewApi } from './board/layout'
 import { Hud } from './hud/Hud'
 import { Briefing, End, HowTo, Title } from './screens/Screens'
+import { Camp, CampaignBriefing, Defeat, Deploy, NewCampaign, Results, Scene, Summary } from './screens/CampaignScreens'
+import { installCampaignHook } from './campaign/testHook'
 import { TEST_MODE, useGame } from './store/game'
 import './theme.css'
 import './hud.css'
+import './campaign.css'
 
 declare global {
   interface Window {
@@ -31,12 +34,15 @@ function installTestHook(): void {
     go: (s: Parameters<ReturnType<typeof g>['go']>[0]) => g().go(s),
     begin: () => g().begin(),
     skip: () => g().skip(),
+    /** Select a unit as a click on it would (clicks on crowded figures can land on a neighbour). */
+    select: (id: string | null) => g().select(id),
     log: () => g().log,
     ledger: () => g().ledger,
     stats: () => g().stats,
     query,
     tileToScreen: (x: number, y: number) => viewApi.tileToScreen(x, y),
     unitToScreen: (id: string) => viewApi.unitToScreen(id),
+    ...installCampaignHook(),
   }
 }
 
@@ -86,6 +92,14 @@ export function App() {
       {screen === 'title' && <Title />}
       {screen === 'briefing' && <Briefing />}
       {screen === 'howto' && <HowTo />}
+      {screen === 'newcampaign' && <NewCampaign />}
+      {screen === 'scene' && <Scene />}
+      {screen === 'cbrief' && <CampaignBriefing />}
+      {screen === 'camp' && <Camp />}
+      {screen === 'deploy' && <Deploy />}
+      {screen === 'results' && <Results />}
+      {screen === 'defeat' && <Defeat />}
+      {screen === 'summary' && <Summary />}
       {(screen === 'battle' || screen === 'end') && <Hud />}
       {screen === 'end' && <End />}
     </div>

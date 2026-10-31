@@ -2,18 +2,38 @@ import { Canvas } from '@react-three/fiber'
 import { useCallback, useEffect, useMemo } from 'react'
 import { ACESFilmicToneMapping, PCFShadowMap, SRGBColorSpace } from 'three'
 import { getBattleDef } from '../../data'
-import { query } from '../../engine'
-import { useGame, TEST_MODE } from '../store/game'
+import { exitTiles, query } from '../../engine'
+import { useCampaign } from '../store/campaign'
+import { useGame, TEST_MODE, type Screen } from '../store/game'
 import { canControl } from '../store/orders'
-import { CameraRig } from './CameraRig'
-import { BeatFx, Flames, Floaters, Incense, Marks, Pennant, Smoke, useBurnTiles, windVector } from './Effects'
+import { CameraRig, type CamMode } from './CameraRig'
+import { DeployMarkers } from './DeployMarkers'
+import { BeatFx, Flames, Floaters, Incense, Marks, Pennant, Smoke, TerrainChangeFx, useBurnTiles, windVector } from './Effects'
 import { Figure } from './Figure'
-import { BOARD_H, BOARD_W, BRIDGE_TOP, COLORS, TOP, tileX, tileZ } from './layout'
+import { COLORS, sideColour, tileX, tileZ } from './layout'
 import { computeMarks } from './marks'
 import { Stage } from './Stage'
 import { Terrain } from './Terrain'
+import { gateIsOpenFor, tileTop } from './terrainModel'
 
-const BRIDGES = getBattleDef('daxing-hill')?.bridges ?? []
+const NO_BRIDGES: { x: number; y: number }[] = []
+
+function camMode(screen: Screen): CamMode {
+  switch (screen) {
+    case 'battle':
+    case 'end':
+      return 'battle'
+    case 'title':
+    case 'howto':
+      return 'title'
+    case 'scene':
+      return 'scene'
+    case 'deploy':
+      return 'deploy'
+    default:
+      return 'backdrop'
+  }
+}
 
 const Q = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search)
 const AA = Q.get('aa') !== '0'
@@ -30,19 +50,22 @@ export function BoardCanvas() {
   const clickTile = useGame((s) => s.clickTile)
   const hoverTile = useGame((s) => s.hoverTile)
 
-  const tops = useCallback(
-    (x: number, y: number): number => {
-      if (BRIDGES.some((b) => b.x === x && b.y === y)) return BRIDGE_TOP
-      const t = scene.terrain[y * BOARD_W + x]
-      return t ? TOP[t] : 0
-    },
-    [scene.terrain],
-  )
+  const W = scene.width
+  const H = scene.height
+  const bridges = useMemo(() => getBattleDef(state.battleId)?.bridges ?? NO_BRIDGES, [state.battleId])
+  const exits = useMemo(() => exitTiles(state), [state])
+  const grid = useMemo(() => ({ terrain: scene.terrain, width: W, height: H }), [scene.terrain, W, H])
+  const tops = useCallback((x: number, y: number): number => tileTop(grid, bridges, x, y), [grid, bridges])
+  const deployMarks = useCampaign((c) => c.deployMarkers)
+  const gateColour = sideColour(state.gateOwner ?? 'han')
+  const gateOpen = gateIsOpenFor(state.gateOwner, 'han')
+  const fx = beat?.fx
+  const arriving = fx && fx.t === 'arrive' && !scene.units.some((u) => u.id === fx.unit) ? fx.vis : null
   const unitPos = useCallback((id: string) => scene.units.find((u) => u.id === id) ?? null, [scene.units])
 
   const interactive = screen === 'battle' && !playing
   const marks = useMemo(() => computeMarks(state, ui, interactive), [state, ui, interactive])
-  const burnTiles = useBurnTiles(scene.burning, BOARD_W)
+  const burnTiles = useBurnTiles(scene.burning, W)
   const sel = state.units.find((u) => u.id === ui.selectedId)
   const targetIds = useMemo(() => {
     if (!interactive || !sel || !canControl(state, sel)) return new Set<string>()
@@ -79,9 +102,35 @@ export function BoardCanvas() {
       }}
     >
       <color attach="background" args={[COLORS.night]} />
-      <fog attach="fog" args={[COLORS.night, 34, 80]} />
-      <Stage />
-      <Terrain terrain={scene.terrain} bridges={BRIDGES} onHover={onHover} onPick={clickTile} onLeave={onLeave} />
+      <fog attach="fog" args={[COLORS.night, 36, 84]} />
+      <Stage width={W} height={H} />
+      <Terrain
+        terrain={scene.terrain}
+        width={W}
+        height={H}
+        bridges={bridges}
+        exits={exits}
+        gateColour={gateColour}
+        gateOpen={gateOpen}
+        onHover={onHover}
+        onPick={clickTile}
+        onLeave={onLeave}
+      />
+      <TerrainChangeFx terrain={scene.terrain} width={W} tops={tops} />
+      {arriving && (
+        <Figure
+          key={`arriving-${arriving.id}`}
+          unit={arriving}
+          top={tops(arriving.x, arriving.y)}
+          tops={tops}
+          actable={false}
+          selected={false}
+          targeted={false}
+          onPick={clickTile}
+          onHover={onHover}
+          onLeave={onLeave}
+        />
+      )}
       {scene.units.map((u) => (
         <Figure
           key={u.id}
@@ -99,11 +148,12 @@ export function BoardCanvas() {
       <Marks marks={marks} tops={tops} />
       <Flames tiles={burnTiles} tops={tops} />
       <Smoke emitters={flameEmit} drift={[wv[0] * 0.8, wv[1] * 0.8]} color="#2a2420" size={0.9} rise={1.8} per={3} opacity={0.4} />
-      <Pennant wind={scene.wind} position={[-BOARD_W / 2 - 0.95, 0, BOARD_H / 2 + 0.9]} />
-      <Incense position={[BOARD_W / 2 + 1.0, -0.08, BOARD_H / 2 + 0.95]} wind={scene.wind} />
+      <Pennant wind={scene.wind} position={[-W / 2 - 0.95, 0, H / 2 + 0.9]} />
+      <Incense position={[W / 2 + 1.0, -0.08, H / 2 + 0.95]} wind={scene.wind} />
+      {screen === 'deploy' && <DeployMarkers marks={deployMarks} tops={tops} />}
       <BeatFx beat={beat} tops={tops} />
       <Floaters items={floaters} tops={tops} />
-      <CameraRig mode={screen === 'title' ? 'title' : 'battle'} tops={tops} unitPos={unitPos} />
+      <CameraRig mode={camMode(screen)} width={W} height={H} tops={tops} unitPos={unitPos} />
     </Canvas>
   )
 }

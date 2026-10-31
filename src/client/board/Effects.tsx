@@ -23,7 +23,7 @@ import type { Facing, Pos, Wind } from '../../engine'
 import type { Floater } from '../store/game'
 import type { Beat } from '../presentation/beats'
 import { anim, animProgress } from '../presentation/director'
-import { COLORS, tileX, tileZ } from './layout'
+import { COLORS, SAND, tileX, tileZ } from './layout'
 import { puffTexture } from './textures'
 
 export type MarkKind = 'move' | 'target' | 'area' | 'chain' | 'fire' | 'hover' | 'dash'
@@ -290,6 +290,7 @@ export function BeatFx({ beat, tops }: { beat: Beat | null; tops: (x: number, y:
   const burst = useRef<Mesh>(null)
   const burstMat = useMemo(() => new MeshBasicMaterial({ color: '#ff9a3a', transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, side: DoubleSide }), [])
   const areaMat = useMemo(() => new MeshBasicMaterial({ color: COLORS.cinnabar, transparent: true, opacity: 0, depthWrite: false, side: DoubleSide }), [])
+  const terrMat = useMemo(() => new MeshBasicMaterial({ color: '#3f7fb0', transparent: true, opacity: 0, depthWrite: false, side: DoubleSide }), [])
   useFrame(() => {
     const b = anim.beat
     const p = animProgress()
@@ -310,8 +311,14 @@ export function BeatFx({ beat, tops }: { beat: Beat | null; tops: (x: number, y:
       area.current.visible = !!f && f.t === 'stratagem'
       areaMat.opacity = f && f.t === 'stratagem' ? Math.sin(Math.min(1, p) * Math.PI) * 0.55 : 0
     }
+    // tiles about to change terrain take on the colour of what they are becoming, growing stronger until the beat commits
+    if (f && f.t === 'terrain') {
+      terrMat.color.set(terrainTint(f.to))
+      terrMat.opacity = 0.15 + 0.5 * Math.min(1, p)
+    } else terrMat.opacity = 0
   })
   const tiles: Pos[] = beat && beat.fx.t === 'stratagem' ? beat.fx.tiles : []
+  const changing: Pos[] = beat && beat.fx.t === 'terrain' ? beat.fx.tiles : []
   return (
     <group>
       <mesh ref={burst} geometry={burstGeo} material={burstMat} visible={false} raycast={() => null} />
@@ -320,6 +327,64 @@ export function BeatFx({ beat, tops }: { beat: Beat | null; tops: (x: number, y:
           <mesh key={`${t.x}-${t.y}-${i}`} geometry={burstGeo} material={areaMat} position={[tileX(t.x), tops(t.x, t.y) + 0.05, tileZ(t.y)]} scale={[0.96, 1, 0.96]} raycast={() => null} />
         ))}
       </group>
+      {changing.map((t, i) => (
+        <mesh key={`c${t.x}-${t.y}-${i}`} geometry={burstGeo} material={terrMat} position={[tileX(t.x), tops(t.x, t.y) + 0.08, tileZ(t.y)]} scale={[0.98, 1, 0.98]} raycast={() => null} />
+      ))}
+    </group>
+  )
+}
+
+/** Colour a tile takes on while it changes into `to` (water-like terrain reads blue, the rest sand). */
+export function terrainTint(to: string): string {
+  if (to === 'water' || to === 'river' || to === 'shallows') return '#3f7fb0'
+  return (SAND as Record<string, string>)[to] ?? '#cdb88c'
+}
+
+const FADE_MS = 900
+/**
+ * After a terrain change commits, the changed tiles keep a tint that fades out, so a flood or an opened gate reads as a
+ * transformation and not a pop. Watches the presented terrain; no state outside this component.
+ */
+export function TerrainChangeFx({ terrain, width, tops }: { terrain: string[]; width: number; tops: (x: number, y: number) => number }) {
+  const prev = useRef<string[]>(terrain)
+  const fades = useRef<{ x: number; y: number; to: string; t0: number }[]>([])
+  const group = useRef<Group>(null)
+  const pool = 40
+  const mats = useMemo(() => Array.from({ length: pool }, () => new MeshBasicMaterial({ color: '#3f7fb0', transparent: true, opacity: 0, depthWrite: false, side: DoubleSide })), [])
+  if (prev.current !== terrain) {
+    if (prev.current.length === terrain.length) {
+      const now = performance.now()
+      for (let i = 0; i < terrain.length; i++) {
+        if (prev.current[i] !== terrain[i]) fades.current.push({ x: i % width, y: Math.floor(i / width), to: terrain[i]!, t0: now })
+      }
+      // ash from burning is not a transformation worth a fade
+      fades.current = fades.current.filter((f) => f.to !== 'ash').slice(-pool)
+    }
+    prev.current = terrain
+  }
+  useFrame(() => {
+    const now = performance.now()
+    fades.current = fades.current.filter((f) => now - f.t0 < FADE_MS)
+    const g = group.current
+    if (!g) return
+    g.children.forEach((c, i) => {
+      const f = fades.current[i]
+      const m = mats[i]!
+      if (!f) {
+        c.visible = false
+        return
+      }
+      c.visible = true
+      c.position.set(tileX(f.x), tops(f.x, f.y) + 0.07, tileZ(f.y))
+      m.color.set(terrainTint(f.to))
+      m.opacity = 0.65 * (1 - (now - f.t0) / FADE_MS)
+    })
+  })
+  return (
+    <group ref={group}>
+      {mats.map((m, i) => (
+        <mesh key={i} geometry={burstGeo} material={m} visible={false} scale={[0.98, 1, 0.98]} raycast={() => null} />
+      ))}
     </group>
   )
 }

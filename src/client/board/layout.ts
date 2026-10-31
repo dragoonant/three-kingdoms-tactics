@@ -2,11 +2,18 @@
 // x runs west to east, z runs north (negative) to south, so a camera looking north has East on the right.
 import type { Facing, Pos, Terrain } from '../../engine'
 
-export const BOARD_W = 14
-export const BOARD_H = 12
+/**
+ * The size of the board on the table right now. It is set (by setBoardSize) the moment a battle is loaded, before anything
+ * renders, so every tile helper below works for any W x H. Pure framing helpers that take the size explicitly live in frame.ts.
+ */
+export const board = { w: 14, h: 12 }
+export function setBoardSize(w: number, h: number): void {
+  board.w = w
+  board.h = h
+}
 
-export const tileX = (x: number): number => x - (BOARD_W - 1) / 2
-export const tileZ = (y: number): number => y - (BOARD_H - 1) / 2
+export const tileX = (x: number): number => x - (board.w - 1) / 2
+export const tileZ = (y: number): number => y - (board.h - 1) / 2
 
 /** Height of the sand surface for each terrain. Rivers are cut below the banks. */
 export const TOP: Record<Terrain, number> = {
@@ -19,8 +26,8 @@ export const TOP: Record<Terrain, number> = {
   ford: 0.07,
   river: 0.0,
   ash: 0.1,
-  wall: 0.5,
-  rampart: 0.46,
+  wall: 0.95,
+  rampart: 0.62,
   gate: 0.14,
   shallows: 0.05,
   reeds: 0.1,
@@ -41,12 +48,12 @@ export const SAND: Record<Terrain, string> = {
   ford: '#d9cfae',
   river: '#8a7852',
   ash: '#3a322b',
-  wall: '#9a8a6e',
-  rampart: '#a89878',
-  gate: '#8a6a3a',
-  shallows: '#b9c2a8',
+  wall: '#a58f73',
+  rampart: '#b09b7c',
+  gate: '#a68a5a',
+  shallows: '#9c9a76',
   reeds: '#a9a05e',
-  deck: '#8a6a44',
+  deck: '#6f7a63',
   water: '#6f7a63',
   bridge: '#b48f55',
 }
@@ -65,9 +72,20 @@ export const COLORS = {
   lu: '#5b2c6f',
 }
 
-/** Banner colour of a side, by its colour token (side ids double as tokens in the shipped battles). */
-export function sideColour(token: string): string {
-  return (COLORS as Record<string, string>)[token] ?? COLORS.yellow
+/** Side id -> colour token, filled from the battle's `sides` data when a battle loads ([R2-SIDE-1]). */
+const sideTokens = new Map<string, string>()
+export function setSideTokens(sides: { id: string; colourToken: string }[]): void {
+  sideTokens.clear()
+  for (const s of sides) sideTokens.set(s.id, s.colourToken)
+}
+/** The colour token of a side id (falls back to the id itself, which is also a token in the shipped battles). */
+export function sideToken(sideId: string): string {
+  return sideTokens.get(sideId) ?? sideId
+}
+/** Banner colour of a side, by side id or colour token. */
+export function sideColour(idOrToken: string): string {
+  const c = COLORS as Record<string, string>
+  return c[sideToken(idOrToken)] ?? c[idOrToken] ?? COLORS.yellow
 }
 
 export function hash2(x: number, y: number, k = 0): number {

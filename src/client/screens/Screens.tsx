@@ -1,6 +1,9 @@
 import { useEffect } from 'react'
-import { BATTLE_ID, useGame } from '../store/game'
+import { getBattleDef } from '../../data'
+import { SKIRMISH_ID, useGame } from '../store/game'
+import { useCampaign } from '../store/campaign'
 import { Portrait } from '../hud/parts'
+import { nameOfUnit } from '../names'
 
 function SealButton({ children, onClick, id }: { children: React.ReactNode; onClick: () => void; id: string }) {
   return (
@@ -15,6 +18,14 @@ function SealButton({ children, onClick, id }: { children: React.ReactNode; onCl
 
 export function Title() {
   const go = useGame((s) => s.go)
+  const hasSave = useCampaign((c) => c.hasSave)
+  const openNew = useCampaign((c) => c.openNew)
+  const cont = useCampaign((c) => c.continueSave)
+  const refresh = useCampaign((c) => c.refresh)
+  useEffect(() => {
+    refresh()
+  }, [refresh])
+  const skirmish = getBattleDef(SKIRMISH_ID)
   return (
     <main className="title-screen" data-testid="title-screen">
       <div className="hang">
@@ -31,8 +42,16 @@ export function Title() {
           <p>A war-council on the sand table</p>
         </div>
         <nav className="slips" aria-label="Main menu">
+          {hasSave && (
+            <button type="button" className="hang-slip" data-testid="continue" onClick={() => cont()}>
+              <span>Continue the campaign</span>
+            </button>
+          )}
+          <button type="button" className="hang-slip" data-testid="campaign" onClick={openNew}>
+            <span>{hasSave ? 'New campaign' : "Campaign: Liu Bei's Rise"}</span>
+          </button>
           <button type="button" className="hang-slip" data-testid="begin" onClick={() => go('briefing')}>
-            <span>Begin: Daxing Hill</span>
+            <span>Skirmish: {skirmish?.name ?? 'Daxing Hill'}</span>
           </button>
           <button type="button" className="hang-slip" data-testid="howto" onClick={() => go('howto')}>
             <span>How to play</span>
@@ -153,8 +172,24 @@ export function End() {
   const r = state.result
   if (!r) return null
   const won = r.winner === 'han'
-  const why =
-    r.reason === 'commander'
+  const daxing = state.battleId === 'daxing-hill'
+  const foe = state.sideOrder.find((x) => x !== 'han') ?? 'yellow'
+  const foeCommander = nameOfUnit(state, state.commanders[foe] ?? '')
+  const why = !daxing
+    ? r.reason === 'commander'
+      ? won
+        ? `${foeCommander} is routed and the enemy host breaks.`
+        : 'Liu Bei has been routed. The army scatters.'
+      : r.reason === 'annihilation'
+        ? won
+          ? 'Not an enemy banner is left standing.'
+          : 'Your whole line has been destroyed.'
+        : r.reason === 'objective'
+          ? won
+            ? 'The objective is met.'
+            : 'The objective is lost.'
+          : `Round ${state.turnLimit} ended without a decision.`
+    : r.reason === 'commander'
       ? won
         ? 'Cheng Yuanzhi is routed and the rebel host breaks.'
         : 'Liu Bei has been routed. The army scatters.'
@@ -166,7 +201,7 @@ export function End() {
   return (
     <div className="modal" data-testid="end-screen">
       <section className={`panel endpanel ${won ? 'won' : 'lost'}`}>
-        <Portrait name={won ? 'Liu Bei' : 'Cheng Yuanzhi'} side={won ? 'han' : 'yellow'} size={72} />
+        <Portrait name={won ? 'Liu Bei' : foeCommander} side={won ? 'han' : foe} size={72} />
         <h2 data-testid="end-title">{won ? 'Victory' : 'Defeat'}</h2>
         <p className="why" data-testid="end-reason">
           {why}
@@ -202,4 +237,3 @@ export function End() {
   )
 }
 
-export { BATTLE_ID }
