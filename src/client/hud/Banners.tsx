@@ -31,6 +31,11 @@ export function Banners() {
           </div>
         </div>
       )}
+      {!hide && fx?.t === 'note' && fx.text !== '' && (
+        <div className="note-wrap" key={`n${bannerKey}`} data-testid="note-banner">
+          <p className="note-slip">{fx.text}</p>
+        </div>
+      )}
       {!hide && fx?.t === 'end' && (
         <div className="scroll-wrap" data-testid="end-banner">
           <div className="scroll big">

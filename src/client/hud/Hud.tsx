@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { query } from '../../engine'
 import { facingWord, num, windWord } from '../ledger'
 import { phaseLabel, shortName } from '../names'
-import { viewApi } from '../board/layout'
+import { sideToken, viewApi } from '../board/layout'
+import { timelineLabel, trackerHeadline, trackerLines } from '../campaign/helpers'
 import type { Speed } from '../presentation/beats'
 import { useGame } from '../store/game'
 import { canControl } from '../store/orders'
@@ -32,7 +33,7 @@ function TopBar() {
           Round {scene.round}
         </span>
         <span className="round-of">of {state.turnLimit}</span>
-        <span className={`phase-pip ${scene.side}`} aria-hidden="true" />
+        <span className={`phase-pip ${sideToken(scene.side)}`} aria-hidden="true" />
         <span className="phase" data-testid="phase">
           {phaseLabel(state, scene.side)}
         </span>
@@ -115,6 +116,68 @@ function WindSlip() {
   )
 }
 
+/** The objective tracker: the engine's own text and progress for every win and lose condition. */
+function ObjectiveSlip() {
+  const state = useGame((s) => s.state)
+  const [open, setOpen] = useState(false)
+  const lines = useMemo(() => trackerLines(query.objectives(state)), [state])
+  const upcoming = useMemo(() => query.timelinePreview(state, 4), [state])
+  const win = lines.filter((l) => l.side === 'win')
+  const lose = lines.filter((l) => l.side === 'lose')
+  return (
+    <>
+      <aside className={`objslip${open ? ' open' : ''}`} data-testid="objectives">
+        <button type="button" className="obj-head" aria-expanded={open} onClick={() => setOpen(!open)} data-testid="objectives-toggle">
+          <span className="obj-title">Objectives</span>
+          <span className="obj-headline">{trackerHeadline(lines)}</span>
+        </button>
+        <div className="obj-body">
+          <ul className="obj-list win" aria-label="Win">
+            {win.map((l) => (
+              <li key={l.key} className={l.met ? 'met' : ''}>
+                <span className="obj-mark" aria-hidden="true">
+                  ◆
+                </span>
+                <span className="obj-text">{l.text}</span>
+                {l.progress !== null && (
+                  <span className="obj-bar" aria-hidden="true">
+                    <span style={{ width: `${Math.round(l.progress * 100)}%` }} />
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+          <ul className="obj-list lose" aria-label="Lose">
+            {lose.map((l) => (
+              <li key={l.key}>
+                <span className="obj-mark" aria-hidden="true">
+                  ✕
+                </span>
+                <span className="obj-text">{l.text}</span>
+              </li>
+            ))}
+          </ul>
+          {upcoming.length > 0 && <Upcoming items={upcoming.map(timelineLabel)} className="in-drawer" />}
+        </div>
+      </aside>
+      {upcoming.length > 0 && <Upcoming items={upcoming.map(timelineLabel)} className="beside" />}
+    </>
+  )
+}
+
+function Upcoming({ items, className }: { items: string[]; className: string }) {
+  return (
+    <aside className={`timeslip ${className}`} data-testid={className === 'beside' ? 'timeline' : undefined}>
+      <h4>Coming</h4>
+      <ul>
+        {items.slice(0, 3).map((t, i) => (
+          <li key={i}>{t}</li>
+        ))}
+      </ul>
+    </aside>
+  )
+}
+
 function EndPhase() {
   const state = useGame((s) => s.state)
   const playing = useGame((s) => s.playing)
@@ -190,6 +253,7 @@ export function Hud() {
       <div className="vignette" aria-hidden="true" />
       <TopBar />
       <Ledger />
+      <ObjectiveSlip />
       <WindSlip />
       <TileSlip />
       <EndPhase />

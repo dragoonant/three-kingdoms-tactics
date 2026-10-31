@@ -16,7 +16,8 @@ import {
 import { anim, animProgress } from '../presentation/director'
 import type { UnitVis } from '../presentation/scene'
 import { figureGeometry, swirlGeometry } from './figureGeometry'
-import { angleDelta, COLORS, facingAngle, sideColour, tileX, tileZ } from './layout'
+import { edgePoint } from './frame'
+import { angleDelta, board, COLORS, facingAngle, sideColour, tileX, tileZ } from './layout'
 
 const ease = (t: number): number => t * t * (3 - 2 * t)
 
@@ -171,6 +172,48 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
           break
         case 'wait':
           if (fx.unit === u.id) hop = Math.sin(Math.min(1, p) * Math.PI) * 0.03
+          break
+        case 'arrive':
+          // reinforcements march in from the nearest edge of the table at a steady pace
+          if (fx.unit === u.id) {
+            const e = edgePoint(u.x, u.y, board.w, board.h, 2.2)
+            const sx = tileX(e.x)
+            const sz = tileZ(e.y)
+            const ex = tileX(u.x)
+            const ez = tileZ(u.y)
+            const k = Math.min(1, p)
+            x = sx + (ex - sx) * k
+            z = sz + (ez - sz) * k
+            const steps = Math.max(1, Math.hypot(ex - sx, ez - sz))
+            hop = Math.abs(Math.sin(k * steps * Math.PI)) * 0.07
+            const heading = Math.atan2(ex - sx, ez - sz)
+            ang = k > 0.85 ? heading + angleDelta(heading, facingAngle(u.facing)) * ease((k - 0.85) / 0.15) : heading
+          }
+          break
+        case 'leave':
+          // a retreating or escaping unit walks off the table by the nearest edge and fades into the distance
+          if (fx.unit === u.id) {
+            const e = edgePoint(u.x, u.y, board.w, board.h, 2.2)
+            const ex = tileX(e.x)
+            const ez = tileZ(e.y)
+            const k = Math.min(1, p)
+            const dx = ex - x
+            const dz = ez - z
+            x += dx * k
+            z += dz * k
+            hop = Math.abs(Math.sin(k * Math.hypot(dx, dz) * Math.PI)) * 0.07
+            if (Math.hypot(dx, dz) > 0.01) ang = Math.atan2(dx, dz)
+            sc = k > 0.7 ? Math.max(0.05, 1 - ((k - 0.7) / 0.3) * 0.95) : 1
+          }
+          break
+        case 'buff':
+          if (fx.unit === u.id) glow = Math.sin(Math.min(1, p) * Math.PI) * 0.9
+          break
+        case 'provoke':
+          if (fx.unit === u.id) {
+            flash = 0.55 * (1 - p)
+            hop = Math.sin(Math.min(1, p) * Math.PI * 3) * 0.05
+          }
           break
         default:
           break

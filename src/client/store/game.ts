@@ -1,15 +1,32 @@
 // The ONLY caller of step(). Holds the live state, the action log, the presented scene and the UI selection.
 import { create } from 'zustand'
 import { createBotClient } from '../../ai/workerClient'
+import { getBattleDef } from '../../data'
+import type { CreateOptions } from '../../data/types'
 import { createBattle, legalActions, query, step, type Action, type BattleState, type Facing, type GameEvent, type Side } from '../../engine'
+import { setBoardSize, setSideTokens } from '../board/layout'
 import { linesFor, type LedgerEntry } from '../ledger'
 import { introBeats, planBeats, type Beat, type Speed } from '../presentation/beats'
 import { Director } from '../presentation/director'
 import { sceneFromState, type Scene } from '../presentation/scene'
 import { canControl, EMPTY_UI, isBotSide, PLAYER_SIDE, type Mode, type UiState } from './orders'
 
-export type Screen = 'title' | 'howto' | 'briefing' | 'battle' | 'end'
-export const BATTLE_ID = 'daxing-hill'
+export type Screen =
+  | 'title'
+  | 'howto'
+  | 'briefing'
+  | 'battle'
+  | 'end'
+  // campaign flow (docs/spec/12-campaign.md)
+  | 'newcampaign'
+  | 'scene'
+  | 'cbrief'
+  | 'camp'
+  | 'deploy'
+  | 'results'
+  | 'defeat'
+  | 'summary'
+export type PlayMode = 'skirmish' | 'campaign'
 /** Which AI tier plays the enemy (random, easy or normal). */
 const BOT_TIER = 'normal' as const
 
@@ -34,21 +51,38 @@ export interface Stats {
   swayed: number
 }
 
+const STAT_WORD: Record<string, string> = { war: 'War', int: 'Int', lead: 'Lead', cha: 'Cha' }
+
 const params = typeof window === 'undefined' ? new URLSearchParams() : new URLSearchParams(window.location.search)
 const seedParam = params.get('seed')
 export const TEST_MODE = params.get('test') === '1'
 const speedParam = params.get('speed')
+/** The quick-play battle. `?battle=<id>` is a dev switch (e.g. `?battle=proving-ground`). */
+const battleParam = params.get('battle')
+export const SKIRMISH_ID = battleParam && getBattleDef(battleParam) ? battleParam : 'daxing-hill'
+export const BATTLE_ID = SKIRMISH_ID
 
 function freshSeed(): number {
   if (seedParam !== null && Number.isFinite(Number(seedParam))) return Number(seedParam) >>> 0
   return Math.floor(Math.random() * 0x7fffffff) + 1
 }
 
+type BattleEndHandler = (final: BattleState, events: GameEvent[]) => void
+let battleEndHandler: BattleEndHandler | null = null
+/** The campaign layer registers here to hear that a campaign battle ended (the store never imports it). */
+export function setBattleEndHandler(h: BattleEndHandler | null): void {
+  battleEndHandler = h
+}
+
 interface GameStore {
   screen: Screen
+  mode: PlayMode
+  battleId: string
   seed: number
   state: BattleState
   log: Action[]
+  /** Every engine event of the battle so far (state.opening, then each action's events), for the campaign's XP. */
+  events: GameEvent[]
   scene: Scene
   /** True while a batch of beats is playing. */
   playing: boolean
@@ -67,6 +101,10 @@ interface GameStore {
 
   go: (s: Screen) => void
   begin: () => void
+  /** Load a battle onto the table without starting it (title, scenes, briefing, camp and deploy backdrops). */
+  showTable: (battleId: string, seed: number, options?: CreateOptions) => BattleState
+  /** Start a campaign battle: the table is set from `options` and the round scroll plays. */
+  beginCampaign: (battleId: string, seed: number, options?: CreateOptions) => void
   restart: () => void
   act: (a: Action) => { ok: boolean; code?: string; message?: string }
   skip: () => void
@@ -90,6 +128,8 @@ const initialStats = (): Stats => ({ bestChain: 0, hanLost: 0, foesRouted: 0, sw
 export const useGame = create<GameStore>((set, get) => {
   const seed0 = freshSeed()
   const state0 = createBattle(BATTLE_ID, seed0)
+  setBoardSize(state0.grid.width, state0.grid.height)
+  setSideTokens(state0.sides)
   let floaterSeq = 1
   let sealSeq = 1
   let ledgerSeq = 1
@@ -117,6 +157,10 @@ export const useGame = create<GameStore>((set, get) => {
         else if (f.t === 'confuse') fl(f.at.x, f.at.y, 'Confused', 'bad')
         else if (f.t === 'recover') fl(f.at.x, f.at.y, 'Recovered', 'good')
         else if (f.t === 'sway') fl(f.at.x, f.at.y, f.ok ? 'Joins us!' : 'Refused', f.ok ? 'good' : 'info')
+        else if (f.t === 'buff') fl(f.at.x, f.at.y, `${STAT_WORD[f.stat] ?? f.stat} ${f.amount > 0 ? '+' : ''}${f.amount}`, 'good')
+        else if (f.t === 'provoke') fl(f.at.x, f.at.y, 'Provoked!', 'bad')
+        else if (f.t === 'leave') fl(f.at.x, f.at.y, f.how === 'escape' ? 'Escapes!' : 'Retreats', f.how === 'escape' ? 'good' : 'info')
+        else if (f.t === 'arrive') fl(f.at.x, f.at.y, 'Reinforcements', f.vis.side === PLAYER_SIDE ? 'good' : 'bad')
         if (add.length) {
           patch.floaters = [...get().floaters, ...add].slice(-12)
           const ids = new Set(add.map((a) => a.id))
@@ -146,9 +190,16 @@ export const useGame = create<GameStore>((set, get) => {
     },
   })
 
+  let suppressIdle = false
   function afterIdle(): void {
+    if (suppressIdle) return
     const st = get()
     if (st.screen === 'battle' && st.state.result) {
+      if (st.mode === 'campaign' && battleEndHandler) {
+        set({ ui: EMPTY_UI })
+        battleEndHandler(st.state, st.events)
+        return
+      }
       set({ screen: 'end', ui: EMPTY_UI })
       return
     }
@@ -205,25 +256,38 @@ export const useGame = create<GameStore>((set, get) => {
     return st
   }
 
-  function resetBattle(): void {
-    const seed = freshSeed()
-    const s = createBattle(BATTLE_ID, seed)
+  /** Put a battle on the table: size, side colours, scene, ledger (round-1 timeline lines) and a clean log. */
+  function loadBattle(battleId: string, seed: number, options?: CreateOptions): BattleState {
+    const s = createBattle(battleId, seed, options)
+    setBoardSize(s.grid.width, s.grid.height)
+    setSideTokens(s.sides)
     pendingBefore = s
+    suppressIdle = true
     director.skip()
+    suppressIdle = false
+    ledgerSeq = 1
+    const opening = linesFor(s.opening, s).map((l) => ({ ...l, id: ledgerSeq++, round: s.round }))
     set({
+      battleId,
       seed,
       state: s,
       log: [],
+      events: s.opening.slice(),
       scene: sceneFromState(s),
       playing: false,
       beat: null,
       floaters: [],
       seals: [],
-      ledger: [],
+      ledger: opening,
       stats: initialStats(),
       ui: EMPTY_UI,
       lastReject: null,
     })
+    return s
+  }
+
+  function resetBattle(): void {
+    loadBattle(SKIRMISH_ID, freshSeed())
   }
 
   // Watchdog: re-arms the bot if a timer was lost (background tabs throttle timers) and skips a batch that overran.
@@ -243,9 +307,12 @@ export const useGame = create<GameStore>((set, get) => {
 
   return {
     screen: params.get('screen') === 'battle' ? 'battle' : 'title',
+    mode: 'skirmish',
+    battleId: BATTLE_ID,
     seed: seed0,
     state: state0,
     log: [],
+    events: state0.opening.slice(),
     scene: sceneFromState(state0),
     playing: false,
     beat: null,
@@ -261,16 +328,31 @@ export const useGame = create<GameStore>((set, get) => {
     toast: null,
 
     go: (screen) => {
-      // Leaving a battle for the title shows a fresh sand table again.
-      if (screen === 'title' && (get().screen === 'battle' || get().screen === 'end')) resetBattle()
+      // Leaving for the title shows a fresh sand table again.
+      if (screen === 'title') {
+        const was = get().screen
+        if (was === 'battle' || was === 'end' || get().mode === 'campaign') {
+          resetBattle()
+          set({ mode: 'skirmish' })
+        }
+      }
       set({ screen, ui: EMPTY_UI })
       if (screen === 'battle') scheduleBot()
     },
 
+    showTable: (battleId, seed, options) => loadBattle(battleId, seed, options),
+
     begin: () => {
       resetBattle()
       const s = get().state
-      set({ screen: 'battle' })
+      set({ screen: 'battle', mode: 'skirmish' })
+      pendingBefore = s
+      director.play(introBeats(s), sceneFromState(s))
+    },
+
+    beginCampaign: (battleId, seed, options) => {
+      const s = loadBattle(battleId, seed, options)
+      set({ screen: 'battle', mode: 'campaign' })
       pendingBefore = s
       director.play(introBeats(s), sceneFromState(s))
     },
@@ -297,6 +379,7 @@ export const useGame = create<GameStore>((set, get) => {
       set({
         state: r.state,
         log: [...st.log, a],
+        events: [...st.events, ...r.events],
         stats: tally(r.events, before),
         ui: clearedUi(nextSel),
         lastReject: null,

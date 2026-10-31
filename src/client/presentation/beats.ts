@@ -2,6 +2,7 @@
 // Each beat carries the engine events it "commits" to the presented scene when it finishes.
 import type { BattleState, Facing, GameEvent, Pos, Side } from '../../engine'
 import { sideTitle } from '../names'
+import type { UnitVis } from './scene'
 
 export type Speed = 'full' | 'quick' | 'instant'
 
@@ -25,8 +26,11 @@ export type Fx =
   | { t: 'banner'; title: string; sub: string; side: Side; round: number }
   | { t: 'end'; winner: Side; reason: string }
   | { t: 'leave'; unit: string; at: Pos; how: 'retreat' | 'escape' }
-  | { t: 'arrive'; unit: string; at: Pos }
-  | { t: 'terrain'; tiles: Pos[]; to: string }
+  /** A unit marches in from the nearest board edge to `at`; `vis` is what the scene will hold once the beat commits. */
+  | { t: 'arrive'; unit: string; at: Pos; vis: UnitVis }
+  | { t: 'terrain'; tiles: Pos[]; to: string; cause: 'timeline' | 'burnout' }
+  | { t: 'buff'; unit: string; at: Pos; stat: string; amount: number }
+  | { t: 'provoke'; unit: string; at: Pos; by: string }
   | { t: 'note'; text: string }
 
 export interface Beat {
@@ -39,6 +43,9 @@ export interface Beat {
 }
 
 export const BANNER_MS = 1600
+export const ARRIVE_MS = 1100
+export const TERRAIN_MS = 800
+export const LEAVE_MS = 900
 const MOVE_MS_PER_TILE = 170
 
 /** Playback duration in ms for a beat at a speed. */
@@ -188,26 +195,53 @@ export function planBeats(events: GameEvent[], before: BattleState): Beat[] {
         break
       // engine v2 events: kept simple, each commits itself to the presented scene
       case 'retreated':
-        push({ t: 'leave', unit: ev.unit, at: { x: ev.x, y: ev.y }, how: 'retreat' }, 620, ev)
+        push({ t: 'leave', unit: ev.unit, at: { x: ev.x, y: ev.y }, how: 'retreat' }, LEAVE_MS, ev)
         break
       case 'escaped':
-        push({ t: 'leave', unit: ev.unit, at: { x: ev.x, y: ev.y }, how: 'escape' }, 620, ev)
+        push({ t: 'leave', unit: ev.unit, at: { x: ev.x, y: ev.y }, how: 'escape' }, LEAVE_MS, ev)
         break
       case 'reinforced':
         positions.set(ev.unit, { x: ev.x, y: ev.y })
-        push({ t: 'arrive', unit: ev.unit, at: { x: ev.x, y: ev.y } }, 600, ev)
+        push(
+          {
+            t: 'arrive',
+            unit: ev.unit,
+            at: { x: ev.x, y: ev.y },
+            vis: {
+              id: ev.unit,
+              officer: ev.officer,
+              side: ev.side,
+              type: ev.type,
+              commander: ev.commander,
+              x: ev.x,
+              y: ev.y,
+              facing: ev.facing,
+              troops: ev.troops,
+              maxTroops: ev.maxTroops,
+              confused: false,
+              done: false,
+            },
+          },
+          ARRIVE_MS,
+          ev,
+        )
         break
       case 'terrainChanged':
-        push({ t: 'terrain', tiles: ev.tiles, to: ev.to }, 700, ev)
+        push({ t: 'terrain', tiles: ev.tiles, to: ev.to, cause: ev.cause }, TERRAIN_MS, ev)
         break
       case 'timelineMessage':
-        push({ t: 'note', text: ev.text }, 1200, ev)
+        push({ t: 'note', text: ev.text }, 1400, ev)
         break
       case 'buffed':
-      case 'buffExpired':
+        push({ t: 'buff', unit: ev.unit, at: ctx.at(ev.unit), stat: ev.stat, amount: ev.amount }, 420, ev)
+        break
       case 'provoked':
+        push({ t: 'provoke', unit: ev.unit, at: ctx.at(ev.unit), by: ev.by }, 520, ev)
+        break
+      case 'buffExpired':
       case 'objectiveProgress':
-        push({ t: 'note', text: '' }, 240, ev)
+        // the ledger carries these; no beat time is spent
+        push({ t: 'note', text: '' }, 0, ev)
         break
     }
   }

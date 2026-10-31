@@ -3,7 +3,7 @@ import { query, type Action, type BattleState, type Facing, type Pos, type Strat
 import { facingWord, num } from '../ledger'
 import { nameOfUnit, shortName } from '../names'
 
-export type Mode = 'none' | 'attack' | 'stratagem' | 'sway' | 'wait'
+export type Mode = 'none' | 'attack' | 'stratagem' | 'sway' | 'wait' | 'escape'
 
 export interface UiState {
   selectedId: string | null
@@ -94,6 +94,9 @@ export function pendingOrder(state: BattleState, ui: UiState): Order | null {
       label: `Seal: ${def.name} → ${tail}${chain}`,
       preview: { stratagem: pv },
     }
+  }
+  if (ui.mode === 'escape' && query.canEscape(state, u.id)) {
+    return { action: { type: 'escape', unit: u.id }, label: `Seal: Escape, ${shortName(nameOfUnit(state, u.id))} leaves the field` }
   }
   if (ui.mode === 'wait' && ui.pendingFacing) {
     return { action: { type: 'wait', unit: u.id, facing: ui.pendingFacing }, label: `Seal: Wait, facing ${facingWord(ui.pendingFacing)}` }
