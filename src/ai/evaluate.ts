@@ -18,6 +18,8 @@ import {
   type StratagemPreview,
   type Unit,
 } from '../engine'
+import { legalActionsFor } from '../engine/legal'
+import { ARC_MULT } from '../engine/geometry'
 import {
   FACINGS,
   QI_VALUE,
@@ -25,14 +27,17 @@ import {
   actionValue,
   approachScore,
   bestFacing,
+  buffValue,
   exposure,
   fireLoss,
   ignitionValue,
+  lethal,
   posScore,
   routChance,
   routValue,
   threatenFrom,
   weight,
+  windValue,
   WIN,
   ROUT,
   type Ctx,
@@ -67,8 +72,6 @@ interface Off {
   label: string
 }
 
-const ARC_MULT = { front: 1, side: 1.25, rear: 1.5 }
-
 function unitById(state: BattleState, id: string): Unit | undefined {
   return state.units.find((u) => u.id === id)
 }
@@ -82,8 +85,8 @@ function enemiesOnTiles(ctx: Ctx, st: BattleState, tiles: Pos[]): Unit[] {
   return out
 }
 
-function softRout(cum: number, troops: number): number {
-  return Math.max(0, Math.min(1, (cum / Math.max(1, troops) - 0.85) / 0.3))
+function softRout(cum: number, lethalDamage: number): number {
+  return Math.max(0, Math.min(1, (cum / Math.max(1, lethalDamage) - 0.85) / 0.3))
 }
 
 // ------------------------------------------------------------------ offense options
@@ -94,8 +97,8 @@ function attackOptions(ctx: Ctx, st: BattleState, u: Unit): Off[] {
     const t = unitById(st, tid)
     const pv = query.attackPreview(st, u.id, tid)
     if (!t || !pv) continue
-    const pr = routChance(pv.damage.min, pv.damage.max, t.troops)
-    let v = pv.damage.expected * weight(ctx, t)
+    const pr = routChance(pv.damage.min, pv.damage.max, lethal(t))
+    let v = Math.min(pv.damage.expected, lethal(t)) * weight(ctx, t)
     v += pr * (ROUT * weight(ctx, t) + (ctx.goals.routWins.has(t.id) ? WIN : 0))
     if (pv.counter.possible) v -= ((pv.counter.min + pv.counter.max) / 2) * weight(ctx, u) * (1 - pr)
     out.push({
@@ -117,11 +120,13 @@ function stratagemValue(ctx: Ctx, st: BattleState, u: Unit, pv: StratagemPreview
     if (!tu) continue
     const fs = t.foresightChance / 100
     const dmg = t.expected * (1 - fs)
-    v += dmg * weight(ctx, tu)
+    v += Math.min(dmg, lethal(tu)) * weight(ctx, tu)
     cum.set(tu.id, (cum.get(tu.id) ?? 0) + dmg)
-    const pr = routChance(t.min, t.max, tu.troops) * (1 - fs)
+    const pr = routChance(t.min, t.max, lethal(tu)) * (1 - fs)
     v += pr * (ROUT * weight(ctx, tu) + (ctx.goals.routWins.has(tu.id) ? WIN : 0))
     if (t.confuseChance > 0) v += (t.confuseChance / 100) * (1 - fs) * (1 - pr) * 0.9 * actionValue(ctx, tu)
+    // A provoked unit must come at the caster: it loses its own plan for the turn.
+    if (t.provokes) v += 0.35 * (1 - fs) * (1 - pr) * actionValue(ctx, tu)
   }
   for (let k = 1; k < pv.chain.length; k++) {
     const link = pv.chain[k]!
@@ -141,7 +146,7 @@ function stratagemValue(ctx: Ctx, st: BattleState, u: Unit, pv: StratagemPreview
     const first = pv.targets.find((t) => t.unit === id)
     const firstShare = first ? first.expected : 0
     if (c > firstShare + 1) {
-      const p = softRout(c, tu.troops) - softRout(firstShare, tu.troops)
+      const p = softRout(c, lethal(tu)) - softRout(firstShare, lethal(tu))
       if (p > 0) v += p * (ROUT * weight(ctx, tu) + (ctx.goals.routWins.has(tu.id) ? WIN : 0))
     }
   }
@@ -164,6 +169,11 @@ function stratagemOptions(ctx: Ctx, st: BattleState, u: Unit): Off[] {
           const ally = unitById(st, h.unit)
           return n + (ally ? h.amount * weight(ctx, ally) * 0.8 : 0)
         }, 0)
+        for (const b of pv.buffs ?? []) {
+          const ally = unitById(st, b.unit)
+          if (ally && ally.side === ctx.me) v += buffValue(ctx, ally, b.stat, b.amount, b.rounds)
+        }
+        if (pv.wind) v += windValue(ctx, pv.wind)
         v -= def.cost * QI_VALUE
         if (v <= 0) continue
       } else {
@@ -273,11 +283,8 @@ function makeCand(ctx: Ctx, u: Unit, dest: Pos, viaMove: boolean, off: Off | nul
   const decisive = !!off && off.value >= WIN * 0.55
   const ps = posScore(ctx, u, finalPos, finalFacing)
   let pos = ps.value
-  if (decisive && u.commander) {
-    // No safety penalty for a commander that wins the battle with this action.
-    const frac = ps.incoming / Math.max(1, u.troops)
-    if (frac >= 0.35) pos += 600 + 5000 * (frac - 0.35)
-  }
+  // No safety penalty for a key unit whose action wins the battle.
+  if (decisive && ps.keyPenalty > 0) pos += ps.keyPenalty
   const finish: Action | null = wait ? { type: 'wait', unit: u.id, facing: postFacing } : off.action
   const emit: Action = viaMove ? { type: 'move', unit: u.id, x: dest.x, y: dest.y } : (finish as Action)
   const offense = off ? off.value : 0
@@ -299,29 +306,42 @@ function makeCand(ctx: Ctx, u: Unit, dest: Pos, viaMove: boolean, off: Off | nul
   }
 }
 
-/** The best candidate (at most `keep`) for each destination of one ready unit. */
+const actionKey = (a: Action): string => JSON.stringify(a)
+
+/** The best candidate for each destination of one ready unit. A provoked unit only gets what legalActions allows it. */
 export function candidatesForUnit(ctx: Ctx, u: Unit, maxDests: number, expired: () => boolean): Cand[] {
   const state = ctx.state
   const idle = posScore(ctx, u, u, u.facing).value
   const out: Cand[] = []
+  const restricted = u.provoked !== undefined
+  const legal0 = restricted ? new Set(legalActionsFor(state, u).map(actionKey)) : null
   const dests: { p: Pos; via: boolean }[] = [{ p: { x: u.x, y: u.y }, via: false }]
   if (!u.moved) {
-    for (const p of pickDestinations(ctx, u, query.moveRange(state, u.id), maxDests)) dests.push({ p, via: true })
+    const moves = query.moveRange(state, u.id).filter((m) => !legal0 || legal0.has(actionKey({ type: 'move', unit: u.id, x: m.x, y: m.y })))
+    for (const p of pickDestinations(ctx, u, moves, maxDests)) dests.push({ p, via: true })
   }
   for (const d of dests) {
     if (d.via && out.length > 0 && expired()) break
     const st = d.via ? relocated(state, u, d.p) : state
     const uu = unitById(st, u.id)!
-    const offs: Off[] = [...attackOptions(ctx, st, uu), ...stratagemOptions(ctx, st, uu), ...swayOptions(ctx, st, uu)]
+    // After a (provoked) move the restriction is re-read from the engine for the new position.
+    const allowed = restricted ? new Set(legalActionsFor(st, uu).map(actionKey)) : null
+    const offs: Off[] = [...attackOptions(ctx, st, uu), ...stratagemOptions(ctx, st, uu), ...swayOptions(ctx, st, uu)].filter((o) => !allowed || allowed.has(actionKey(o.action)))
     const postFacing = d.via ? uu.facing : u.facing
-    // Waiting: pick the facing that exposes the unit least.
-    const wf = bestFacing(ctx, uu, d.p)
-    let best = makeCand(ctx, u, d.p, d.via, null, idle, wf)
+    // Waiting: pick the facing that exposes the unit least (among the legal ones).
+    let wf = bestFacing(ctx, uu, d.p)
+    let canWait = true
+    if (allowed && !allowed.has(actionKey({ type: 'wait', unit: u.id, facing: wf }))) {
+      const alt = FACINGS.find((f) => allowed.has(actionKey({ type: 'wait', unit: u.id, facing: f })))
+      if (alt) wf = alt
+      else canWait = false
+    }
+    let best: Cand | null = canWait ? makeCand(ctx, u, d.p, d.via, null, idle, wf) : null
     for (const off of offs) {
       const c = makeCand(ctx, u, d.p, d.via, off, idle, postFacing)
-      if (c.score > best.score) best = c
+      if (!best || c.score > best.score) best = c
     }
-    out.push(best)
+    if (best) out.push(best)
   }
   return out
 }
@@ -339,10 +359,21 @@ function eventsValue(ctx: Ctx, before: BattleState, events: GameEvent[]): number
         v += (t.side === ctx.me ? -1 : 1) * e.amount * weight(ctx, t)
         break
       }
-      case 'routed': {
+      case 'routed':
+      case 'retreated': {
         const t = get(e.unit)
         if (!t) break
         v += (t.side === ctx.me ? -1 : 1) * ROUT * weight(ctx, t)
+        break
+      }
+      case 'buffed': {
+        const t = get(e.unit)
+        if (t && t.side === ctx.me) v += buffValue(ctx, t, e.stat, e.amount, Math.max(1, e.until - before.round))
+        break
+      }
+      case 'provoked': {
+        const t = get(e.unit)
+        if (t && t.side !== ctx.me) v += 0.35 * actionValue(ctx, t)
         break
       }
       case 'confused': {
@@ -392,7 +423,7 @@ function fireDeltaAfter(ctx: Ctx, after: BattleState): number {
 
 /** Re-prices a candidate by sampling the engine. Returns null when the sampled action is rejected. */
 export function rollout(ctx: Ctx, c: Cand, seeds: number[]): number | null {
-  if (!c.finish || c.finish.type === 'wait') return null
+  if (!c.finish || c.finish.type === 'wait' || c.finish.type === 'escape') return null
   let base = ctx.state
   if (c.viaMove) {
     const r = step(base, c.emit)
@@ -407,7 +438,7 @@ export function rollout(ctx: Ctx, c: Cand, seeds: number[]): number | null {
     const r = step(sampled, c.finish)
     if (!r.ok) return null
     let v = eventsValue(ctx, base, r.events)
-    if (r.events.some((e) => e.kind === 'ignited')) v += fireDeltaAfter(ctx, r.state)
+    if (r.events.some((e) => e.kind === 'ignited' || e.kind === 'windChanged')) v += fireDeltaAfter(ctx, r.state)
     const uu = unitById(r.state, c.unit)
     if (uu && !r.state.result) v += posScore(ctx, uu, uu, uu.facing).value
     total += v
@@ -417,7 +448,16 @@ export function rollout(ctx: Ctx, c: Cand, seeds: number[]): number | null {
 
 // ------------------------------------------------------------------ v2 escape
 
-/** Candidates for { type: 'escape' } actions the engine may offer once objectives land. */
+/** Walking a unit off the board: the battle when it completes the objective, otherwise solid progress toward it. */
+function escapeValue(ctx: Ctx, id: string): number {
+  const e = ctx.goals.escape
+  if (!e) return 0
+  const out = ctx.state.escaped
+  const rest = (e.units ?? []).every((x) => x === id || out.includes(x))
+  return out.length + 1 >= e.count && rest ? WIN : 2500
+}
+
+/** Candidates for { type: 'escape' } actions (engine v2) for the units that are meant to leave by the exits. */
 export function escapeCandidates(ctx: Ctx, legal: Action[]): Cand[] {
   const out: Cand[] = []
   for (const a of legal) {
@@ -425,19 +465,20 @@ export function escapeCandidates(ctx: Ctx, legal: Action[]): Cand[] {
     if (!id || !wantsEscape(ctx.goals, id)) continue
     const u = unitById(ctx.state, id)
     if (!u) continue
+    const value = escapeValue(ctx, id)
     out.push({
       unit: id,
       dest: { x: u.x, y: u.y },
       viaMove: false,
       finish: a,
       emit: a,
-      offense: 5000,
+      offense: value,
       pos: 0,
-      score: 5000,
-      gain: 5000,
+      score: value,
+      gain: value,
       finalPos: { x: u.x, y: u.y },
       finalFacing: u.facing,
-      decisive: false,
+      decisive: value >= WIN * 0.55,
       label: `escape ${id}`,
     })
   }
