@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url'
 import { createBattle, legalActions, step, type Action, type BattleState } from '../src/engine'
 import { decide } from '../src/ai/decider'
 import { greedyAction } from '../src/ai/greedy'
-import { checkInvariants } from './invariants'
+import { checkInvariants, unitBudget } from './invariants'
 
 type Player = 'random' | 'easy' | 'greedy' | 'normal'
 const PLAYERS: Player[] = ['random', 'easy', 'greedy', 'normal']
@@ -55,7 +55,7 @@ interface Config {
 
 function playGame(cfg: Config, seed: number, hanP: Player, yellowP: Player): GameResult {
   let s: BattleState = createBattle(cfg.battle, seed)
-  const total = s.units.length
+  const total = unitBudget(s)
   const seats: Record<string, SeatStats> = { han: blank(), yellow: blank() }
   const players: Record<string, Player> = { han: hanP, yellow: yellowP }
   let actionsThisPhase = 0

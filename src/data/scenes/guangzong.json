@@ -1,15 +1,19 @@
 {
-  "stub": true,
   "pre": [
-    {
-      "speaker": "narrator",
-      "text": "[stub] Scene text for guangzong will be written by a content builder."
-    }
+    {"speaker": "narrator", "text": "Guangzong, in the autumn of the first year of the rising. The imperial army has dug in before the last great Yellow Turban stronghold. Zhang Jiao lies sick behind the palisade, and his brothers Zhang Liang and Zhang Bao hold the camp."},
+    {"speaker": "liu-bei", "text": "A river, two belts of ripe millet and a palisade. It looks like Daxing Hill to me. I do not think it will behave like Daxing Hill."},
+    {"speaker": "jian-yong", "text": "The scouts say Zhang Bao keeps an altar on the north bank, and that he can drag the wind around by the collar."},
+    {"speaker": "zhang-fei", "text": "Turn the wind? I have never seen a man turn anything but a bad stew."},
+    {"speaker": "guan-yu", "text": "Laugh if you like. Watch the sky over their altar. If it goes dark, something is about to change."},
+    {"speaker": "liu-bei", "text": "Then we light nothing we cannot afford to see come back at us, and if the clouds gather we stand on ground that does not burn."},
+    {"speaker": "jian-yong", "text": "Or we find the man who gives the orders to the weather and put an arrow in him. I like that plan better."}
   ],
   "post": [
-    {
-      "speaker": "narrator",
-      "text": "[stub] Closing scene for guangzong."
-    }
+    {"speaker": "narrator", "text": "Zhang Liang's banner falls inside the palisade. The black cloud over the altar thins, and the wind goes back to being only wind."},
+    {"speaker": "zhang-fei", "text": "He did something to the sky. I want that on the record. I saw it."},
+    {"speaker": "guan-yu", "text": "It is on the record. Fire is a poor servant when the other side holds the wind."},
+    {"speaker": "jian-yong", "text": "I will remember it for a long time. I do not light a field again without looking at the altar first."},
+    {"speaker": "liu-bei", "text": "They say Zhang Jiao is dead in his bed. A man who called himself a god, and a fever took him anyway. Most of his followers were only hungry."},
+    {"speaker": "narrator", "text": "The rising is broken, but the realm is not mended. The court gives its rewards to others and offers Liu Bei a small post at the far end of nowhere. Years pass, and then Dong Zhuo seizes the capital."}
   ]
 }

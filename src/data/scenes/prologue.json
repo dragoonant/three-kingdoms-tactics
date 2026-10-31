@@ -1,10 +1,13 @@
 {
-  "stub": true,
   "pre": [
-    {
-      "speaker": "narrator",
-      "text": "[stub] Scene text for prologue will be written by a content builder."
-    }
+    {"speaker": "narrator", "text": "Zhuo County, in the last cold weeks of winter. A notice has been nailed to the gatepost: the Yellow Turbans are up in half the provinces, and every district must raise men to meet them."},
+    {"speaker": "liu-bei", "text": "I have read it three times and I get the same answer each time. The Han is coming apart, and I am standing here sighing at a wall."},
+    {"speaker": "zhang-fei", "text": "Then stop sighing at the wall and come to my farm. I have a cellar of wine, a pig that is asking to be eaten, and a whole orchard of peach trees in bloom behind the barn."},
+    {"speaker": "guan-yu", "text": "I am Guan Yu. I came to see who is signing up men here. If it is to guard the people and not to fatten a purse, put my name beside yours."},
+    {"speaker": "liu-bei", "text": "Then let us say it under the trees. We were born in three houses, on three different days. We ask only that Heaven let us die on the same one."},
+    {"speaker": "zhang-fei", "text": "A brother to two men I met this week. Fine. I have done stupider things, and most of them were this morning."},
+    {"speaker": "guan-yu", "text": "Three men and a barn of grain do not make an army. Where are the soldiers?"},
+    {"speaker": "narrator", "text": "By morning there are three hundred volunteers at Zhang Fei's gate, and a smith has been told to forge a pair of long weapons. Magistrate Zou Jing is marching out to meet the rebels at Daxing Hill, and the brothers go with him."}
   ],
   "post": []
 }

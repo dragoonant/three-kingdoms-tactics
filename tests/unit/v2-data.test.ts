@@ -81,11 +81,9 @@ describe('v2 data: officers, stratagems, registry', () => {
   })
 
   it('R2-DATA-2 stubs are marked, valid and playable; the real battles are not stubs', () => {
-    const stubs = ARC.filter((id) => getBattleDef(id)!.stub)
-    expect(stubs).toEqual(ARC.slice(1))
+    // content builders replace stubs one by one: a battle's stub flag and its scene's stub flag always agree
     expect(getBattleDef('daxing-hill')!.stub).toBeUndefined()
-    for (const id of stubs) expect(SCENES[id]!.stub, id).toBe(true)
-    expect(SCENES.prologue!.stub).toBe(true)
+    for (const id of ARC) expect(Boolean(SCENES[id]!.stub), id).toBe(Boolean(getBattleDef(id)!.stub))
   })
 
   it('R2-DATA-3 the validator is clean on all shipped data', () => {
@@ -176,7 +174,7 @@ describe('R2-DATA-4 validator catches content mistakes', () => {
   })
   it('battle-local ids must not collide with shared or other battles\' ids', () => {
     expect(mutated('qingzhou', (b) => { b.officers!.push({ ...GAME_DATA.officers['lu-bu']! }) }).some((e) => /collides with officers.json/.test(e))).toBe(true)
-    expect(mutated('qingzhou', (b) => { b.officers!.push({ ...b.officers![0]!, id: 'gz-rebel-a' }) }).some((e) => /gz-rebel-a collides with battle/.test(e))).toBe(true)
+    expect(mutated('qingzhou', (b) => { b.officers!.push({ ...b.officers![0]!, id: 'gz-guard' }) }).some((e) => /gz-guard collides with battle/.test(e))).toBe(true)
     expect(mutated('qingzhou', (b) => { b.stratagems = [{ ...GAME_DATA.stratagems['kindling']! }] }).some((e) => /stratagem kindling collides/.test(e))).toBe(true)
   })
   it('gates need an owner, sides must match sideOrder, retreatAt must be a fraction', () => {

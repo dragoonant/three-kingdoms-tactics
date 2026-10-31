@@ -2,51 +2,89 @@
   "id": "qingzhou",
   "name": "Relief of Qingzhou",
   "year": 184,
-  "stub": true,
   "title": "The Relief of Qingzhou",
   "place": "Qingzhou",
   "blurb": [
-    "[stub] Placeholder battle. A content builder will replace this file with the full design for Relief of Qingzhou."
+    "A Yellow Turban host has thrown a ring around Qingzhou, camped in the ripe millet right up to the gate, and Governor Gong Jing cannot hold the walls forever. Liu Bei comes with his own company, Jian Yong at his shoulder and the magistrate Zou Jing and his archers beside him. It is not enough, and Liu Bei knows it.",
+    "He will give ground on purpose. The rebels are in the habit of chasing anyone who runs, and Guan Yu and Zhang Fei are waiting behind the wooded ridges on either side of the road with the rest of the company. Draw the chief into the pocket, keep Liu Bei alive until the horns sound, and when the governor opens his gate the rebels will find themselves with a wall at their backs."
   ],
   "map": [
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    ".........."
+    "..TTThhTTT......",
+    "..ThhhhhTT......",
+    "...Thh..TT......",
+    "....hh..fff.####",
+    "....hh..fff.#vv#",
+    "........fff.#vv#",
+    "============Gvv#",
+    "....hh..fff.#vv#",
+    "....hh..fff.####",
+    "...Thh..TT......",
+    "..ThhhhhTT......",
+    "..TTThhTTT......"
   ],
-  "legend": {".": "plain"},
+  "legend": {".": "plain", "f": "farm", "T": "forest", "h": "hill", "#": "wall", "G": "gate", "v": "village", "=": "road"},
   "bridges": [],
   "turnLimit": 14,
   "onTimeout": "yellow",
   "sideOrder": ["han", "yellow"],
-  "sides": [{"id": "han", "name": "Han", "colourToken": "han"}, {"id": "yellow", "name": "Yellow Turban", "colourToken": "yellow"}],
+  "sides": [
+    {"id": "han", "name": "Han", "colourToken": "han"},
+    {"id": "yellow", "name": "Yellow Turban", "colourToken": "yellow"}
+  ],
+  "gateOwner": "han",
   "wind": [
-    {"round": 1, "dir": null, "strength": "calm"}
+    {"round": 1, "dir": "E", "strength": "breeze"},
+    {"round": 6, "dir": null, "strength": "calm"},
+    {"round": 9, "dir": "W", "strength": "breeze"},
+    {"round": 12, "dir": null, "strength": "calm"}
   ],
   "units": [
-    {"id": "qz-rebel-chief", "officer": "qz-rebel-chief", "side": "yellow", "type": "infantry", "x": 8, "y": 3, "facing": "W", "troops": 2800, "commander": true},
-    {"id": "qz-raider-a", "officer": "qz-raider-a", "side": "yellow", "type": "cavalry", "x": 8, "y": 4, "facing": "W", "troops": 1500, "commander": false},
-    {"id": "qz-raider-b", "officer": "qz-raider-b", "side": "yellow", "type": "infantry", "x": 7, "y": 2, "facing": "W", "troops": 1500, "commander": false}
+    {"id": "qz-rebel-chief", "officer": "qz-rebel-chief", "side": "yellow", "type": "infantry", "x": 11, "y": 5, "facing": "W", "troops": 3200, "commander": true},
+    {"id": "qz-raider-a", "officer": "qz-raider-a", "side": "yellow", "type": "cavalry", "x": 10, "y": 3, "facing": "W", "troops": 1700, "commander": false},
+    {"id": "qz-raider-b", "officer": "qz-raider-b", "side": "yellow", "type": "cavalry", "x": 10, "y": 8, "facing": "W", "troops": 1700, "commander": false},
+    {"id": "qz-spearman-a", "officer": "qz-spearman-a", "side": "yellow", "type": "infantry", "x": 9, "y": 4, "facing": "W", "troops": 2100, "commander": false},
+    {"id": "qz-spearman-b", "officer": "qz-spearman-b", "side": "yellow", "type": "infantry", "x": 9, "y": 7, "facing": "W", "troops": 2100, "commander": false},
+    {"id": "qz-bowman-a", "officer": "qz-bowman-a", "side": "yellow", "type": "archers", "x": 10, "y": 4, "facing": "W", "troops": 1300, "commander": false},
+    {"id": "qz-bowman-b", "officer": "qz-bowman-b", "side": "yellow", "type": "archers", "x": 10, "y": 7, "facing": "W", "troops": 1300, "commander": false},
+    {"id": "qz-adept", "officer": "qz-adept", "side": "yellow", "type": "archers", "x": 11, "y": 6, "facing": "W", "troops": 1200, "commander": false}
+  ],
+  "guests": [
+    {"id": "zou-jing", "officer": "zou-jing", "side": "han", "type": "archers", "x": 2, "y": 7, "facing": "E", "troops": 2500, "commander": false}
   ],
   "playerStarts": [
-    {"x": 1, "y": 3, "facing": "E"},
-    {"x": 1, "y": 4, "facing": "E"},
-    {"x": 1, "y": 2, "facing": "E"},
-    {"x": 1, "y": 5, "facing": "E"}
+    {"x": 2, "y": 5, "facing": "E"},
+    {"x": 1, "y": 6, "facing": "E"},
+    {"x": 6, "y": 1, "facing": "S"},
+    {"x": 6, "y": 10, "facing": "N"}
   ],
   "deploySlots": 4,
-  "required": ["liu-bei"],
-  "defaultDeploy": ["liu-bei", "guan-yu", "zhang-fei", "jian-yong"],
-  "par": 12,
-  "objectives": {"win": [{"type": "routCommander"}], "lose": [{"type": "commanderLost"}, {"type": "timeout", "round": 14}]},
-  "enemyBehaviour": {},
+  "required": ["liu-bei", "jian-yong", "guan-yu", "zhang-fei"],
+  "defaultDeploy": ["liu-bei", "jian-yong", "guan-yu", "zhang-fei"],
+  "par": 9,
+  "objectives": {"win": [{"type": "routCommander", "label": "Rout the Rebel Chief"}], "lose": [{"type": "commanderLost"}, {"type": "timeout", "round": 14}]},
+  "reinforcements": [
+    {"round": 3, "side": "han", "slot": 2, "units": [], "entry": [[6,1]]},
+    {"round": 3, "side": "han", "slot": 3, "units": [], "entry": [[6,10]]},
+    {"round": 5, "side": "han", "units": [{"id": "gong-jing", "officer": "gong-jing", "side": "han", "type": "infantry", "x": 12, "y": 6, "facing": "W", "troops": 2000, "commander": false}], "entry": [[12,6],[13,6]]}
+  ],
+  "timeline": [
+    {"round": 1, "phase": "start", "kind": "message", "text": "Qingzhou holds its gate shut. Liu Bei is too few to break the siege, so he must make the rebels come to him."},
+    {"round": 2, "phase": "end", "kind": "message", "text": "Horns sound on both ridges at dawn. Guan Yu and Zhang Fei are coming down."},
+    {"round": 4, "phase": "end", "kind": "message", "text": "Behind the rebel camp the bar of the Qingzhou gate is being lifted."}
+  ],
+  "enemyBehaviour": {"qz-rebel-chief": "pursue:liu-bei", "qz-raider-a": "advance", "qz-raider-b": "advance", "qz-spearman-a": "advance", "qz-spearman-b": "advance", "qz-bowman-a": "guard:12,6", "qz-bowman-b": "guard:12,6", "qz-adept": "guard:12,6"},
+  "joins": [],
+  "departs": [
+    {"officer": "zou-jing", "note": "Zou Jing turns back to Youzhou with the news; the brothers go on without him."}
+  ],
   "officers": [
     {"id": "qz-rebel-chief", "name": "Rebel Chief", "war": 62, "int": 35, "lead": 55, "cha": 30, "loyalty": null, "bonds": [], "stratagems": ["mob-rush", "rebel-war-cry"], "source": "invented", "type": "infantry", "invented": true},
-    {"id": "qz-raider-a", "name": "Rebel Raider", "war": 50, "int": 35, "lead": 45, "cha": 25, "loyalty": 40, "bonds": [], "stratagems": ["mob-rush"], "source": "invented", "type": "cavalry", "invented": true},
-    {"id": "qz-raider-b", "name": "Rebel Spearman", "war": 50, "int": 35, "lead": 45, "cha": 25, "loyalty": 40, "bonds": [], "stratagems": ["mob-rush"], "source": "invented", "type": "infantry", "invented": true}
+    {"id": "qz-raider-a", "name": "Raider Hu", "war": 55, "int": 25, "lead": 40, "cha": 20, "loyalty": 35, "bonds": [], "stratagems": ["torch-raid"], "source": "invented", "type": "cavalry", "invented": true},
+    {"id": "qz-raider-b", "name": "Raider Bo", "war": 54, "int": 25, "lead": 40, "cha": 20, "loyalty": 38, "bonds": [], "stratagems": ["mob-rush"], "source": "invented", "type": "cavalry", "invented": true},
+    {"id": "qz-spearman-a", "name": "Captain Du", "war": 50, "int": 30, "lead": 45, "cha": 25, "loyalty": 45, "bonds": [], "stratagems": ["mob-rush"], "source": "invented", "type": "infantry", "invented": true},
+    {"id": "qz-spearman-b", "name": "Captain Lei", "war": 50, "int": 32, "lead": 44, "cha": 28, "loyalty": 42, "bonds": [], "stratagems": ["mob-rush"], "source": "invented", "type": "infantry", "invented": true},
+    {"id": "qz-bowman-a", "name": "Bowman Kuang", "war": 46, "int": 38, "lead": 40, "cha": 28, "loyalty": 50, "bonds": [], "stratagems": ["massed-arrows"], "source": "invented", "type": "archers", "invented": true},
+    {"id": "qz-bowman-b", "name": "Bowman Ning", "war": 46, "int": 36, "lead": 40, "cha": 26, "loyalty": 48, "bonds": [], "stratagems": ["massed-arrows"], "source": "invented", "type": "archers", "invented": true},
+    {"id": "qz-adept", "name": "Taiping Adept Shan", "war": 30, "int": 66, "lead": 38, "cha": 50, "loyalty": 55, "bonds": [], "stratagems": ["yellow-sky-hex"], "source": "invented", "type": "archers", "invented": true}
   ]
 }

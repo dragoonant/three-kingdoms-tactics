@@ -1,15 +1,20 @@
 {
-  "stub": true,
   "pre": [
-    {
-      "speaker": "narrator",
-      "text": "[stub] Scene text for daxing-hill will be written by a content builder."
-    }
+    {"speaker": "narrator", "text": "Daxing Hill, Youzhou. The Yellow Turbans under Cheng Yuanzhi sit on the high ground, and between their camp and the road lies a wide field of ripe millet, dry as paper."},
+    {"speaker": "zou-jing", "text": "Their host is larger than mine, and my levies have never seen a real fight. Give me one good reason not to wait for the imperial army."},
+    {"speaker": "liu-bei", "text": "The wind is at our backs, sir, and the millet has not seen rain in a month. If the rebels cross it, they cross it on fire."},
+    {"speaker": "jian-yong", "text": "A spark, a breeze and some patience. I will do the rest, though I would prefer not to be asked to prove it twice."},
+    {"speaker": "zhang-fei", "text": "Fire? I thought we were going to hit them."},
+    {"speaker": "guan-yu", "text": "We shall hit them. Fire first, steel after."},
+    {"speaker": "zou-jing", "text": "Then hold the line at the village and wait for the smoke. If this goes wrong, Liu Bei, I will remember whose idea it was."}
   ],
   "post": [
-    {
-      "speaker": "narrator",
-      "text": "[stub] Closing scene for daxing-hill."
-    }
+    {"speaker": "narrator", "text": "Cheng Yuanzhi's banner goes down on the hill, and the rebel host breaks and scatters across the blackened millet."},
+    {"speaker": "zhang-fei", "text": "Did you see that? Two of them with one swing. My hands are still shaking. Don't tell anyone."},
+    {"speaker": "guan-yu", "text": "It is normal. It passes. Do not wait for it to pass before the next one."},
+    {"speaker": "liu-bei", "text": "Most of them were farmers a month ago. I want the dead counted, ours and theirs, and I want it written down that we counted."},
+    {"speaker": "jian-yong", "text": "I would like to stay with the company, if you can use an unpaid strategist who burns things."},
+    {"speaker": "liu-bei", "text": "Gladly, old friend. We have the beginning of an army, and it needs someone who can think."},
+    {"speaker": "zou-jing", "text": "Youzhou will not forget today. But a rider has come from Qingzhou, and its governor writes that he cannot hold the walls much longer."}
   ]
 }

@@ -141,10 +141,12 @@ describe('C-DEP deploying the roster', () => {
   })
   it('C-DEP-2 required officers come first; the choice fills the remaining slots in order up to deploySlots; inactive officers are skipped', () => {
     let c = newCampaign(1, false)
-    c = { ...c, battleIndex: 1, roster: [...c.roster, makeRecord('jian-yong', 3), { ...makeRecord('mi-zhu', 3), status: 'fallen' }, { ...makeRecord('sun-qian', 3), status: 'departed' }] }
-    expect(deployList(c, { officers: ['jian-yong', 'mi-zhu', 'sun-qian', 'zhang-fei', 'guan-yu'] })).toEqual(['liu-bei', 'jian-yong', 'zhang-fei', 'guan-yu']) // qingzhou: 4 slots
+    c = { ...c, battleIndex: 2, roster: [...c.roster, makeRecord('jian-yong', 3), { ...makeRecord('mi-zhu', 3), status: 'fallen' }, { ...makeRecord('sun-qian', 3), status: 'departed' }] }
+    expect(deployList(c, { officers: ['jian-yong', 'mi-zhu', 'sun-qian', 'zhang-fei', 'guan-yu'] })).toEqual(['liu-bei', 'jian-yong', 'zhang-fei', 'guan-yu']) // guangzong: 4 slots, only liu-bei required
     expect(deployList(c, { officers: [] })).toEqual(['liu-bei'])
     expect(deployList(c, { officers: ['liu-bei', 'liu-bei', 'guan-yu'] })).toEqual(['liu-bei', 'guan-yu'])
+    // qingzhou requires all four so that the deploy list order is fixed (slots 2 and 3 are the brothers who arrive in round 3)
+    expect(deployList({ ...c, battleIndex: 1 }, { officers: ['zhang-fei'] })).toEqual(['liu-bei', 'jian-yong', 'guan-yu', 'zhang-fei'])
   })
   it('C-DEP-3 at most 3 stratagems are carried: the chosen ones the officer knows, else the first three', () => {
     let c = newCampaign(1, false)
@@ -207,7 +209,7 @@ describe('C-RES applying a finished battle', () => {
     expect(r.report.fallen).toEqual(['zhang-fei'])
     expect(rec(r.state, 'zhang-fei').status).toBe('fallen')
     expect(r.state.stats.officersLost).toBe(1)
-    expect(deployList(r.state, { officers: ['zhang-fei', 'guan-yu'] })).toEqual(['liu-bei', 'guan-yu'])
+    expect(deployList(r.state, { officers: ['zhang-fei', 'guan-yu'] })).toEqual(['liu-bei', 'jian-yong', 'guan-yu']) // qingzhou requires the brothers; the fallen one is skipped
     expect(r.state.finished).toBeUndefined()
   })
   it('C-RES-6 a lost battle never kills anyone and changes nothing but the defeat count (retry from the pre-battle save)', () => {

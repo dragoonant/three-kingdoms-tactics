@@ -1,15 +1,20 @@
 {
-  "stub": true,
   "pre": [
-    {
-      "speaker": "narrator",
-      "text": "[stub] Scene text for qingzhou will be written by a content builder."
-    }
+    {"speaker": "narrator", "text": "Qingzhou, some weeks later. Governor Gong Jing's letters have grown shorter and the smoke on the horizon has grown thicker. The rebels have camped in the millet right up to his gate."},
+    {"speaker": "zou-jing", "text": "I count more rebels than we have, Liu Bei. Whatever we do, we do it knowing that my levies will break at the first hard push."},
+    {"speaker": "liu-bei", "text": "Then we will not push. We will let them push us, and run, and make it look as if we mean it."},
+    {"speaker": "guan-yu", "text": "A retreat. I would rather not. But I would rather a retreat that wins than a stand that does not."},
+    {"speaker": "liu-bei", "text": "Guan Yu, take the north ridge. Zhang Fei, the south. Wait until their chief has chased me off the road, then come down on both flanks. Not a moment before."},
+    {"speaker": "zhang-fei", "text": "Wait? Brother, that is the worst thing you have ever asked of me. Fine. I will hold my breath until the horns, and not a heartbeat longer."},
+    {"speaker": "jian-yong", "text": "By my count that is two rounds of running for you, Liu Bei. Keep to the pass and keep your archers close."}
   ],
   "post": [
-    {
-      "speaker": "narrator",
-      "text": "[stub] Closing scene for qingzhou."
-    }
+    {"speaker": "narrator", "text": "The Rebel Chief's standard falls in the trampled millet, and the siege lines dissolve. Above the walls, the gate of Qingzhou swings open at last."},
+    {"speaker": "gong-jing", "text": "I had stopped counting the days. Whoever you are, you have my thanks and a seat at my table."},
+    {"speaker": "liu-bei", "text": "I did very little. I ran away well, and my brothers did the rest."},
+    {"speaker": "zhang-fei", "text": "You ran away beautifully, brother. I almost believed it."},
+    {"speaker": "guan-yu", "text": "So did the chief. That was the point."},
+    {"speaker": "zou-jing", "text": "I must carry this news back to Youzhou, Liu Bei. Wherever you go from here, the empire will be saying your name."},
+    {"speaker": "narrator", "text": "Zou Jing turns north for home. A letter follows him out of the gates, from Liu Bei's old teacher Lu Zhi: the imperial army has marched on Guangzong, and wants every spear it can find."}
   ]
 }
