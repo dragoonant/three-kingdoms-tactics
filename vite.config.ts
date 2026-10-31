@@ -14,6 +14,12 @@ export default defineConfig(({ mode }) => ({
   build: {
     chunkSizeWarningLimit: 1200,
     rollupOptions: {
+      // Pages: the game, the cut-in review page (docs/spec/51) and the figure lab (docs/spec/31).
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        cinema: fileURLToPath(new URL('./cinema.html', import.meta.url)),
+        figures: fileURLToPath(new URL('./figure-lab.html', import.meta.url)),
+      },
       output: {
         manualChunks(id: string) {
           if (!id.includes('node_modules')) return undefined
