@@ -130,8 +130,11 @@ test('campaign: title, new campaign, scenes, briefing, deploy, battle, results, 
 
   // pre-battle scene, click advances (or finishes) it
   await expect(page.getByTestId('scene')).toBeVisible()
+  // a click advances one line (the scene stays up while lines remain); Skip scene ends it
+  const firstLine = await page.getByTestId('scene').innerText()
   await page.getByTestId('scene-advance').click()
-  // the stub scene has one line, so the click moves on to the deploy screen
+  await expect(page.getByTestId('scene')).not.toHaveText(firstLine)
+  await page.getByTestId('skip-scene').click()
   await expect(page.getByTestId('deploy')).toBeVisible()
   await expect(page.getByTestId('deploy-count')).toHaveText('3 of 5 places filled')
   await expect(page.getByTestId('pick-liu-bei')).toBeDisabled()
@@ -209,7 +212,7 @@ test('campaign: title, new campaign, scenes, briefing, deploy, battle, results, 
 
   // the battle loads with the battle-2 map size (10 x 8), and the canvas frames it
   const dims = await page.evaluate(() => ({ id: (window as unknown as { __game: G }).__game.state().battleId, w: (window as unknown as { __game: G }).__game.state().grid.width, h: (window as unknown as { __game: G }).__game.state().grid.height }))
-  expect(dims).toEqual({ id: 'qingzhou', w: 10, h: 8 })
+  expect(dims).toEqual({ id: 'qingzhou', w: 16, h: 12 }) // the real Relief of Qingzhou map (docs/spec/battles/02-qingzhou.md)
   const tl = await page.evaluate(() => ((window as unknown as { __game: G }).__game as unknown as { tileToScreen: (x: number, y: number) => { x: number; y: number } }).tileToScreen(0, 0))
   const br = await page.evaluate(() => ((window as unknown as { __game: G }).__game as unknown as { tileToScreen: (x: number, y: number) => { x: number; y: number } }).tileToScreen(9, 7))
   for (const p of [tl, br]) {

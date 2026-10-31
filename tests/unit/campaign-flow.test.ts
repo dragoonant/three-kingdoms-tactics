@@ -5,6 +5,7 @@ import { decide } from '../../src/ai/decider'
 import { createMemoryStorage, loadCampaign, SAVE_KEY, PREBATTLE_KEY } from '../../src/campaign'
 import { setCampaignStorage, useCampaign } from '../../src/client/store/campaign'
 import { useGame } from '../../src/client/store/game'
+import { getBattleDef } from '../../src/data'
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
 const g = () => useGame.getState()
@@ -91,8 +92,9 @@ describe('C-FLOW the campaign flow', () => {
     c().seal()
     expect(g().state.battleId).toBe('qingzhou')
     expect(g().scene.width).toBe(g().state.grid.width)
-    expect(g().state.grid.width).toBe(10)
-    expect(g().state.grid.height).toBe(8)
+    const def = getBattleDef('qingzhou')!
+    expect(g().state.grid.height).toBe(def.map.length)
+    expect(g().state.grid.width).toBe(def.map[0]!.length)
   }, 150_000)
 
   it('C-FLOW-2 a defeat offers Retry, which restores the pre-camp snapshot and changes the battle seed', async () => {
