@@ -2,49 +2,290 @@
   "id": "bowang",
   "name": "Bowang Slope",
   "year": 207,
-  "stub": true,
   "title": "The Valley of Bowang",
   "place": "Bowang Slope",
   "blurb": [
-    "[stub] Placeholder battle. A content builder will replace this file with the full design for Bowang Slope."
+    "Xiahou Dun has come south with the vanguard of Cao Cao's army, hot to run the little Liu Bei army into the ground. Liu Bei has a new adviser, three visits old, whom Guan Yu and Zhang Fei still do not quite trust. Zhuge Liang asks only for the command, a handful of seals and a valley.",
+    "Bowang is a long cleft of reeds between two forested slopes, narrowing to a neck before the camp. The enemy will follow a bait down it at dusk. Zhao Yun is the bait. The wind off the northern pass turns south from the fourth round and runs straight down the valley; fire lit north of the neck will run with it. Keep the camp on bare road, and keep your own people out of the reeds when it does."
   ],
   "map": [
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    "..........",
-    ".........."
+    ".............",
+    "......=......",
+    "h.....=.....h",
+    "hT....=....Th",
+    "hTT.eeeee.TTh",
+    "hhTTeeeeeTThh",
+    "hhTTeeeeeTThh",
+    "hhhTeeeeeThhh",
+    "hhhTTeeeTThhh",
+    "hhhTTeeeTThhh",
+    "hhTTeeeeeTThh",
+    "hTT.=====.TTh",
+    ".T..==v==..T.",
+    "............."
   ],
-  "legend": {".": "plain"},
+  "legend": {
+    ".": "plain",
+    "e": "reeds",
+    "T": "forest",
+    "h": "hill",
+    "v": "village",
+    "=": "road"
+  },
   "bridges": [],
   "turnLimit": 12,
   "onTimeout": "cao",
   "sideOrder": ["han", "cao"],
-  "sides": [{"id": "han", "name": "Han", "colourToken": "han"}, {"id": "cao", "name": "Cao Cao's army", "colourToken": "cao"}],
+  "sides": [
+    {
+      "id": "han",
+      "name": "Han",
+      "colourToken": "han"
+    },
+    {
+      "id": "cao",
+      "name": "Cao Cao's army",
+      "colourToken": "cao"
+    }
+  ],
   "wind": [
-    {"round": 1, "dir": null, "strength": "calm"}
+    {
+      "round": 1,
+      "dir": null,
+      "strength": "calm"
+    },
+    {
+      "round": 4,
+      "dir": "S",
+      "strength": "breeze"
+    }
   ],
   "units": [
-    {"id": "xiahou-dun", "officer": "xiahou-dun", "side": "cao", "type": "cavalry", "x": 8, "y": 3, "facing": "W", "troops": 3000, "commander": true, "retreatAt": 0.5},
-    {"id": "yu-jin", "officer": "yu-jin", "side": "cao", "type": "infantry", "x": 8, "y": 4, "facing": "W", "troops": 2200, "commander": false},
-    {"id": "li-dian", "officer": "li-dian", "side": "cao", "type": "infantry", "x": 7, "y": 2, "facing": "W", "troops": 2200, "commander": false}
+    {
+      "id": "xiahou-dun",
+      "officer": "xiahou-dun",
+      "side": "cao",
+      "type": "cavalry",
+      "x": 6,
+      "y": 0,
+      "facing": "S",
+      "troops": 3000,
+      "commander": true,
+      "retreatAt": 0.5
+    },
+    {
+      "id": "yu-jin",
+      "officer": "yu-jin",
+      "side": "cao",
+      "type": "infantry",
+      "x": 4,
+      "y": 1,
+      "facing": "S",
+      "troops": 2200,
+      "commander": false
+    },
+    {
+      "id": "li-dian",
+      "officer": "li-dian",
+      "side": "cao",
+      "type": "infantry",
+      "x": 8,
+      "y": 1,
+      "facing": "S",
+      "troops": 2200,
+      "commander": false
+    },
+    {
+      "id": "bowang-scout-a",
+      "officer": "bowang-scout",
+      "side": "cao",
+      "type": "cavalry",
+      "x": 5,
+      "y": 0,
+      "facing": "S",
+      "troops": 1500,
+      "commander": false
+    },
+    {
+      "id": "bowang-scout-b",
+      "officer": "bowang-scout",
+      "side": "cao",
+      "type": "cavalry",
+      "x": 7,
+      "y": 0,
+      "facing": "S",
+      "troops": 1500,
+      "commander": false
+    },
+    {
+      "id": "bowang-spear-a",
+      "officer": "bowang-spearman",
+      "side": "cao",
+      "type": "infantry",
+      "x": 5,
+      "y": 2,
+      "facing": "S",
+      "troops": 1700,
+      "commander": false
+    },
+    {
+      "id": "bowang-spear-b",
+      "officer": "bowang-spearman",
+      "side": "cao",
+      "type": "infantry",
+      "x": 7,
+      "y": 2,
+      "facing": "S",
+      "troops": 1700,
+      "commander": false
+    },
+    {
+      "id": "bowang-crossbow",
+      "officer": "bowang-crossbow",
+      "side": "cao",
+      "type": "archers",
+      "x": 6,
+      "y": 2,
+      "facing": "S",
+      "troops": 1300,
+      "commander": false
+    }
   ],
   "playerStarts": [
-    {"x": 1, "y": 3, "facing": "E"},
-    {"x": 1, "y": 4, "facing": "E"},
-    {"x": 1, "y": 2, "facing": "E"},
-    {"x": 1, "y": 5, "facing": "E"},
-    {"x": 0, "y": 3, "facing": "E"},
-    {"x": 0, "y": 4, "facing": "E"},
-    {"x": 0, "y": 2, "facing": "E"}
+    {
+      "x": 6,
+      "y": 12,
+      "facing": "N"
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "facing": "E"
+    },
+    {
+      "x": 6,
+      "y": 8,
+      "facing": "N"
+    },
+    {
+      "x": 3,
+      "y": 6,
+      "facing": "E",
+      "ambush": true
+    },
+    {
+      "x": 9,
+      "y": 6,
+      "facing": "W",
+      "ambush": true
+    },
+    {
+      "x": 4,
+      "y": 9,
+      "facing": "E",
+      "ambush": true
+    },
+    {
+      "x": 8,
+      "y": 9,
+      "facing": "W",
+      "ambush": true
+    }
   ],
   "deploySlots": 7,
   "required": ["liu-bei", "zhuge-liang", "zhao-yun"],
   "defaultDeploy": ["liu-bei", "zhuge-liang", "zhao-yun", "guan-yu", "zhang-fei", "guan-ping", "jian-yong"],
-  "par": 10,
-  "objectives": {"win": [{"type": "routCommander"}], "lose": [{"type": "commanderLost"}, {"type": "timeout", "round": 12}]},
-  "enemyBehaviour": {}
+  "par": 8,
+  "objectives": {
+    "win": [
+      {
+        "type": "routCommander",
+        "label": "Break Xiahou Dun"
+      }
+    ],
+    "lose": [
+      {
+        "type": "commanderLost"
+      },
+      {
+        "type": "timeout",
+        "round": 12
+      }
+    ]
+  },
+  "reinforcements": [],
+  "timeline": [
+    {
+      "round": 1,
+      "phase": "start",
+      "kind": "message",
+      "text": "Dusk at Bowang. Xiahou Dun is coming down the road after Zhao Yun. The wind will turn south in round 4."
+    },
+    {
+      "round": 3,
+      "phase": "start",
+      "kind": "message",
+      "text": "Li Dian shouts from the valley mouth: narrow road, reeds on both sides, beware of fire."
+    },
+    {
+      "round": 4,
+      "phase": "start",
+      "kind": "message",
+      "text": "The evening wind comes down the pass and runs south along the valley."
+    }
+  ],
+  "enemyBehaviour": {
+    "xiahou-dun": "pursue:zhao-yun",
+    "yu-jin": "hold",
+    "li-dian": "guard:xiahou-dun",
+    "bowang-scout-a": "pursue:zhao-yun",
+    "bowang-scout-b": "advance",
+    "bowang-spear-a": "advance",
+    "bowang-spear-b": "advance",
+    "bowang-crossbow": "guard:xiahou-dun"
+  },
+  "officers": [
+    {
+      "id": "bowang-scout",
+      "name": "Cao Light Horse",
+      "war": 62,
+      "int": 35,
+      "lead": 50,
+      "cha": 30,
+      "loyalty": 70,
+      "bonds": [],
+      "stratagems": ["thundering-charge"],
+      "source": "invented",
+      "invented": true,
+      "type": "cavalry"
+    },
+    {
+      "id": "bowang-spearman",
+      "name": "Cao Spear Captain",
+      "war": 64,
+      "int": 38,
+      "lead": 60,
+      "cha": 32,
+      "loyalty": 75,
+      "bonds": [],
+      "stratagems": ["serpent-thrust"],
+      "source": "invented",
+      "invented": true,
+      "type": "infantry"
+    },
+    {
+      "id": "bowang-crossbow",
+      "name": "Cao Crossbow Captain",
+      "war": 55,
+      "int": 45,
+      "lead": 50,
+      "cha": 35,
+      "loyalty": 75,
+      "bonds": [],
+      "stratagems": ["massed-arrows"],
+      "source": "invented",
+      "invented": true,
+      "type": "archers"
+    }
+  ]
 }

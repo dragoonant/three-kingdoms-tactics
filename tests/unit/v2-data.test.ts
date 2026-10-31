@@ -82,9 +82,11 @@ describe('v2 data: officers, stratagems, registry', () => {
 
   it('R2-DATA-2 stubs are marked, valid and playable; the real battles are not stubs', () => {
     const stubs = ARC.filter((id) => getBattleDef(id)!.stub)
-    expect(stubs).toEqual(ARC.slice(1))
+    // content builders replace the stubs one battle at a time; whatever is still a stub is a campaign battle after the first
+    expect(ARC.slice(1)).toEqual(expect.arrayContaining(stubs))
     expect(getBattleDef('daxing-hill')!.stub).toBeUndefined()
     for (const id of stubs) expect(SCENES[id]!.stub, id).toBe(true)
+    for (const id of ARC.slice(1).filter((x) => !stubs.includes(x))) expect(SCENES[id]!.stub, id).toBeUndefined()
     expect(SCENES.prologue!.stub).toBe(true)
   })
 
