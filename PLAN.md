@@ -18,6 +18,14 @@ An original 3D grid tactics game set in the Three Kingdoms era, built as a spiri
 - **D11** Working title "Three Kingdoms Tactics" until the owner picks one.
 - **D12** The knowledge base is linked as a submodule at `docs/knowledge-base/` (KB rule). Pages does not check out submodules.
 
+## Campaign decisions (owner, 2026-10-31 night — do not re-ask)
+- **D13** Campaign arc: **Liu Bei's rise, 9 battles**: Daxing Hill → Relief of Qingzhou → Guangzong → Hulao Gate → Defence of Xuzhou → Xiapi → Bowang Slope → Changban → Red Cliffs. If time runs short, finish fewer battles completely rather than all nine half-done.
+- **D14** Between battles: **camp with a persistent army**. Troops, experience and levels carry over; officers learn stratagems; swayed officers can join the roster; the player picks who deploys; autosave in the browser after each battle.
+- **D15** Routed officers: return wounded next battle by default. **"Iron Oath" option** at campaign start makes routed officers permanent losses (Liu Bei falling ends the run). A lost battle can be retried.
+- **D16** Enemy AI: **utility AI (M4) before the campaign battles**; gate: normal beats random ≥ 95%.
+- **D17** Story: **short scenes on the table** (3–8 lines of our own prose per scene, speech slips, click skips) plus the briefing.
+- **D18** Overnight budget **~6M tokens**; Sonnet agents implement; **multi-agent workflows approved**; **KB pushes approved**.
+
 ## Milestones
 | M | What | Where | Status |
 |---|---|---|---|
@@ -29,7 +37,8 @@ An original 3D grid tactics game set in the Three Kingdoms era, built as a spiri
 | M5 | Art: MGSD officer concepts → Hunyuan GLBs; sand-table terrain props | owner's PC | |
 | M6 | Audio: drums/guqin/erhu score, seal stamp, fire, clash SFX | owner's PC | |
 | M7 | Polish, phone layout, settings, end screen | cloud | |
-| Next | Campaign: Liu Bei's road (Guangzong, Hulao Gate, Xuzhou, Changban, Red Cliffs, …), persistent officers, recruitment | | |
+| M8 | Campaign framework: progression, camp, roster, saves, story scenes, Iron Oath | cloud | |
+| M9 | Campaign battles 2–9 (specs + data + scenes + per-battle AI checks) | cloud | |
 
 ## Rulings / balance log
 (`RULING: <rule> | <what we did> | <why>`)
