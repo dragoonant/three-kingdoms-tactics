@@ -64,6 +64,18 @@ export function areaTiles(area: AreaKind, caster: Pos, anchor: Pos, auraRange = 
     }
     case 'adjacent':
       return neighbors(caster)
+    case 'ring2': {
+      // [R2-AREA-1] every tile within Manhattan distance 1..2 of the caster
+      const out: Pos[] = []
+      for (let y = caster.y - 2; y <= caster.y + 2; y++)
+        for (let x = caster.x - 2; x <= caster.x + 2; x++) {
+          const d = Math.abs(x - caster.x) + Math.abs(y - caster.y)
+          if (d >= 1 && d <= 2) out.push({ x, y })
+        }
+      return out
+    }
+    case 'self':
+      return [{ x: caster.x, y: caster.y }]
     case 'aura': {
       const out: Pos[] = []
       for (let y = caster.y - auraRange; y <= caster.y + auraRange; y++)

@@ -20,6 +20,12 @@
 //                          neighbour that is flammable, not burning (including tiles lit
 //                          earlier in this same step) and has a chance > 0
 //
+// Engine v2 adds NO new draws. Specifically: provoke, buffs, wind stratagems, retreats, escapes, reinforcements,
+// terrain changes, timeline items and objective checks never draw. The new stratagems use the existing slots:
+//   bridge-roar (damage + confuse + provoke): per target foresight (none: Shout), variance, then the confuse roll;
+//   valley-blaze / fire-ships / kindling (ignite on one or several tiles): foresight, variance per target, no draw for the fire;
+//   end of round: fire (a, b, c) as above, THEN timeline 'end' items (no draws), then the objective check.
+//
 // Previews and chain planning never touch the RNG (they run in "expected" mode).
 
 export type RngState = [number, number, number, number]

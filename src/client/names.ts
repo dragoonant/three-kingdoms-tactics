@@ -12,13 +12,23 @@ export function shortName(name: string): string {
   return name.replace(/^Rebel /, '')
 }
 
-export function sideName(side: Side): string {
-  return side === 'han' ? 'Han' : 'Yellow Turban'
+/** Display name of a side from the battle's side data ([R2-SIDE-1]). */
+export function sideName(state: BattleState, side: Side): string {
+  return state.sides.find((s) => s.id === side)?.name ?? side
 }
 
 /** Title of a side's phase, in the player's frame. */
-export function sideTitle(_state: BattleState, side: Side): string {
-  return side === 'han' ? "Liu Bei's forces" : 'The Yellow Turban host'
+export function sideTitle(state: BattleState, side: Side): string {
+  if (side === 'han') return "Liu Bei's forces"
+  const n = sideName(state, side)
+  return /army$/i.test(n) ? `The ${n}` : `The ${n} host`
+}
+
+/** Short phase label for the top bar. */
+export function phaseLabel(state: BattleState, side: Side): string {
+  if (side === 'han') return "Liu Bei's forces"
+  const n = sideName(state, side)
+  return /army$/i.test(n) ? n : `${n}s`
 }
 
 export function surname(name: string): string {

@@ -3,7 +3,8 @@ import { round10, terrainAt, terrainIdAt, tileIndex, unitAt } from './board'
 import { DIRS, FACINGS, perpendicular } from './geometry'
 import { applyDamage } from './ops'
 import type { Roller } from './rng'
-import type { BattleState, Facing, FireForecast, GameEvent, Wind, WindInfo } from './types'
+import type { BattleState, Facing, FireForecast, GameEvent, Terrain, Wind, WindInfo } from './types'
+import { changeTerrain } from './terrain'
 
 export const BURN_ROUNDS = 2
 export const FIRE_DAMAGE_PCT = 0.1
@@ -73,17 +74,23 @@ export function resolveFire(w: BattleState, ev: GameEvent[], roller: Roller): vo
       }
     }
   }
-  // (c) burn down
+  // (c) burn down. A tile becomes ash, or the terrain's `burnsTo` (a burnt-out deck sinks into water).
   let tiles = g.tiles
+  const sunk: { x: number; y: number; to: Terrain }[] = []
   for (const i of burningAtStart) {
     w.burn[i] = w.burn[i]! - 1
     if (w.burn[i] === 0) {
+      const x = i % g.width
+      const y = Math.floor(i / g.width)
+      const burnsTo = w.data.terrain[g.tiles[i]!.terrain].burnsTo
       if (tiles === g.tiles) tiles = g.tiles.slice()
       tiles[i] = { ...tiles[i]!, terrain: 'ash' }
-      ev.push({ kind: 'burnedOut', x: i % g.width, y: Math.floor(i / g.width) })
+      ev.push({ kind: 'burnedOut', x, y })
+      if (burnsTo) sunk.push({ x, y, to: burnsTo })
     }
   }
   if (tiles !== g.tiles) w.grid = { ...g, tiles }
+  for (const s of sunk) changeTerrain(w, ev, [{ x: s.x, y: s.y }], s.to, 'burnout')
 }
 
 /** What the next end-of-round fire step will do (open information). */

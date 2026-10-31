@@ -19,6 +19,7 @@ const WEIGHTS: Record<string, number> = {
   attack: 5,
   sway: 2,
   move: 3,
+  escape: 4,
   wait: 1,
   undoMove: 0.15,
 }

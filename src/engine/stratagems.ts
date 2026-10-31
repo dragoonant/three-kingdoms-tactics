@@ -1,5 +1,5 @@
 // [R-STRAT-1..6], [R-CHAIN-1..6]: stratagem legality, evaluation, resolution and chains.
-import type { StratagemDef } from '../data/types'
+import type { StratEffect, StratagemDef } from '../data/types'
 import {
   alliesOf,
   enemiesOf,
@@ -8,7 +8,9 @@ import {
   isBurning,
   officerOf,
   round10,
+  statOf,
   terrainAt,
+  terrainCostFor,
   tileIndex,
   unitAt,
 } from './board'
@@ -16,7 +18,7 @@ import { calcDamage, damageRange, finalizeDamage, type DamageCalc } from './dama
 import { areaTiles, facingToward, manhattan, shift } from './geometry'
 import { applyDamage, healUnit, turnUnit } from './ops'
 import type { Roller } from './rng'
-import type { Arc, BattleState, GameEvent, Multiplier, Pos, Unit } from './types'
+import type { Arc, BattleState, Facing, GameEvent, Multiplier, Pos, Unit, WindStrength } from './types'
 import { concludeIfWon } from './victory'
 
 export const CHAIN_MAX_LINKS = 4
@@ -32,6 +34,34 @@ export function ignitable(state: BattleState, p: Pos): boolean {
 
 export function isDash(strat: StratagemDef): boolean {
   return strat.effect?.type === 'dash'
+}
+
+/** The stratagem's effect, or its `also` effect, of the given type. */
+export function effectOf<T extends StratEffect['type']>(strat: StratagemDef, type: T): Extract<StratEffect, { type: T }> | null {
+  if (strat.effect?.type === type) return strat.effect as Extract<StratEffect, { type: T }>
+  if (strat.also?.type === type) return strat.also as Extract<StratEffect, { type: T }>
+  return null
+}
+
+function windWouldChange(state: BattleState, dir: Facing, strength: WindStrength): boolean {
+  return state.wind.dir !== dir || state.wind.strength !== strength
+}
+
+/** Wind stratagem anchors: the tile whose direction from the caster sets the wind (range 0-0 means the four neighbours). */
+function windAnchors(state: BattleState, caster: Unit, strat: StratagemDef): Pos[] {
+  const eff = effectOf(strat, 'wind')
+  if (!eff) return []
+  if (eff.dir !== 'toward-target') return windWouldChange(state, eff.dir, eff.strength) ? [{ x: caster.x, y: caster.y }] : []
+  const lo = Math.max(1, strat.range.min)
+  const hi = Math.max(lo, strat.range.max)
+  const out: Pos[] = []
+  for (let y = 0; y < state.grid.height; y++)
+    for (let x = 0; x < state.grid.width; x++) {
+      const d = Math.abs(x - caster.x) + Math.abs(y - caster.y)
+      if (d < lo || d > hi) continue
+      if (windWouldChange(state, facingToward(caster, { x, y }), eff.strength)) out.push({ x, y })
+    }
+  return out
 }
 
 /**
@@ -52,7 +82,7 @@ export function dashDestination(state: BattleState, caster: Unit, anchor: Pos, s
     p = shift(p, f)
     if (!inBounds(state.grid, p.x, p.y)) return null
     const t = terrainAt(state, p.x, p.y)
-    if (t.move === null || t.id === 'forest') return null
+    if (terrainCostFor(state, t, caster.side, caster.type) === null || t.id === 'forest') return null
     if (unitAt(state, p.x, p.y)) return null
   }
   return p
@@ -72,9 +102,15 @@ function enemyUnitsInArea(state: BattleState, caster: Unit, strat: StratagemDef,
   return out
 }
 
-function woundedAlliesInAura(state: BattleState, caster: Unit, strat: StratagemDef): Unit[] {
+/** Allies in the aura who would benefit: wounded for a heal, not yet buffed by this stratagem for a buff. */
+function auraBeneficiaries(state: BattleState, caster: Unit, strat: StratagemDef): Unit[] {
   const tiles = areaTiles('aura', caster, caster, strat.range.max)
-  return alliesOf(state, caster.side).filter((u) => u.troops < u.maxTroops && tiles.some((t) => t.x === u.x && t.y === u.y))
+  const heal = effectOf(strat, 'heal')
+  return alliesOf(state, caster.side).filter((u) => {
+    if (!tiles.some((t) => t.x === u.x && t.y === u.y)) return false
+    if (heal) return u.troops < u.maxTroops
+    return !(u.buffs ?? []).some((b) => b.id === strat.id)
+  })
 }
 
 /**
@@ -90,11 +126,12 @@ export function legalAnchors(
   const bonus = opts.bonus ?? 0
   const restrict = opts.restrict
   const here: Pos = { x: caster.x, y: caster.y }
+  if (strat.area === 'self') return restrict ? [] : windAnchors(state, caster, strat)
   if (strat.area === 'aura') {
     if (restrict) return []
-    return woundedAlliesInAura(state, caster, strat).length > 0 ? [here] : []
+    return auraBeneficiaries(state, caster, strat).length > 0 ? [here] : []
   }
-  if (strat.area === 'adjacent') {
+  if (strat.area === 'adjacent' || strat.area === 'ring2') {
     const hit = enemyUnitsInArea(state, caster, strat, here, here)
     return hit.some((u) => !restrict || restrict.has(u.id)) ? [here] : []
   }
@@ -121,7 +158,11 @@ export function legalAnchors(
         out.push(p)
         continue
       }
-      if (strat.effect?.type === 'ignite' && ignitable(state, p) && !unitAt(state, x, y)) out.push(p)
+      if (effectOf(strat, 'ignite')) {
+        if (strat.area === 'single') {
+          if (ignitable(state, p) && !unitAt(state, x, y)) out.push(p)
+        } else if (areaOf(strat, here, p).some((t) => ignitable(state, t))) out.push(p)
+      }
     }
   }
   return out
@@ -150,14 +191,14 @@ export interface LinkEval {
 
 export function foresightChance(caster: Unit, target: Unit, strat: StratagemDef, state: BattleState): number {
   if (strat.tag !== 'Ruse' && strat.tag !== 'Fire') return 0
-  const diff = officerOf(state, target).int - officerOf(state, caster).int
+  const diff = statOf(state, target, 'int') - statOf(state, caster, 'int')
   return diff > 0 ? Math.min(60, 2 * diff) : 0
 }
 
 export function confuseChance(caster: Unit, target: Unit, strat: StratagemDef, state: BattleState): number {
-  if (strat.effect?.type !== 'confuse') return 0
+  if (!effectOf(strat, 'confuse')) return 0
   const stat = strat.stat ?? 'war'
-  const v = 40 + officerOf(state, caster)[stat] - officerOf(state, target).lead
+  const v = 40 + statOf(state, caster, stat) - statOf(state, target, 'lead')
   return Math.max(10, Math.min(90, v))
 }
 
@@ -306,24 +347,55 @@ function resolveLink(
       u.confused = true
       ev.push({ kind: 'confused', unit: u.id, source: 'stratagem', by: caster.id, chance: tg.confuseChance })
     }
+    // [R2-STRAT-3] provoke: no roll, the target simply must come for the caster
+    if (!routed && effectOf(strat, 'provoke')) {
+      u.provoked = caster.id
+      ev.push({ kind: 'provoked', unit: u.id, by: caster.id })
+    }
   }
-  // [R-STRAT-5] ignite after the damage
-  if (strat.effect?.type === 'ignite' && ignitable(w, anchor)) {
-    w.burn[tileIndex(w.grid, anchor.x, anchor.y)] = 2
-    summary.ignited = true
-    ev.push({ kind: 'ignited', x: anchor.x, y: anchor.y, by: caster.id, strat: strat.id })
+  // [R-STRAT-5] ignite after the damage; [R2-AREA-2] a multi-tile area ignites every flammable tile in it
+  if (effectOf(strat, 'ignite')) {
+    for (const t of strat.area === 'single' ? [anchor] : evl.tiles) {
+      if (!ignitable(w, t)) continue
+      w.burn[tileIndex(w.grid, t.x, t.y)] = 2
+      summary.ignited = true
+      ev.push({ kind: 'ignited', x: t.x, y: t.y, by: caster.id, strat: strat.id })
+    }
   }
   return summary
 }
 
-function resolveCommand(w: BattleState, ev: GameEvent[], caster: Unit, strat: StratagemDef): void {
-  const tiles = areaTiles('aura', caster, caster, strat.range.max).filter((t) => inBounds(w.grid, t.x, t.y))
+/** Direction a wind stratagem sets when anchored at `anchor`. */
+export function windDirFor(strat: StratagemDef, caster: Pos, anchor: Pos): Facing | null {
+  const eff = effectOf(strat, 'wind')
+  if (!eff) return null
+  return eff.dir === 'toward-target' ? facingToward(caster, anchor) : eff.dir
+}
+
+function resolveCommand(w: BattleState, ev: GameEvent[], caster: Unit, strat: StratagemDef, anchor: Pos): void {
+  const selfArea = strat.area === 'self'
+  const tiles = selfArea
+    ? [{ x: caster.x, y: caster.y }]
+    : areaTiles('aura', caster, caster, strat.range.max).filter((t) => inBounds(w.grid, t.x, t.y))
   caster.qi -= strat.cost
-  ev.push({ kind: 'stratagem', unit: caster.id, strat: strat.id, anchor: { x: caster.x, y: caster.y }, tiles, cost: strat.cost, link: 0 })
-  const pct = strat.effect?.type === 'heal' ? strat.effect.pct : 0
+  ev.push({ kind: 'stratagem', unit: caster.id, strat: strat.id, anchor: selfArea ? { ...anchor } : { x: caster.x, y: caster.y }, tiles, cost: strat.cost, link: 0 })
+  const heal = effectOf(strat, 'heal')
+  const buff = effectOf(strat, 'buff')
   for (const u of alliesOf(w, caster.side)) {
     if (!tiles.some((t) => t.x === u.x && t.y === u.y)) continue
-    healUnit(ev, u, (u.maxTroops * pct) / 100, 'rally', caster.id)
+    if (heal) healUnit(ev, u, (u.maxTroops * heal.pct) / 100, 'rally', caster.id)
+    if (buff) {
+      const until = w.round + buff.rounds
+      u.buffs = [...(u.buffs ?? []).filter((b) => b.id !== strat.id), { id: strat.id, stat: buff.stat, amount: buff.amount, until, by: caster.id }]
+      ev.push({ kind: 'buffed', unit: u.id, by: caster.id, strat: strat.id, stat: buff.stat, amount: buff.amount, until })
+    }
+  }
+  const wind = effectOf(strat, 'wind')
+  if (wind) {
+    const dir = windDirFor(strat, caster, anchor)!
+    w.wind = { dir, strength: wind.strength }
+    w.windUntil = w.round + wind.rounds
+    ev.push({ kind: 'windChanged', dir, strength: wind.strength, round: w.round, by: caster.id, strat: strat.id, rounds: wind.rounds })
   }
 }
 
@@ -394,7 +466,7 @@ export function runStratagem(
   excludeFromChain: string[],
 ): LinkSummary[] {
   if (strat.tag === 'Command') {
-    resolveCommand(w, ev, caster, strat)
+    resolveCommand(w, ev, caster, strat, anchor)
     return []
   }
   const links: LinkSummary[] = []

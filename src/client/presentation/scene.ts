@@ -56,6 +56,8 @@ export function sceneFromState(s: BattleState): Scene {
 }
 
 const idx = (sc: Scene, p: Pos): number => p.y * sc.width + p.x
+/** Terrains that can burn (mirrors flammability > 0 in terrain.json). */
+const FLAMMABLE = new Set<string>(['plain', 'farm', 'forest', 'hill', 'reeds', 'deck'])
 
 function setUnit(sc: Scene, id: string, f: (u: UnitVis) => UnitVis): Scene {
   if (!sc.units.some((u) => u.id === id)) return sc
@@ -118,6 +120,45 @@ export function applyEvent(sc: Scene, ev: GameEvent): Scene {
     case 'roundStarted':
       return { ...sc, round: ev.round }
     case 'battleEnded':
+      return sc
+    case 'retreated':
+    case 'escaped':
+      return { ...sc, units: sc.units.filter((u) => u.id !== ev.unit) }
+    case 'reinforced':
+      return {
+        ...sc,
+        units: [
+          ...sc.units,
+          {
+            id: ev.unit,
+            officer: ev.officer,
+            side: ev.side,
+            type: ev.type,
+            commander: ev.commander,
+            x: ev.x,
+            y: ev.y,
+            facing: ev.facing,
+            troops: ev.troops,
+            maxTroops: ev.maxTroops,
+            confused: false,
+            done: false,
+          },
+        ],
+      }
+    case 'terrainChanged': {
+      const terrain = sc.terrain.slice()
+      const burning = sc.burning.slice()
+      for (const t of ev.tiles) {
+        terrain[idx(sc, t)] = ev.to
+        if (!FLAMMABLE.has(ev.to)) burning[idx(sc, t)] = false
+      }
+      return { ...sc, terrain, burning }
+    }
+    case 'timelineMessage':
+    case 'buffed':
+    case 'buffExpired':
+    case 'provoked':
+    case 'objectiveProgress':
       return sc
   }
 }

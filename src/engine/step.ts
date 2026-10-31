@@ -1,6 +1,10 @@
 // The reducer. step() never throws on a bad action: it returns {ok:false, code, message}.
 import { cloneWork, getUnit, inBounds, officerOf, unitAt } from './board'
 import { attackRange, resolveAttack } from './combat'
+import { legalActionsFor, sameAction } from './legal'
+import { isExitTile } from './objectives'
+import { emitProgress } from './turn'
+import { PLAYER_SIDE } from '../data/types'
 import { FACINGS, manhattan } from './geometry'
 import { pathTo } from './movement'
 import { turnUnit } from './ops'
@@ -33,6 +37,8 @@ function shapeError(a: unknown): Reject | null {
     case 'attack':
     case 'sway':
       return isStr(r.unit) && isStr(r.target) ? null : rej('malformed', `${String(r.type)} needs unit and target`)
+    case 'escape':
+      return isStr(r.unit) ? null : rej('malformed', 'escape needs a unit id')
     case 'wait':
       return isStr(r.unit) && typeof r.facing === 'string' ? null : rej('malformed', 'wait needs unit and facing')
     case 'stratagem':
@@ -60,6 +66,13 @@ function actor(w: BattleState, id: string): Unit | Reject {
 
 const isReject = (v: Unit | Reject): v is Reject => 'code' in v
 
+/** [R2-STRAT-3] A provoked unit may only take the actions legalActions offers it. */
+function provokeGuard(w: BattleState, u: Unit, a: Action): Reject | null {
+  if (u.provoked === undefined) return null
+  if (legalActionsFor(w, u).some((x) => sameAction(x, a))) return null
+  return rej('provoked', `${u.id} is provoked and must attack or approach the provoker`)
+}
+
 function stepInner(state: BattleState, action: Action): StepResult {
   if (state.result) return { ok: false, code: 'battleOver', message: 'The battle is over' }
   const bad = shapeError(action)
@@ -76,6 +89,8 @@ function stepInner(state: BattleState, action: Action): StepResult {
     case 'move': {
       const u = actor(w, action.unit)
       if (isReject(u)) return { ok: false, ...u }
+      const pv = provokeGuard(w, u, action)
+      if (pv) return { ok: false, ...pv }
       if (u.moved) return { ok: false, ...rej('alreadyMoved', `${u.id} has already moved`) }
       const p = pathTo(w, u, action.x, action.y)
       if (!p) return { ok: false, ...rej('cannotReach', `${u.id} cannot reach ${action.x},${action.y}`) }
@@ -92,6 +107,8 @@ function stepInner(state: BattleState, action: Action): StepResult {
     case 'undoMove': {
       const u = actor(w, action.unit)
       if (isReject(u)) return { ok: false, ...u }
+      const pv = provokeGuard(w, u, action)
+      if (pv) return { ok: false, ...pv }
       if (!u.moved || !u.undo) return { ok: false, ...rej('nothingToUndo', `${u.id} has not moved`) }
       if (unitAt(w, u.undo.x, u.undo.y)) return { ok: false, ...rej('startTileOccupied', `The tile ${u.id} started on is now occupied`) }
       const from = { x: u.x, y: u.y }
@@ -108,6 +125,8 @@ function stepInner(state: BattleState, action: Action): StepResult {
     case 'attack': {
       const u = actor(w, action.unit)
       if (isReject(u)) return { ok: false, ...u }
+      const pv = provokeGuard(w, u, action)
+      if (pv) return { ok: false, ...pv }
       const t = getUnit(w, action.target)
       if (!t) return { ok: false, ...rej('unknownTarget', `No unit ${action.target}`) }
       if (t.side === u.side) return { ok: false, ...rej('targetNotEnemy', `${t.id} is an ally`) }
@@ -127,6 +146,8 @@ function stepInner(state: BattleState, action: Action): StepResult {
     case 'stratagem': {
       const u = actor(w, action.unit)
       if (isReject(u)) return { ok: false, ...u }
+      const pv = provokeGuard(w, u, action)
+      if (pv) return { ok: false, ...pv }
       const strat = w.data.stratagems[action.strat]
       if (!strat) return { ok: false, ...rej('unknownStratagem', `No stratagem ${action.strat}`) }
       if (!officerOf(w, u).stratagems.includes(strat.id))
@@ -146,6 +167,8 @@ function stepInner(state: BattleState, action: Action): StepResult {
     case 'sway': {
       const u = actor(w, action.unit)
       if (isReject(u)) return { ok: false, ...u }
+      const pv = provokeGuard(w, u, action)
+      if (pv) return { ok: false, ...pv }
       const t = getUnit(w, action.target)
       if (!t) return { ok: false, ...rej('unknownTarget', `No unit ${action.target}`) }
       if (t.side === u.side) return { ok: false, ...rej('targetNotEnemy', `${t.id} is an ally`) }
@@ -165,9 +188,24 @@ function stepInner(state: BattleState, action: Action): StepResult {
       break
     }
 
+    case 'escape': {
+      const u = actor(w, action.unit)
+      if (isReject(u)) return { ok: false, ...u }
+      const pv = provokeGuard(w, u, action)
+      if (pv) return { ok: false, ...pv }
+      if (u.side !== PLAYER_SIDE || !isExitTile(w, u.x, u.y)) return { ok: false, ...rej('cannotEscape', `${u.id} is not on an exit tile`) }
+      w.units = w.units.filter((x) => x.id !== u.id)
+      w.escaped.push(u.id)
+      ev.push({ kind: 'escaped', unit: u.id, side: u.side, x: u.x, y: u.y })
+      emitProgress(w, ev)
+      break
+    }
+
     case 'wait': {
       const u = actor(w, action.unit)
       if (isReject(u)) return { ok: false, ...u }
+      const pv = provokeGuard(w, u, action)
+      if (pv) return { ok: false, ...pv }
       if (!FACINGS.includes(action.facing)) return { ok: false, ...rej('badFacing', `Facing must be one of N E S W`) }
       turnUnit(ev, u, action.facing)
       ev.push({ kind: 'waited', unit: u.id, facing: u.facing })

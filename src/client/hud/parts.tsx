@@ -3,7 +3,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import type { Facing } from '../../engine'
 import { surname } from '../names'
 
-export function Portrait({ name, side, size = 56 }: { name: string; side: 'han' | 'yellow'; size?: number }) {
+export function Portrait({ name, side, size = 56 }: { name: string; side: string; size?: number }) {
   const style: CSSProperties = { width: size, height: size, fontSize: size * 0.62 }
   return (
     <span className={`portrait ${side}`} style={style} aria-hidden="true">
@@ -22,7 +22,7 @@ export function Coins({ qi, max = 10 }: { qi: number; max?: number }) {
   )
 }
 
-export function BrushBar({ value, max, side }: { value: number; max: number; side: 'han' | 'yellow' }) {
+export function BrushBar({ value, max, side }: { value: number; max: number; side: string }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100))
   return (
     <span className="brushbar" aria-hidden="true">

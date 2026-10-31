@@ -1,7 +1,8 @@
-// [R-UNIT-5], [R-WIN-1], [R-WIN-2]
+// [R-UNIT-5], [R-WIN-1], [R-WIN-2], [R2-OBJ-1]
+import { decideByObjectives, type CheckPoint } from './objectives'
 import type { BattleResult, BattleState, GameEvent } from './types'
 
-/** Decide the result from the units on the board (not the turn limit). */
+/** Decide the result from the units on the board (not the turn limit). Old rules; used when a battle has no objectives. */
 export function decideWinner(w: BattleState): BattleResult | null {
   const lacking = w.sideOrder.filter((s) => !w.units.some((u) => u.side === s && u.commander))
   if (lacking.length >= 2) return { winner: w.onTimeout, reason: 'commander' }
@@ -12,9 +13,9 @@ export function decideWinner(w: BattleState): BattleResult | null {
 }
 
 /** Sets state.result and emits battleEnded if a side has won. Returns true when the battle is over. */
-export function concludeIfWon(w: BattleState, ev: GameEvent[]): boolean {
+export function concludeIfWon(w: BattleState, ev: GameEvent[], where: CheckPoint = 'action'): boolean {
   if (w.result) return true
-  const r = decideWinner(w)
+  const r = w.objectives ? decideByObjectives(w, where) : decideWinner(w)
   if (!r) return false
   w.result = r
   ev.push({ kind: 'battleEnded', winner: r.winner, reason: r.reason })

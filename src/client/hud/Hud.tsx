@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { query } from '../../engine'
 import { facingWord, num, windWord } from '../ledger'
-import { shortName } from '../names'
+import { phaseLabel, shortName } from '../names'
 import { viewApi } from '../board/layout'
 import type { Speed } from '../presentation/beats'
 import { useGame } from '../store/game'
@@ -34,7 +34,7 @@ function TopBar() {
         <span className="round-of">of {state.turnLimit}</span>
         <span className={`phase-pip ${scene.side}`} aria-hidden="true" />
         <span className="phase" data-testid="phase">
-          {scene.side === 'han' ? "Liu Bei's forces" : 'Yellow Turbans'}
+          {phaseLabel(state, scene.side)}
         </span>
       </div>
       <div className="speed" role="group" aria-label="Playback speed">

@@ -148,8 +148,11 @@ export function greedyAction(state: BattleState): Action {
   for (const a of legal) if (a.type !== 'endPhase') actors.add(a.unit)
   if (actors.size === 0) return { type: 'endPhase' }
 
+  // [R2-STRAT-3] a provoked unit's legal actions are restricted; only ever consider actions legalActions offers.
+  const legalKeys = new Set(legal.map((a) => JSON.stringify(a)))
   let best: Cand | null = null
   const consider = (c: Cand): void => {
+    if (!legalKeys.has(JSON.stringify(c.action))) return
     if (!best || c.score > best.score) best = c
   }
 

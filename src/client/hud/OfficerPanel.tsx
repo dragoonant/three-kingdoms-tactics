@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { query, type Unit } from '../../engine'
 import { num } from '../ledger'
-import { shortName } from '../names'
+import { shortName, sideName } from '../names'
 import { useGame } from '../store/game'
 import { canControl } from '../store/orders'
 import { BrushBar, Coins, Cord, Portrait } from './parts'
@@ -33,7 +33,7 @@ export function OfficerPanel() {
         <div className="who">
           <h2>{shortName(off.name)}</h2>
           <p>
-            {TYPE_LABEL[live.type]} · {live.side === 'han' ? 'Han' : 'Yellow Turban'}
+            {TYPE_LABEL[live.type]} · {sideName(state, live.side)}
             {live.commander ? ' · Commander' : ''}
           </p>
         </div>
@@ -95,7 +95,7 @@ export function OfficerPanel() {
         })}
         {options.length === 0 && <li className="strat-none">No stratagems</li>}
       </ul>
-      {live.side === 'yellow' && <p className="readonly">Enemy officer. Select one of your own units, then hover this one to read the strike numbers.</p>}
+      {live.side !== 'han' && <p className="readonly">Enemy officer. Select one of your own units, then hover this one to read the strike numbers.</p>}
     </aside>
   )
 }

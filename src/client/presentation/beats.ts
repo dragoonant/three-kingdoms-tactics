@@ -24,6 +24,10 @@ export type Fx =
   | { t: 'wait'; unit: string; facing: Facing }
   | { t: 'banner'; title: string; sub: string; side: Side; round: number }
   | { t: 'end'; winner: Side; reason: string }
+  | { t: 'leave'; unit: string; at: Pos; how: 'retreat' | 'escape' }
+  | { t: 'arrive'; unit: string; at: Pos }
+  | { t: 'terrain'; tiles: Pos[]; to: string }
+  | { t: 'note'; text: string }
 
 export interface Beat {
   id: number
@@ -181,6 +185,29 @@ export function planBeats(events: GameEvent[], before: BattleState): Beat[] {
         break
       case 'battleEnded':
         push({ t: 'end', winner: ev.winner, reason: ev.reason }, 1300, ev)
+        break
+      // engine v2 events: kept simple, each commits itself to the presented scene
+      case 'retreated':
+        push({ t: 'leave', unit: ev.unit, at: { x: ev.x, y: ev.y }, how: 'retreat' }, 620, ev)
+        break
+      case 'escaped':
+        push({ t: 'leave', unit: ev.unit, at: { x: ev.x, y: ev.y }, how: 'escape' }, 620, ev)
+        break
+      case 'reinforced':
+        positions.set(ev.unit, { x: ev.x, y: ev.y })
+        push({ t: 'arrive', unit: ev.unit, at: { x: ev.x, y: ev.y } }, 600, ev)
+        break
+      case 'terrainChanged':
+        push({ t: 'terrain', tiles: ev.tiles, to: ev.to }, 700, ev)
+        break
+      case 'timelineMessage':
+        push({ t: 'note', text: ev.text }, 1200, ev)
+        break
+      case 'buffed':
+      case 'buffExpired':
+      case 'provoked':
+      case 'objectiveProgress':
+        push({ t: 'note', text: '' }, 240, ev)
         break
     }
   }

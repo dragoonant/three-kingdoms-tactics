@@ -19,6 +19,14 @@ export const TOP: Record<Terrain, number> = {
   ford: 0.07,
   river: 0.0,
   ash: 0.1,
+  wall: 0.5,
+  rampart: 0.46,
+  gate: 0.14,
+  shallows: 0.05,
+  reeds: 0.1,
+  deck: 0.16,
+  water: 0.0,
+  bridge: 0.1,
 }
 
 export const BRIDGE_TOP = 0.2
@@ -33,6 +41,14 @@ export const SAND: Record<Terrain, string> = {
   ford: '#d9cfae',
   river: '#8a7852',
   ash: '#3a322b',
+  wall: '#9a8a6e',
+  rampart: '#a89878',
+  gate: '#8a6a3a',
+  shallows: '#b9c2a8',
+  reeds: '#a9a05e',
+  deck: '#8a6a44',
+  water: '#6f7a63',
+  bridge: '#b48f55',
 }
 
 export const COLORS = {
@@ -44,6 +60,14 @@ export const COLORS = {
   cinnabar: '#c8372d',
   han: '#2f6b5e',
   yellow: '#d4a72c',
+  dong: '#6b1f2a',
+  cao: '#34495e',
+  lu: '#5b2c6f',
+}
+
+/** Banner colour of a side, by its colour token (side ids double as tokens in the shipped battles). */
+export function sideColour(token: string): string {
+  return (COLORS as Record<string, string>)[token] ?? COLORS.yellow
 }
 
 export function hash2(x: number, y: number, k = 0): number {

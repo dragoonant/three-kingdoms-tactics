@@ -1,0 +1,15 @@
+{
+  "stub": true,
+  "pre": [
+    {
+      "speaker": "narrator",
+      "text": "[stub] Scene text for daxing-hill will be written by a content builder."
+    }
+  ],
+  "post": [
+    {
+      "speaker": "narrator",
+      "text": "[stub] Closing scene for daxing-hill."
+    }
+  ]
+}

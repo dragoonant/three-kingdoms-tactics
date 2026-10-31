@@ -1,0 +1,48 @@
+{
+  "id": "xiapi",
+  "name": "Xiapi",
+  "year": 198,
+  "stub": true,
+  "title": "The Siege of Xiapi",
+  "place": "Xiapi",
+  "blurb": [
+    "[stub] Placeholder battle. A content builder will replace this file with the full design for Xiapi."
+  ],
+  "map": [
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    ".........."
+  ],
+  "legend": {".": "plain"},
+  "bridges": [],
+  "turnLimit": 14,
+  "onTimeout": "lu",
+  "sideOrder": ["han", "lu"],
+  "sides": [{"id": "han", "name": "Han", "colourToken": "han"}, {"id": "lu", "name": "Lu Bu's army", "colourToken": "lu"}],
+  "wind": [
+    {"round": 1, "dir": null, "strength": "calm"}
+  ],
+  "units": [
+    {"id": "lu-bu", "officer": "lu-bu", "side": "lu", "type": "cavalry", "x": 8, "y": 3, "facing": "W", "troops": 3200, "commander": true},
+    {"id": "chen-gong", "officer": "chen-gong", "side": "lu", "type": "archers", "x": 8, "y": 4, "facing": "W", "troops": 1500, "commander": false},
+    {"id": "gao-shun", "officer": "gao-shun", "side": "lu", "type": "infantry", "x": 7, "y": 2, "facing": "W", "troops": 2200, "commander": false}
+  ],
+  "playerStarts": [
+    {"x": 1, "y": 3, "facing": "E"},
+    {"x": 1, "y": 4, "facing": "E"},
+    {"x": 1, "y": 2, "facing": "E"},
+    {"x": 1, "y": 5, "facing": "E"},
+    {"x": 0, "y": 3, "facing": "E"}
+  ],
+  "deploySlots": 5,
+  "required": ["liu-bei"],
+  "defaultDeploy": ["liu-bei", "guan-yu", "zhang-fei", "jian-yong", "mi-zhu"],
+  "par": 12,
+  "objectives": {"win": [{"type": "routCommander"}], "lose": [{"type": "commanderLost"}, {"type": "timeout", "round": 14}]},
+  "enemyBehaviour": {}
+}

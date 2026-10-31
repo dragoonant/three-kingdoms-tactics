@@ -29,7 +29,8 @@ export const EMPTY_UI: UiState = {
 }
 
 export const PLAYER_SIDE = 'han' as const
-export const BOT_SIDE = 'yellow' as const
+/** Every side other than the player's is driven by the bot ([R2-SIDE-1]: side ids are data). */
+export const isBotSide = (side: string): boolean => side !== PLAYER_SIDE
 
 export function canControl(state: BattleState, u: Unit | undefined): u is Unit {
   return !!u && !state.result && u.side === PLAYER_SIDE && state.side === PLAYER_SIDE && !u.done && !u.confused

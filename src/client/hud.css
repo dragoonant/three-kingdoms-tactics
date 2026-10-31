@@ -30,6 +30,9 @@ ol, ul { list-style: none; }
 .phase-pip { width: 10px; height: 10px; border-radius: 50%; align-self: center; border: 1px solid rgba(0, 0, 0, 0.5); }
 .phase-pip.han, .pip.han { background: var(--han); }
 .phase-pip.yellow, .pip.yellow { background: var(--yellow); }
+.phase-pip.dong, .pip.dong { background: var(--dong); }
+.phase-pip.cao, .pip.cao { background: var(--cao); }
+.phase-pip.lu, .pip.lu { background: var(--lu); }
 .phase { font-size: 15px; color: var(--silk); }
 .speed, .bar-btns { display: flex; gap: 4px; align-items: center; }
 .speed button, .bar-btns button {
@@ -119,6 +122,9 @@ ol, ul { list-style: none; }
 }
 .portrait.han { background: radial-gradient(circle at 35% 30%, #4a8c7c, var(--han) 60%, #1c4a3f); }
 .portrait.yellow { background: radial-gradient(circle at 35% 30%, #efc84e, var(--yellow) 60%, #9a7810); color: var(--ink); }
+.portrait.dong { background: radial-gradient(circle at 35% 30%, #a8465a, var(--dong) 60%, #3b0f17); color: var(--silk); }
+.portrait.cao { background: radial-gradient(circle at 35% 30%, #5f7a94, var(--cao) 60%, #1b2733); color: var(--silk); }
+.portrait.lu { background: radial-gradient(circle at 35% 30%, #8a54a1, var(--lu) 60%, #2f1639); color: var(--silk); }
 .portrait span { text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
 .troops { background: rgba(239, 230, 210, 0.8); padding: 6px 9px 7px; border-radius: 3px; font-size: 14px; }
 .troops b { font-size: 24px; font-weight: 700; }
@@ -126,6 +132,9 @@ ol, ul { list-style: none; }
 .brushfill { display: block; height: 100%; border-radius: 6px 3px 6px 3px; transition: width 0.3s; }
 .brushfill.han { background: linear-gradient(180deg, #4fa38f, var(--han)); }
 .brushfill.yellow { background: linear-gradient(180deg, #ecc84e, var(--yellow)); }
+.brushfill.dong { background: linear-gradient(180deg, #a8465a, var(--dong)); }
+.brushfill.cao { background: linear-gradient(180deg, #5f7a94, var(--cao)); }
+.brushfill.lu { background: linear-gradient(180deg, #8a54a1, var(--lu)); }
 .brushfill.low { background: linear-gradient(180deg, #e0564a, var(--cinnabar)); }
 .qi { display: flex; align-items: center; gap: 8px; margin: 7px 0; }
 .qi-n { font-size: 13px; color: var(--ink-soft); }

@@ -16,7 +16,7 @@ import {
 import { anim, animProgress } from '../presentation/director'
 import type { UnitVis } from '../presentation/scene'
 import { figureGeometry, swirlGeometry } from './figureGeometry'
-import { angleDelta, COLORS, facingAngle, tileX, tileZ } from './layout'
+import { angleDelta, COLORS, facingAngle, sideColour, tileX, tileZ } from './layout'
 
 const ease = (t: number): number => t * t * (3 - 2 * t)
 
@@ -61,10 +61,10 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
   const han = u.side === 'han'
   const cav = u.type === 'cavalry'
   const dim = u.done ? 0.55 : 1
-  const faction = han ? COLORS.han : COLORS.yellow
+  const faction = han ? COLORS.han : sideColour(u.side)
   const phase = useMemo(() => (u.id.length * 1.37) % 6, [u.id])
 
-  const geos = useMemo(() => figureGeometry({ id: u.id, han, type: u.type, commander: u.commander }), [u.id, han, u.type, u.commander])
+  const geos = useMemo(() => figureGeometry({ id: u.id, han, type: u.type, commander: u.commander, colour: han ? undefined : sideColour(u.side) }), [u.id, han, u.type, u.commander, u.side])
   const dimColor = useMemo(() => new Color(dim, dim, dim), [dim])
   const bodyMat = useRef<MeshStandardMaterial>(null)
   const rider = cav ? 0.34 : 0

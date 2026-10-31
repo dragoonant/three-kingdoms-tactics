@@ -56,6 +56,8 @@ export interface FigureSpec {
   han: boolean
   type: TroopType
   commander: boolean
+  /** Banner colour of an enemy side (defaults to the Yellow Turban gold). */
+  colour?: string | undefined
 }
 
 export const FIGURE_HEIGHT = 0.9
@@ -81,14 +83,14 @@ const plane = new PlaneGeometry(1, 1)
 const cache = new Map<string, { body: BufferGeometry }>()
 
 export function figureGeometry(s: FigureSpec): { body: BufferGeometry } {
-  const key = `${s.id}|${s.han}|${s.type}|${s.commander}`
+  const key = `${s.id}|${s.han}|${s.type}|${s.commander}|${s.colour ?? ''}`
   const hit = cache.get(key)
   if (hit) return hit
   const cav = s.type === 'cavalry'
   const y0 = 0.07 + (cav ? RIDER_LIFT : 0)
-  const faction = s.han ? COLORS.han : COLORS.yellow
+  const faction = s.han ? COLORS.han : (s.colour ?? COLORS.yellow)
   const armour = s.han ? '#27302d' : '#4a3a20'
-  const hat = s.han ? '#2b2a30' : COLORS.yellow
+  const hat = s.han ? '#2b2a30' : (s.colour ?? COLORS.yellow)
   const skin = '#e8c5a2'
   const dark = '#17120f'
   const wood = '#6b4a2a'

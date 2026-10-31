@@ -1,10 +1,12 @@
 // query.* owns every number the UI shows.
+import { PLAYER_SIDE } from '../data/types'
 import { alliesOf, cloneWork, getUnit, officerOf, unitAt } from './board'
 import { attackTargets as attackTargetUnits, previewAttack } from './combat'
 import { fireForecast, windInfo } from './fire'
 import { moveOptions } from './movement'
 import { EXPECTED_ROLLER } from './rng'
-import { evalLink, healAmount, legalAnchors, runStratagem } from './stratagems'
+import { effectOf, evalLink, healAmount, ignitable, legalAnchors, runStratagem, windDirFor } from './stratagems'
+import { isExitTile, objectiveStatuses } from './objectives'
 import { previewSway, swayTargets as swayTargetUnits } from './sway'
 import type {
   AttackPreview,
@@ -12,8 +14,10 @@ import type {
   FireForecast,
   MoveOption,
   Pos,
+  ObjectiveStatus,
   StratagemOption,
   StratagemPreview,
+  TimelineItemPreview,
   SwayPreview,
   Unit,
   WindInfo,
@@ -82,15 +86,23 @@ export function stratagemPreview(
   if (!legalAnchors(state, u, s).some((a) => a.x === target.x && a.y === target.y)) return null
   const anchor = { x: target.x, y: target.y }
   if (s.tag === 'Command') {
-    const tiles = areaTiles('aura', u, u, s.range.max).filter((t) => t.x >= 0 && t.y >= 0 && t.x < state.grid.width && t.y < state.grid.height)
-    const pct = s.effect?.type === 'heal' ? s.effect.pct : 0
-    const heals = alliesOf(state, u.side)
-      .filter((a) => tiles.some((t) => t.x === a.x && t.y === a.y))
-      .map((a) => ({ unit: a.id, amount: healAmount(a, pct) }))
-      .filter((h) => h.amount > 0)
-    return {
+    const selfArea = s.area === 'self'
+    const tiles = selfArea
+      ? [{ x: u.x, y: u.y }]
+      : areaTiles('aura', u, u, s.range.max).filter((t) => t.x >= 0 && t.y >= 0 && t.x < state.grid.width && t.y < state.grid.height)
+    const heal = effectOf(s, 'heal')
+    const buff = effectOf(s, 'buff')
+    const wind = effectOf(s, 'wind')
+    const inAura = alliesOf(state, u.side).filter((a) => tiles.some((t) => t.x === a.x && t.y === a.y))
+    const heals = heal
+      ? inAura.map((a) => ({ unit: a.id, amount: healAmount(a, heal.pct) })).filter((h) => h.amount > 0)
+      : []
+    const pv: StratagemPreview = {
       unit: u.id, strat: s.id, anchor, cost: s.cost, tiles, targets: [], dashTo: null, ignites: false, heals, chain: [], totalExpected: 0,
     }
+    if (buff) pv.buffs = inAura.map((a) => ({ unit: a.id, stat: buff.stat, amount: buff.amount, rounds: buff.rounds }))
+    if (wind) pv.wind = { dir: windDirFor(s, u, anchor)!, strength: wind.strength, rounds: wind.rounds }
+    return pv
   }
   const ev0 = evalLink(state, u, s, anchor, 0, false)
   const sim = cloneWork(state)
@@ -120,10 +132,12 @@ export function stratagemPreview(
       ...(t.arc ? { arc: t.arc } : {}),
       foresightChance: t.foresightChance,
       confuseChance: t.confuseChance,
+      ...(effectOf(s, 'provoke') ? { provokes: true } : {}),
       routsAtMax: t.max >= t.unit.troops && t.max > 0,
     })),
     dashTo: ev0.dashTo,
-    ignites: s.effect?.type === 'ignite',
+    ignites: effectOf(s, 'ignite') !== null,
+    igniteTiles: effectOf(s, 'ignite') ? (s.area === 'single' ? [anchor] : ev0.tiles).filter((t) => igniteOk(state, t)) : [],
     heals: [],
     chain,
     totalExpected: chain.reduce((n, l) => n + l.expected, 0),
@@ -141,6 +155,70 @@ export function swayChance(state: BattleState, unitId: string, targetId: string)
   const t = getUnit(state, targetId)
   if (!u || !t) return null
   return previewSway(state, u, t)
+}
+
+function igniteOk(state: BattleState, p: Pos): boolean {
+  return ignitable(state, p)
+}
+
+/** [R2-OBJ-1] Every win/lose condition with the engine's progress text. */
+export function objectives(state: BattleState): ObjectiveStatus[] {
+  return objectiveStatuses(state)
+}
+
+/** Can the unit leave the board by an exit tile right now? [R2-OBJ-1] */
+export function canEscape(state: BattleState, unitId: string): boolean {
+  const u = getUnit(state, unitId)
+  return canAct(u) && u.side === PLAYER_SIDE && isExitTile(state, u.x, u.y)
+}
+
+/** [R2-STRAT-3] The id of the unit this one must attack or approach (null when not provoked or unable to comply). */
+export function provokedBy(state: BattleState, unitId: string): string | null {
+  const u = getUnit(state, unitId)
+  if (!u || u.provoked === undefined) return null
+  const p = getUnit(state, u.provoked)
+  if (!p || p.side === u.side) return null
+  return p.id
+}
+
+function describeTimeline(t: BattleState['timeline'][number], state: BattleState): TimelineItemPreview {
+  const base = { round: t.round, phase: t.phase }
+  switch (t.kind) {
+    case 'terrain':
+      return { ...base, kind: 'terrain', text: `${state.data.terrain[t.to].name} spreads over ${t.tiles.length} tile${t.tiles.length === 1 ? '' : 's'}`, tiles: t.tiles.map(([x, y]) => ({ x, y })) }
+    case 'wind':
+      return { ...base, kind: 'wind', text: t.strength === 'calm' || t.dir === null ? 'The wind drops' : `The wind turns to a ${t.strength} toward ${t.dir}`, tiles: [] }
+    case 'message':
+      return { ...base, kind: 'message', text: t.text, tiles: [] }
+    case 'ignite':
+      return { ...base, kind: 'ignite', text: 'Fire breaks out', tiles: t.tiles.map(([x, y]) => ({ x, y })) }
+  }
+}
+
+/**
+ * [R2-TIME-1] The next scheduled timeline items and reinforcement waves that are open information, soonest first.
+ * Items whose moment has passed are left out; `hidden` items are never listed.
+ */
+export function timelinePreview(state: BattleState, limit = 6): TimelineItemPreview[] {
+  const upcoming = (round: number, phase: 'start' | 'end'): boolean =>
+    round > state.round || (round === state.round && phase === 'end')
+  const out: TimelineItemPreview[] = []
+  for (const t of state.timeline) {
+    if (t.hidden || !upcoming(t.round, t.phase)) continue
+    out.push(describeTimeline(t, state))
+  }
+  for (const r of state.reinforcements) {
+    if (r.round < state.round) continue
+    out.push({
+      round: r.round,
+      phase: 'start',
+      kind: 'reinforcement',
+      text: `${r.units.length} reinforcement${r.units.length === 1 ? '' : 's'} arrive for ${state.sides.find((s) => s.id === r.side)?.name ?? r.side}`,
+      tiles: r.entry.map(([x, y]) => ({ x, y })),
+    })
+  }
+  out.sort((a, b) => a.round - b.round || (a.phase === b.phase ? 0 : a.phase === 'start' ? -1 : 1))
+  return out.slice(0, limit)
 }
 
 export function wind(state: BattleState): WindInfo {
@@ -168,6 +246,10 @@ export const query = {
   swayChance,
   fireForecast: (state: BattleState): FireForecast => fireForecast(state),
   wind,
+  objectives,
+  timelinePreview: (state: BattleState, limit?: number): TimelineItemPreview[] => timelinePreview(state, limit),
+  canEscape,
+  provokedBy,
   unitAt: unitAtTile,
   readyUnits,
 }

@@ -10,8 +10,7 @@ export const COUNTER_MULT = 0.5
 
 export function attackRange(state: BattleState, unit: Unit): { min: number; max: number } {
   if (unit.type !== 'archers') return { min: 1, max: 1 }
-  const onHill = terrainAt(state, unit.x, unit.y).id === 'hill'
-  return { min: 2, max: 3 + (onHill ? 1 : 0) }
+  return { min: 2, max: 3 + (terrainAt(state, unit.x, unit.y).rangeBonus ?? 0) }
 }
 
 export function isRanged(unit: Unit): boolean {
