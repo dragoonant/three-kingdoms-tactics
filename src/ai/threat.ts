@@ -1,12 +1,11 @@
 // Enemy threat model and distance fields. These are HEURISTICS for the AI only: the numbers the player sees still
 // come from query.*; the AI uses query.* previews for its own actions and this lighter estimator only for what the
 // other side might do next phase (it cannot ask the engine for a preview of a move it has not been given yet).
-import { arcOf, manhattan, query, type Arc, type BattleState, type Facing, type Pos, type TroopType, type Unit } from '../engine'
-
-const ARC_MULT: Record<Arc, number> = { front: 1, side: 1.25, rear: 1.5 }
-const STRONG_AGAINST: Record<TroopType, TroopType> = { infantry: 'cavalry', cavalry: 'archers', archers: 'infantry' }
-const FACINGS: Facing[] = ['N', 'E', 'S', 'W']
-const MOVE_POINTS: Record<TroopType, number> = { infantry: 4, cavalry: 6, archers: 3 }
+// The rule constants (damage formula, arcs, move points) are imported from the engine, never copied here.
+import { arcOf, manhattan, query, statOf, terrainCostFor, type BattleState, type Facing, type Pos, type TroopType, type Unit } from '../engine'
+import { BASE_DAMAGE, BASE_PER_TROOP, HEIGHT_DOWN, HEIGHT_UP, MATCHUP_MULT, STRONG_AGAINST } from '../engine/damage'
+import { ARC_MULT, FACINGS } from '../engine/geometry'
+import { TROOP_MOVE } from '../engine/movement'
 
 export interface Mode {
   min: number
@@ -68,17 +67,15 @@ export function baseDamage(
   def: Unit,
   at: Pos,
 ): number {
-  const ao = state.data.officers[att.officer]
-  const dof = state.data.officers[def.officer]
-  if (!ao || !dof) return 0
-  let v = (150 + att.troops * 0.08) * mode.power * ((100 + ao[mode.stat]) / (100 + dof.lead))
-  if (STRONG_AGAINST[att.type] === def.type) v *= 1.2
+  if (!state.data.officers[att.officer] || !state.data.officers[def.officer]) return 0
+  let v = (BASE_DAMAGE + att.troops * BASE_PER_TROOP) * mode.power * ((100 + statOf(state, att, mode.stat)) / (100 + statOf(state, def, 'lead')))
+  if (STRONG_AGAINST[att.type] === def.type) v *= MATCHUP_MULT
   const dt = terrainOf(state, at)
   v *= dt.def
   if (mode.height) {
     const ea = terrainOf(state, from).elev
-    if (ea > dt.elev) v *= 1.15
-    else if (ea < dt.elev) v *= 0.9
+    if (ea > dt.elev) v *= HEIGHT_UP
+    else if (ea < dt.elev) v *= HEIGHT_DOWN
   }
   return v
 }
@@ -143,19 +140,16 @@ export function exposureAt(state: BattleState, threats: Threat[], def: Unit, pos
 // ------------------------------------------------------------------ distance fields
 
 /** Terrain move cost for a troop type, or Infinity when impassable. Tolerates richer v2 terrain data. */
-function enterCost(state: BattleState, i: number, type: TroopType): number {
-  const t = state.data.terrain[state.grid.tiles[i]!.terrain]
-  const m = t.move as unknown
-  if (m === null || typeof m !== 'object') return Infinity
-  const c = (m as Record<string, unknown>)[type]
-  return typeof c === 'number' && Number.isFinite(c) ? c : Infinity
+function enterCost(state: BattleState, i: number, type: TroopType, side: string): number {
+  const c = terrainCostFor(state, state.data.terrain[state.grid.tiles[i]!.terrain], side, type)
+  return c === null ? Infinity : c
 }
 
 /**
  * Movement-cost distance from every tile to the nearest source (a multi-source Dijkstra run backwards from the
  * sources). Rivers are routed around, so the approach logic finds the bridge and the fords.
  */
-export function distanceField(state: BattleState, type: TroopType, sources: readonly Pos[]): Float64Array {
+export function distanceField(state: BattleState, type: TroopType, sources: readonly Pos[], side: string): Float64Array {
   const { width: w, height: h } = state.grid
   const n = w * h
   const dist = new Float64Array(n).fill(Infinity)
@@ -178,14 +172,14 @@ export function distanceField(state: BattleState, type: TroopType, sources: read
     const cx = cur % w
     const cy = Math.floor(cur / w)
     // Stepping from a neighbour onto `cur` costs cur's entry cost; a source tile (an enemy's) is entered at its own cost.
-    const step = Math.min(enterCost(state, cur, type), 4)
+    const step = Math.min(enterCost(state, cur, type, side), 4)
     for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]] as const) {
       const nx = cx + dx
       const ny = cy + dy
       if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue
       const ni = ny * w + nx
       if (done[ni]) continue
-      if (!Number.isFinite(enterCost(state, ni, type))) continue
+      if (!Number.isFinite(enterCost(state, ni, type, side))) continue
       const nd = dist[cur]! + step
       if (nd < dist[ni]!) {
         dist[ni] = nd
@@ -197,5 +191,5 @@ export function distanceField(state: BattleState, type: TroopType, sources: read
 }
 
 export function movePoints(type: TroopType): number {
-  return MOVE_POINTS[type]
+  return TROOP_MOVE[type]
 }

@@ -1,6 +1,7 @@
 // The ONLY caller of step(). Holds the live state, the action log, the presented scene and the UI selection.
 import { create } from 'zustand'
 import { createBotClient } from '../../ai/workerClient'
+import type { Tier } from '../../ai/decider'
 import { getBattleDef } from '../../data'
 import type { CreateOptions } from '../../data/types'
 import { createBattle, legalActions, query, step, type Action, type BattleState, type Facing, type GameEvent, type Side } from '../../engine'
@@ -28,7 +29,19 @@ export type Screen =
   | 'summary'
 export type PlayMode = 'skirmish' | 'campaign'
 /** Which AI tier plays the enemy (random, easy or normal). */
-const BOT_TIER = 'normal' as const
+/** Enemy AI strength. 'normal' in play; `?bot=random|easy|normal` overrides it (debugging, and tests that check flow rather than balance). */
+let botTier: Tier = readBotTier()
+function readBotTier(): Tier {
+  try {
+    const q = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('bot') : null
+    return q === 'random' || q === 'easy' || q === 'normal' ? q : 'normal'
+  } catch {
+    return 'normal'
+  }
+}
+export function setBotTier(t: Tier): void {
+  botTier = t
+}
 
 export interface Floater {
   id: number
@@ -219,7 +232,7 @@ export const useGame = create<GameStore>((set, get) => {
       botBusy = true
       // The utility AI runs in a worker (greedy fallback after 2 s); the answer is applied only if the game has not moved on.
       void bot
-        .decide(cur.state, { tier: BOT_TIER, seed: cur.seed })
+        .decide(cur.state, { tier: botTier, seed: cur.seed })
         .then((d) => d.action)
         .catch((): Action => ({ type: 'endPhase' }))
         .then((a) => {

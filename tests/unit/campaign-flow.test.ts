@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { decide } from '../../src/ai/decider'
 import { createMemoryStorage, loadCampaign, SAVE_KEY, PREBATTLE_KEY } from '../../src/campaign'
 import { setCampaignStorage, useCampaign } from '../../src/client/store/campaign'
-import { useGame } from '../../src/client/store/game'
+import { setBotTier, useGame } from '../../src/client/store/game'
 import { getBattleDef } from '../../src/data'
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
@@ -23,6 +23,9 @@ async function play(mode: 'win' | 'lose'): Promise<void> {
     await sleep(1)
   }
 }
+
+// The flow is under test, not balance: the enemy plays the random tier so the player's utility AI wins reliably.
+setBotTier('random')
 
 describe('C-FLOW the campaign flow', () => {
   it('C-FLOW-1 title to results to camp to battle 2, with autosave and Continue', async () => {

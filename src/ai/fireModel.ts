@@ -1,8 +1,9 @@
 // A cheap probabilistic projection of the fire rules [R-FIRE-1..3] over the next few end-of-round steps.
 // It mirrors engine/fire.ts (burn = 2 rounds, damage first, then spread from tiles burning at the start of the step,
 // then burn-down to ash) but tracks per-tile probabilities instead of rolling dice. Wind comes from the state's own
-// schedule, so a gale due in three rounds is accounted for. Units are assumed to stay put (callers discount).
-import { windFactor, type BattleState, type Facing, type Pos } from '../engine'
+// schedule, the open timeline wind items and any stratagem override still running, so a gale due in three rounds
+// (or one a storm priest could call now) is accounted for. Units are assumed to stay put (callers discount).
+import { windFactor, type BattleState, type Facing, type Pos, type Wind, type WindStrength } from '../engine'
 
 const DIRS: [Facing, number, number][] = [
   ['N', 0, -1],
@@ -22,14 +23,53 @@ export interface FireProjection {
   burningNow: Float64Array
 }
 
-function windAtRound(state: BattleState, round: number): { dir: Facing | null; strength: 'calm' | 'breeze' | 'gale' } {
-  let cur: { dir: Facing | null; strength: 'calm' | 'breeze' | 'gale' } = { dir: null, strength: 'calm' }
+function scheduledWind(state: BattleState, round: number): Wind {
+  let cur: Wind = { dir: null, strength: 'calm' }
   for (const e of state.windSchedule) if (e.round <= round) cur = { dir: e.dir, strength: e.strength }
   return cur
 }
 
+export interface WindOverride {
+  dir: Facing
+  strength: WindStrength
+  /** Rounds it holds, counting the current one (R2-STRAT-1). */
+  rounds: number
+}
+
+/**
+ * The wind each of the next `horizon` end-of-round fire steps will see, replaying the engine's own order: the schedule
+ * (or a running override) at each round start, open timeline wind items, and `end` items after that round's fire.
+ */
+export function windSequence(state: BattleState, horizon: number, override?: WindOverride): Wind[] {
+  const seq: Wind[] = []
+  let cur: Wind = override ? { dir: override.dir, strength: override.strength } : { ...state.wind }
+  let until = override ? state.round + override.rounds : state.windUntil
+  const timelineWind = (round: number, phase: 'start' | 'end'): void => {
+    for (const t of state.timeline) {
+      if (t.kind !== 'wind' || t.hidden || t.round !== round || t.phase !== phase) continue
+      cur = { dir: t.strength === 'calm' ? null : t.dir, strength: t.strength }
+      until = null
+    }
+  }
+  for (let k = 0; k < horizon; k++) {
+    const r = state.round + k
+    if (k > 0) {
+      if (until !== null) {
+        if (r >= until) {
+          until = null
+          cur = scheduledWind(state, r)
+        }
+      } else if (state.windSchedule.some((e) => e.round === r)) cur = scheduledWind(state, r)
+      timelineWind(r, 'start')
+    }
+    seq.push(cur)
+    timelineWind(r, 'end')
+  }
+  return seq
+}
+
 /** Project fire for `horizon` end-of-round steps, optionally with extra tiles set alight right now. */
-export function projectFire(state: BattleState, extraIgnite: readonly Pos[] = [], horizon = FIRE_HORIZON): FireProjection {
+export function projectFire(state: BattleState, extraIgnite: readonly Pos[] = [], horizon = FIRE_HORIZON, override?: WindOverride): FireProjection {
   const { width: w, height: h } = state.grid
   const n = w * h
   const events = new Float64Array(n)
@@ -59,9 +99,10 @@ export function projectFire(state: BattleState, extraIgnite: readonly Pos[] = []
     }
   }
   if (!any) return { events, burningNow }
+  const winds = windSequence(state, horizon, override)
   for (let k = 0; k < horizon; k++) {
     const disc = FIRE_DISCOUNT[k] ?? 0.2
-    const wind = k === 0 ? state.wind : windAtRound(state, state.round + k)
+    const wind = winds[k]!
     const nb2 = new Float64Array(n)
     const nb1 = new Float64Array(n)
     for (let i = 0; i < n; i++) {

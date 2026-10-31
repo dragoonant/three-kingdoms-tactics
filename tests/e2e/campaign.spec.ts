@@ -19,7 +19,7 @@ type G = {
 async function boot(page: Page, query: string): Promise<string[]> {
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
-  await page.goto(`./?test=1&${query}`)
+  await page.goto(`./?test=1&bot=random&${query}`)
   await page.waitForFunction(() => (window as unknown as { __app?: { ready: boolean } }).__app?.ready === true, undefined, { timeout: 60_000 })
   return errors
 }
@@ -174,7 +174,11 @@ test('campaign: title, new campaign, scenes, briefing, deploy, battle, results, 
   await expect(page.getByTestId('camp')).toBeVisible()
   await expect(page.getByTestId('roster-liu-bei')).toBeVisible()
   await expect(page.getByTestId('roster-jian-yong')).toBeVisible()
-  await expect(page.getByTestId('level-guan-yu')).toHaveText('Level 3')
+  const guanLevel = await page.evaluate(
+    () => (window as unknown as { __game: G }).__game.campaignState()!.roster.find((o: { officerId: string }) => o.officerId === 'guan-yu')!.level,
+  )
+  expect(guanLevel).toBeGreaterThanOrEqual(3)
+  await expect(page.getByTestId('level-guan-yu')).toHaveText(`Level ${guanLevel}`)
   await expect(page.getByTestId('drill-guan-yu')).toContainText('−60 provisions, +50 XP · 1 left')
   await expect(page.getByTestId('muster-guan-yu')).toContainText('−80 provisions, +200 max troops · 2 left')
   const prov0 = await page.evaluate(() => (window as unknown as { __game: G }).__game.campaignState()!.provisions)
