@@ -1,0 +1,170 @@
+/* Battle cut-in overlays (docs/spec/51). Sizes use container units so the same layout works from 390 px to 1920 px wide. */
+.co-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--night, #14100d);
+  container-type: size;
+  overflow: hidden;
+}
+.co-frame.co-full {
+  width: 100vw;
+  height: 100vh;
+  aspect-ratio: auto;
+}
+.co-stage {
+  position: absolute;
+  inset: 0;
+}
+.co-stage canvas {
+  display: block;
+}
+.co-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  font-family: var(--font-display, serif);
+  user-select: none;
+}
+.co-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 46%, rgba(20, 16, 13, 0) 52%, rgba(20, 16, 13, 0.55) 100%);
+}
+.co-dof {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(2.6px);
+  -webkit-backdrop-filter: blur(2.6px);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, transparent 52%, #000 100%);
+  mask-image: radial-gradient(ellipse at 50% 50%, transparent 52%, #000 100%);
+}
+.co-veil {
+  position: absolute;
+  inset: 0;
+  background: var(--night, #14100d);
+}
+.co-title {
+  position: absolute;
+  left: 3.6cqw;
+  top: 5.2cqh;
+  transform-origin: left top;
+}
+.co-title-swash {
+  position: absolute;
+  left: -1.6cqw;
+  top: -1.2cqh;
+  width: 36cqw;
+  height: 24cqh;
+  background: radial-gradient(ellipse at 30% 40%, rgba(20, 14, 10, 0.62), rgba(20, 14, 10, 0) 72%);
+  filter: blur(6px);
+}
+.co-title-main {
+  position: relative;
+  font-size: 7.4cqw;
+  line-height: 1;
+  color: var(--silk, #efe6d2);
+  letter-spacing: 0.02em;
+  text-shadow: 0 0.25cqw 0.9cqw rgba(0, 0, 0, 0.7);
+  white-space: nowrap;
+}
+.co-title-sub {
+  position: relative;
+  margin-top: 0.6cqh;
+  display: flex;
+  align-items: center;
+  gap: 1.1cqw;
+  font-size: 3.5cqw;
+  line-height: 1.1;
+  color: var(--bamboo, #c9b27c);
+  text-shadow: 0 0.2cqw 0.7cqw rgba(0, 0, 0, 0.75);
+  white-space: nowrap;
+}
+.co-title-sub::before {
+  content: '';
+  width: 4.6cqw;
+  height: 0.55cqw;
+  background: var(--cinnabar, #c8372d);
+  border-radius: 0.3cqw;
+  filter: url(#co-rough);
+}
+.co-callout {
+  position: absolute;
+  right: 7cqw;
+  top: 9cqh;
+  font-size: 15cqw;
+  line-height: 1;
+  color: var(--cinnabar, #c8372d);
+  transform-origin: 70% 60%;
+  paint-order: stroke fill;
+  -webkit-text-stroke: 0.9cqw var(--silk, #efe6d2);
+  text-shadow: 0.5cqw 0.7cqw 0 rgba(20, 12, 8, 0.55);
+  white-space: nowrap;
+}
+.co-damage {
+  position: absolute;
+  right: 5cqw;
+  top: 5cqh;
+  text-align: right;
+  white-space: nowrap;
+}
+.co-damage-num {
+  position: relative;
+  font-size: 13cqw;
+  line-height: 1;
+  color: var(--cinnabar, #c8372d);
+  paint-order: stroke fill;
+  -webkit-text-stroke: 0.9cqw var(--silk, #efe6d2);
+  text-shadow: 0.5cqw 0.8cqw 0 rgba(20, 12, 8, 0.6);
+  font-variant-numeric: tabular-nums;
+}
+.co-damage-stroke {
+  position: absolute;
+  left: -2cqw;
+  right: -2cqw;
+  bottom: -1.4cqw;
+  height: 3.4cqw;
+}
+.co-seal {
+  position: absolute;
+  right: 6.5cqw;
+  top: 32cqh;
+  width: 8.5cqw;
+  height: 8.5cqw;
+}
+.co-ink,
+.co-wash {
+  position: absolute;
+  inset: 0;
+}
+.co-speed {
+  position: absolute;
+  inset: 0;
+}
+.co-safe {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.co-safe i {
+  position: absolute;
+  border: 1.5px dashed rgba(242, 180, 90, 0.85);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+.co-safe i.action {
+  inset: 3.5% 3.5%;
+}
+.co-safe i.title {
+  inset: 5% 5%;
+  border-color: rgba(201, 178, 124, 0.9);
+}
+.co-safe b {
+  position: absolute;
+  left: 5.4%;
+  bottom: 5.4%;
+  font: 600 11px var(--font-body, sans-serif);
+  color: var(--lantern, #f2b45a);
+  background: rgba(20, 16, 13, 0.7);
+  padding: 2px 6px;
+}
