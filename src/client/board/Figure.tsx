@@ -2,17 +2,22 @@
 // oversized weapon hint, back banner in the faction colour, round black base with a facing notch.
 import { Billboard } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { memo, useMemo, useRef } from 'react'
+import { memo, useEffect, useMemo, useRef } from 'react'
 import {
   Color,
   DoubleSide,
+  Mesh as ThreeMesh,
   Shape,
   ShapeGeometry,
   type Group,
+  type Material,
   type Mesh,
   type MeshBasicMaterial,
   type MeshStandardMaterial,
 } from 'three'
+import { applyClip, idle } from '../figures/clips'
+import { buildHeroRig, isHeroId } from '../figures/heroes'
+import type { Rig } from '../figures/rig'
 import { anim, animProgress } from '../presentation/director'
 import type { UnitVis } from '../presentation/scene'
 import { figureGeometry, swirlGeometry } from './figureGeometry'
@@ -20,6 +25,18 @@ import { edgePoint } from './frame'
 import { angleDelta, board, COLORS, facingAngle, sideColour, tileX, tileZ } from './layout'
 
 const ease = (t: number): number => t * t * (3 - 2 * t)
+
+/** Every distinct standard material of a hero rig (the rig owns them, so the board may tint them per unit). */
+function rigMaterials(rig: Rig): MeshStandardMaterial[] {
+  const set = new Set<MeshStandardMaterial>()
+  rig.group.traverse((o) => {
+    if (!(o instanceof ThreeMesh)) return
+    const m = o.material as Material | Material[]
+    for (const mm of Array.isArray(m) ? m : [m]) set.add(mm as MeshStandardMaterial)
+  })
+  return [...set]
+}
+const tint = new Color()
 
 const notchShape = new Shape()
 notchShape.moveTo(0, 0.2)
@@ -65,11 +82,18 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
   const faction = han ? COLORS.han : sideColour(u.side)
   const phase = useMemo(() => (u.id.length * 1.37) % 6, [u.id])
 
-  const geos = useMemo(() => figureGeometry({ id: u.id, han, type: u.type, commander: u.commander, colour: han ? undefined : sideColour(u.side) }), [u.id, han, u.type, u.commander, u.side])
+  // Heroes with a unique design (docs/spec/31-hero-figures.md) render their rig; every other unit keeps the merged stand-in.
+  const heroRig = useMemo(() => (isHeroId(u.officer) ? (buildHeroRig(u.officer, { mounted: cav, own: true }) ?? null) : null), [u.officer, cav])
+  useEffect(() => () => heroRig?.dispose(), [heroRig])
+  const heroMats = useMemo(() => (heroRig ? rigMaterials(heroRig) : []), [heroRig])
+  const geos = useMemo(
+    () => (heroRig ? null : figureGeometry({ id: u.id, han, type: u.type, commander: u.commander, colour: han ? undefined : sideColour(u.side) })),
+    [heroRig, u.id, han, u.type, u.commander, u.side],
+  )
   const dimColor = useMemo(() => new Color(dim, dim, dim), [dim])
   const bodyMat = useRef<MeshStandardMaterial>(null)
   const rider = cav ? 0.34 : 0
-  const baseR = cav ? 0.4 : 0.35
+  const baseR = heroRig ? ((heroRig.group.userData.baseRadius as number | undefined) ?? 0.35) : cav ? 0.4 : 0.35
 
   useFrame((state) => {
     const g = root.current
@@ -226,6 +250,18 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
     g.scale.setScalar(sc)
     const lerpE = Math.max(flash, 0)
     if (bodyMat.current) bodyMat.current.emissive.setRGB(lerpE * 0.9 + glow * 0.05, glow * 0.45 + lerpE * 0.05, glow * 0.2)
+    if (heroRig) {
+      // static rest pose with a gentle breathe; done units dim, hits flash, stratagems glow (same cues as the stand-ins)
+      applyClip(heroRig, idle(t * 0.8 + phase))
+      tint.setRGB(lerpE * 0.9 + glow * 0.05, glow * 0.45 + lerpE * 0.05, glow * 0.2)
+      for (const m of heroMats) {
+        const ud = m.userData as { c?: Color; e?: Color }
+        const c0 = (ud.c ??= m.color.clone())
+        const e0 = (ud.e ??= m.emissive.clone())
+        m.color.copy(c0).multiplyScalar(dim)
+        m.emissive.copy(e0).add(tint)
+      }
+    }
     if (swirl.current) {
       swirl.current.visible = u.confused
       swirl.current.rotation.y = t * 3.2
@@ -247,9 +283,36 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
         <mesh geometry={notchGeo} position={[0, 0.074, baseR - 0.12]} scale={[1.15, 1, 1.35]}>
           <meshBasicMaterial color={u.done ? '#8f8466' : '#f6e2a4'} side={DoubleSide} />
         </mesh>
-        <mesh geometry={geos.body} castShadow receiveShadow>
-          <meshStandardMaterial ref={bodyMat} vertexColors color={dimColor} side={DoubleSide} roughness={0.75} metalness={0.12} />
-        </mesh>
+        {heroRig && geos === null ? (
+          <>
+            <primitive object={heroRig.group} />
+            {/* side colour stays readable: a rim on the base and a small back banner */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.062, 0]}>
+              <ringGeometry args={[baseR - 0.045, baseR - 0.005, 40]} />
+              <meshBasicMaterial color={faction} />
+            </mesh>
+            <group position={[0, 0.06, -(baseR - 0.1)]}>
+              <mesh position={[0, (1.25 + rider) / 2, 0]}>
+                <cylinderGeometry args={[0.014, 0.014, 1.25 + rider, 6]} />
+                <meshStandardMaterial color="#6b4a2a" roughness={0.8} />
+              </mesh>
+              <mesh position={[0.15, 1.1 + rider, 0.004]}>
+                <planeGeometry args={[0.3, 0.38]} />
+                <meshStandardMaterial color={faction} side={DoubleSide} roughness={0.8} />
+              </mesh>
+              <mesh position={[0.15, 1.1 + rider, 0.008]}>
+                <planeGeometry args={[0.05, 0.26]} />
+                <meshStandardMaterial color={han ? '#e9dfc2' : '#2a1d10'} side={DoubleSide} roughness={0.8} />
+              </mesh>
+            </group>
+          </>
+        ) : (
+          geos && (
+            <mesh geometry={geos.body} castShadow receiveShadow>
+              <meshStandardMaterial ref={bodyMat} vertexColors color={dimColor} side={DoubleSide} roughness={0.75} metalness={0.12} />
+            </mesh>
+          )
+        )}
       </group>
 
       {/* actable pulse and selection rings */}
