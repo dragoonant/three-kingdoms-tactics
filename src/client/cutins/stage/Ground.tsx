@@ -2,7 +2,8 @@
 // shallows, ship deck or plain sand. Each is a small hand-built set dressing on the table's sand that follows the board's
 // terrain look (Terrain.tsx): combed millet ridges, dark conifers, a green mound, plastered houses, blue water, planked deck.
 // Everything is static except the water ripples and the millet, which are functions of the clock.
-import { useFrame } from '@react-three/fiber'
+import { useCutinFrame } from './slot'
+import { keep } from '../gpu'
 import { useMemo, useRef, type ReactElement } from 'react'
 import { BoxGeometry, ConeGeometry, CylinderGeometry, DodecahedronGeometry, Group, Mesh, MeshStandardMaterial, PlaneGeometry, RingGeometry, SphereGeometry } from 'three'
 import type { GroundKind } from '../scenes/act'
@@ -58,7 +59,10 @@ const geo = {
   mound: new SphereGeometry(1, 28, 14),
   ripple: new RingGeometry(0.9, 1, 28).rotateX(-Math.PI / 2),
   plane: new PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
+  mast: new CylinderGeometry(0.05, 0.06, 1.1, 8),
 }
+// shared by every scene of the battle: a cut-in's GPU sweep never releases them (cutins/gpu.ts)
+Object.values(geo).forEach((g) => keep(g))
 
 const NO_DISCS: { x: number; z: number; r: number }[] = []
 
@@ -170,7 +174,7 @@ function Shallows({ seed, center, halfW, halfD, clear }: GroundProps) {
         .map((c, i) => ({ x: c.x, z: c.z, ph: rand(seed, i, 8) })),
     [clear, seed, center, halfW, halfD],
   )
-  useFrame(() => {
+  useCutinFrame(() => {
     const g = group.current
     if (!g) return
     const t = frame.current.t
@@ -205,7 +209,7 @@ function Deck({ center, halfW, halfD }: GroundProps) {
       <mesh geometry={geo.box} material={mats.rail} position={[center[0], 0.08, center[1] + halfD * 1.35]} scale={[halfW * 2.7, 0.1, 0.05]} castShadow />
       <mesh geometry={geo.box} material={mats.rail} position={[center[0] - halfW * 1.35, 0.08, center[1]]} scale={[0.05, 0.1, halfD * 2.7]} castShadow />
       <mesh geometry={geo.box} material={mats.rail} position={[center[0] + halfW * 1.35, 0.08, center[1]]} scale={[0.05, 0.1, halfD * 2.7]} castShadow />
-      <mesh geometry={new CylinderGeometry(0.05, 0.06, 1.1, 8)} material={mats.rail} position={[center[0] + halfW * 0.9, 0.55, center[1] + halfD * 1.1]} castShadow />
+      <mesh geometry={geo.mast} material={mats.rail} position={[center[0] + halfW * 0.9, 0.55, center[1] + halfD * 1.1]} castShadow />
     </group>
   )
 }

@@ -16,6 +16,8 @@ export class CutinController {
   free = false
   /** Set by the canvas bridge: render the current frame now. */
   renderNow: (() => void) | null = null
+  /** Hold every draw (the game sets it while the next link's world is not on screen yet). */
+  hold = false
   private readonly listeners = new Set<Listener>()
   private readonly stateListeners = new Set<() => void>()
   private raf = 0
@@ -165,7 +167,7 @@ export class CutinController {
   private rendering = false
   /** Draw the current frame; re-entrant calls (OrbitControls change events during a render) are ignored. */
   render(): void {
-    if (this.rendering || !this.renderNow) return
+    if (this.rendering || !this.renderNow || this.hold) return
     this.rendering = true
     try {
       this.renderNow()

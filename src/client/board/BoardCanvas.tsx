@@ -1,4 +1,4 @@
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useThree } from '@react-three/fiber'
 import { useCallback, useEffect, useMemo } from 'react'
 import { ACESFilmicToneMapping, PCFShadowMap, SRGBColorSpace } from 'three'
 import { getBattleDef } from '../../data'
@@ -39,6 +39,22 @@ function camMode(screen: Screen): CamMode {
 const Q = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search)
 const AA = Q.get('aa') !== '0'
 const SHADOWS = Q.get('shadows') !== '0'
+
+/**
+ * The board stops drawing the moment a cut-in starts, in the same task (the frameloop prop only follows on React's next
+ * render, which can let one more board frame queue on a busy GPU in front of the cut-in's first frame).
+ */
+function PauseForCutins() {
+  const setFrameloop = useThree((s) => s.setFrameloop)
+  useEffect(
+    () =>
+      useGame.subscribe((s, p) => {
+        if (s.cutinPaused !== p.cutinPaused) setFrameloop(s.cutinPaused ? 'never' : 'always')
+      }),
+    [setFrameloop],
+  )
+  return null
+}
 
 export function BoardCanvas() {
   const scene = useGame((s) => s.scene)
@@ -111,6 +127,7 @@ export function BoardCanvas() {
     >
       <color attach="background" args={[COLORS.night]} />
       <fog attach="fog" args={[COLORS.night, 36, 84]} />
+      <PauseForCutins />
       <Stage width={W} height={H} />
       <Terrain
         terrain={scene.terrain}

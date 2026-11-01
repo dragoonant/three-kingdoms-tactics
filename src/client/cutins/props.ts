@@ -18,6 +18,7 @@ import {
   SphereGeometry,
   Vector3,
 } from 'three'
+import { keep } from './gpu'
 
 const tmpV = new Vector3()
 
@@ -101,9 +102,9 @@ export class TubeBuffer {
   }
 }
 
-const SHAFT = new CylinderGeometry(0.0042, 0.0042, 1, 5).translate(0, 0.5, 0)
-const HEAD = new ConeGeometry(0.011, 0.04, 5).translate(0, 0.02, 0)
-const WRAP = new SphereGeometry(0.018, 8, 6)
+const SHAFT = keep(new CylinderGeometry(0.0042, 0.0042, 1, 5).translate(0, 0.5, 0))
+const HEAD = keep(new ConeGeometry(0.011, 0.04, 5).translate(0, 0.02, 0))
+const WRAP = keep(new SphereGeometry(0.018, 8, 6))
 const shaftMat = new MeshStandardMaterial({ color: '#d8bd84', roughness: 0.8 })
 const headMat = new MeshStandardMaterial({ color: '#2b2a28', roughness: 0.4, metalness: 0.7 })
 const wrapMat = new MeshStandardMaterial({ color: '#2a170b', roughness: 0.9, emissive: '#ff6a10', emissiveIntensity: 0 })

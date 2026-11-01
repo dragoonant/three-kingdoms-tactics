@@ -1,8 +1,9 @@
 // Scene A world: the brazier, six kneeling archers, Jian Yong, the burning millet and seven rebels. Every pose and every
 // particle is a pure function of story time (see fireArrows.ts for the plan and cues).
-import { useFrame } from '@react-three/fiber'
+import { useCutinFrame } from '../stage/slot'
 import { useMemo, useRef } from 'react'
 import { useDisposeWorld } from '../dispose'
+import { perf } from '../perf'
 import { Group, Matrix4, MeshStandardMaterial, PointLight, Vector3, type Object3D } from 'three'
 import { type Rig } from '../../figures'
 import { buildCasterRig } from '../casters'
@@ -456,7 +457,7 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
   const frame = useFrameRef()
   const root = useRef<Group>(null)
 
-  const world = useMemo(() => {
+  const world = useMemo(() => perf.measure('world-build', () => {
     const plan: ArrowPlan[] = arrowPlan()
     const spec0 = fireWorldSpec(scene)
     const ign = spec0.ignited ? ignitions(plan) : []
@@ -535,7 +536,7 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
     })
     publishTroops(scene.id, archers.length + 1 + ranks.crowds.members(ranks.archers), rebels.length + ranks.crowds.members(ranks.def), ranks.crowds, melee)
     return { plan, ign, archers, jian, rebels, falls, flight, outs, launchFrom, fx, spec, ranks, extra, clear, lens, melee }
-  }, [scene])
+  }), [scene])
 
   // the launch points feed the plan used for flight
   const flightPlan = useMemo(() => [...world.plan.map((a, i) => ({ ...a, from: [world.launchFrom[i]!.x, world.launchFrom[i]!.y, world.launchFrom[i]!.z] as [number, number, number] })), ...world.ranks.extra], [world])
@@ -557,7 +558,7 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
   const tipW = useMemo(() => new Vector3(), [])
   const fcol: [number, number, number] = useMemo(() => [1, 1, 1], [])
 
-  useFrame(({ camera, gl }) => {
+  useCutinFrame(({ camera, gl }) => {
     const { story: s, t } = frame.current
     const ppu = pxPerUnit(gl.domElement.height, (camera as { fov?: number }).fov ?? 40)
     const { archers, jian, rebels, falls, outs, fx } = world

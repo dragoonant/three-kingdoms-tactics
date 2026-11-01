@@ -249,6 +249,8 @@ function bakeRig(rig: Rig, kind: TroopKind, side: SidePalette, variant: number, 
     g.setIndex(b.pos.length / 3 > 65535 ? new Uint32BufferAttribute(b.idx, 1) : new Uint16BufferAttribute(b.idx, 1))
     g.computeBoundingSphere()
     g.computeBoundingBox()
+    // released by releaseBake only, never by a cut-in's GPU sweep (cutins/gpu.ts): the set is shared by every crowd that asks
+    g.userData.keep = true
     parts.push({ joint: b.joint, cls: b.cls, tag: b.tag, geometry: g, triangles: b.idx.length / 3 })
   }
   // the evaluator is the rig itself with its meshes taken off: only the joint tree is left to pose
@@ -267,7 +269,31 @@ export function acquireBake(kind: TroopKind, side: SidePalette, variant: number,
     cache.set(key, s)
   }
   s.refs++
+  if (pinning && !pinned.has(key)) {
+    // the battle keeps it: one more reference until unpinBakes()
+    pinned.set(key, s)
+    s.refs++
+  }
   return s
+}
+
+// While a battle with cut-ins is loaded every bake it asks for stays built (and uploaded) between cut-ins, instead of being
+// rebuilt by the next scene: the warm pool of docs/spec/51 "Performance". Capped by what the battle's units can field.
+let pinning = false
+const pinned = new Map<string, BakedSet>()
+/** Keep (true) every bake acquired from now on until unpinBakes(); false stops pinning new ones. */
+export function pinBakes(on: boolean): void {
+  pinning = on
+}
+/** Drop the battle's hold on its bakes (each is freed once no crowd uses it). */
+export function unpinBakes(): void {
+  pinning = false
+  const list = [...pinned.values()]
+  pinned.clear()
+  for (const s of list) releaseBake(s)
+}
+export function pinnedBakes(): number {
+  return pinned.size
 }
 
 export function releaseBake(s: BakedSet): void {
@@ -280,6 +306,7 @@ export function releaseBake(s: BakedSet): void {
 
 /** Frees every baked set (tests, hot reload). */
 export function disposeCrowdCaches(): void {
+  pinned.clear()
   for (const s of [...cache.values()]) {
     s.refs = 1
     releaseBake(s)
@@ -288,6 +315,13 @@ export function disposeCrowdCaches(): void {
   reduced.clear()
 }
 
-export function bakeStats(): { sets: number } {
-  return { sets: cache.size }
+export function bakeStats(): { sets: number; bytes: number } {
+  let bytes = 0
+  for (const s of cache.values()) {
+    for (const p of s.parts) {
+      for (const a of Object.values(p.geometry.attributes)) bytes += (a as { array: { byteLength: number } }).array.byteLength
+      bytes += p.geometry.index?.array.byteLength ?? 0
+    }
+  }
+  return { sets: cache.size, bytes }
 }

@@ -1,6 +1,6 @@
 // A millet field for the cut-ins: combed ridges along x (as on the board, Terrain.tsx) with instanced stalks that catch,
 // burn and char according to the fire model. Stalk state is a pure function of story time.
-import { useFrame } from '@react-three/fiber'
+import { useCutinFrame } from './slot'
 import { useMemo } from 'react'
 import {
   BoxGeometry,
@@ -98,7 +98,7 @@ export function Millet({ box, seed, ignitions, clear = NO_DISCS, low = NO_DISCS,
   const tmp = useMemo(() => ({ m: new Matrix4(), q: new Quaternion(), e: new Euler(), p: new Vector3(), s: new Vector3(), c: new Color() }), [])
   const lean = Math.atan2(wind[1], wind[0])
 
-  useFrame(() => {
+  useCutinFrame(() => {
     const { t, story } = frame.current
     const { stalks, tig, mesh, burn } = model
     for (let i = 0; i < stalks.length; i++) {

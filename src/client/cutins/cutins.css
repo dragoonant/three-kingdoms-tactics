@@ -288,3 +288,30 @@
   border: 1px solid rgba(201, 178, 124, 0.35);
   pointer-events: none;
 }
+/* The persistent cut-in canvas between cut-ins (docs/spec/51 "Performance: warm-up and reuse"): kept at full size, hidden. */
+.co-layer.co-idle {
+  visibility: hidden;
+  pointer-events: none;
+  animation: none;
+  background: transparent;
+}
+.co-preparing {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  z-index: 150;
+  padding: 0.35em 1em;
+  font: 600 12px/1 var(--font-body, sans-serif);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bamboo, #c9b27c);
+  background: rgba(20, 14, 10, 0.6);
+  border: 1px solid rgba(201, 178, 124, 0.35);
+  pointer-events: none;
+}
+@media (max-width: 640px) {
+  .co-preparing {
+    bottom: 76px;
+  }
+}

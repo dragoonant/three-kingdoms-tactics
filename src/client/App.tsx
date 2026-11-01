@@ -10,12 +10,19 @@ import { Camp, CampaignBriefing, Defeat, Deploy, NewCampaign, Results, Scene, Su
 import { installCampaignHook } from './campaign/testHook'
 import { cutinTestApi, player } from './cutins/player'
 import { TEST_MODE, useGame } from './store/game'
+import { EMPTY_UI } from './store/orders'
+import type { Action } from '../engine'
+import { useCutinSettings } from './cutins/settings'
+import { installPreviewPrebuild } from './cutins/prebuildHook'
 import './theme.css'
 import './hud.css'
 import './campaign.css'
 
-// The cut-in layer (and with it every scene's world) loads when the first cut-in plays.
+// The cut-in layer (and with it every scene's world) loads with the battle and stays mounted for it: its canvas warms up
+// behind the briefing and the intro and is reused by every cut-in (docs/spec/51 "Performance: warm-up and reuse").
 const CutinLayer = lazy(() => import('./cutins/CutinLayer'))
+const CUTIN_SCREENS = new Set(['briefing', 'cbrief', 'deploy', 'battle', 'end'])
+const battleNow = () => useGame.getState().state
 
 declare global {
   interface Window {
@@ -42,6 +49,11 @@ function installTestHook(): void {
     skip: () => g().skip(),
     /** Select a unit as a click on it would (clicks on crowded figures can land on a neighbour). */
     select: (id: string | null) => g().select(id),
+    /** Open the order preview for an action as the HUD would (the seal waits for a confirm): the cut-in prebuild starts. */
+    preview: (a: Action) => {
+      if (a.type === 'attack') useGame.setState({ ui: { ...EMPTY_UI, selectedId: a.unit, mode: 'attack', pendingTarget: a.target } })
+      else if (a.type === 'stratagem') useGame.setState({ ui: { ...EMPTY_UI, selectedId: a.unit, mode: 'stratagem', strat: a.strat, pendingAnchor: { x: a.x, y: a.y }, exclude: a.excludeFromChain ?? [] } })
+    },
     log: () => g().log,
     ledger: () => g().ledger,
     stats: () => g().stats,
@@ -60,6 +72,9 @@ function installTestHook(): void {
 export function App() {
   const screen = useGame((s) => s.screen)
   const cutinActive = useSyncExternalStore(player.subscribe, () => player.getSnapshot().active, () => false)
+  const scenesOn = useCutinSettings((s) => s.battleScenes !== 'off')
+  const battleKey = useGame((s) => `${s.state.battleId}:${s.seed}`)
+  const cutinHost = scenesOn && CUTIN_SCREENS.has(screen)
 
   useEffect(() => {
     if (TEST_MODE) installTestHook()
@@ -67,6 +82,9 @@ export function App() {
 
   // The music follows the screen and the battle result (docs/spec/60-audio.md).
   useEffect(() => bindGameAudio(), [])
+
+  // Prebuild the cut-in of the order the player is about to confirm.
+  useEffect(() => installPreviewPrebuild(), [])
 
   // Any press skips the batch being played; the click that follows is swallowed so it cannot also act.
   useEffect(() => {
@@ -118,9 +136,9 @@ export function App() {
       {screen === 'defeat' && <Defeat />}
       {screen === 'summary' && <Summary />}
       {(screen === 'battle' || screen === 'end') && <Hud />}
-      {cutinActive && (
+      {(cutinHost || cutinActive) && (
         <Suspense fallback={null}>
-          <CutinLayer />
+          <CutinLayer battleKey={battleKey} battle={battleNow} note={screen === 'battle'} />
         </Suspense>
       )}
       {screen === 'end' && <End />}

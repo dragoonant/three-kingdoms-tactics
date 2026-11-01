@@ -1,8 +1,9 @@
 // Scene B world: Guan Yu and three Han cavalry in a wedge, seven rebels in a ragged line, dust and the crescent sweep.
 // Poses and particles are pure functions of story time; the plan (paths, who falls when) lives in thunderingCharge.ts.
-import { useFrame } from '@react-three/fiber'
+import { useCutinFrame } from '../stage/slot'
 import { useMemo } from 'react'
 import { useDisposeWorld } from '../dispose'
+import { perf } from '../perf'
 import { CylinderGeometry, ConeGeometry, Group, Mesh, MeshStandardMaterial, Vector3, type Object3D } from 'three'
 import { figures, type Rig } from '../../figures'
 import { buildCasterRig } from '../casters'
@@ -19,7 +20,7 @@ import { Puppet, figureScale, fitFigure, limbsOnly, mix, pArmsUp, pRear, sstep }
 import { Ribbon } from '../props'
 import { rand, srand } from '../rng'
 import { ParticleBuffer } from '../stage/ParticleBuffer'
-import { Stage, pxPerUnit, useFrameRef } from '../stage/Stage'
+import { PadLights, POINT_LIGHTS, Stage, pxPerUnit, useFrameRef } from '../stage/Stage'
 import { cueFor, type CutinScene } from '../timeline'
 import {
   B_LAYOUT,
@@ -453,7 +454,7 @@ function buildRanks(scene: CutinScene, falls: FlingPlan[], mounted: boolean, def
 export function ThunderingChargeWorld({ scene }: { scene: CutinScene }) {
   const frame = useFrameRef()
 
-  const world = useMemo(() => {
+  const world = useMemo(() => perf.measure('world-build', () => {
     const falls = flingPlan(scene.sample.falls)
     const riders = makeRiders(scene)
     const rebels = makeRebels(scene)
@@ -512,7 +513,7 @@ export function ThunderingChargeWorld({ scene }: { scene: CutinScene }) {
     const lens = lensClear(scene, spec.ground === 'millet' ? { reach: 1.0, maxY: 0.6 } : { reach: 2.2, maxY: 1.4 })
     const dust = new ParticleBuffer(16 * 4, 'alpha', 0.9)
     return { falls, riders, rebels, drop, spear, trail, contacts, fx, steps, clear, ranks, lens, dust, melee }
-  }, [scene])
+  }), [scene])
 
   useDisposeWorld(world, () => {
     world.riders.forEach((r) => r.rig.dispose())
@@ -525,7 +526,7 @@ export function ThunderingChargeWorld({ scene }: { scene: CutinScene }) {
 
   const tip = useMemo(() => ({ a: new Vector3(), b: new Vector3() }), [])
 
-  useFrame(({ camera, gl }) => {
+  useCutinFrame(({ camera, gl }) => {
     const { story: s } = frame.current
     const ppu = pxPerUnit(gl.domElement.height, (camera as { fov?: number }).fov ?? 40)
     const { riders, rebels, falls, drop, spear, trail, fx } = world
@@ -657,6 +658,7 @@ export function ThunderingChargeWorld({ scene }: { scene: CutinScene }) {
       {Object.entries(world.fx).map(([k, f]) => (
         <primitive key={k} object={f.points as Object3D} />
       ))}
+      <PadLights n={POINT_LIGHTS} />
     </group>
   )
 }

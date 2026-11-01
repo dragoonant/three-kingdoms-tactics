@@ -10,7 +10,9 @@
 import { audio } from '../audio'
 import { CutinController } from './controller'
 import { sequenceTiming, type LinkPlan, type LinkTiming, type SceneId, type SequencePlan } from './plan'
+import { perf } from './perf'
 import { INTERSTITIAL } from './sceneInfo'
+import { prep } from './prep'
 import { buildScene, samplePlan } from './scenes'
 import type { CutinScene } from './timeline'
 
@@ -25,6 +27,9 @@ export interface PlayerView {
   active: boolean
   /** Changes with every link: the layer remounts the world on it. */
   linkKey: number
+  /** The link's world in the persistent canvas (cutins/prep.ts), and whether it was prebuilt before the link started. */
+  key: string | null
+  prebuilt: boolean
   link: number
   links: number
   phase: 'scene' | 'seal'
@@ -36,7 +41,7 @@ export interface PlayerView {
   plan: SequencePlan | null
 }
 
-const IDLE: PlayerView = { active: false, linkKey: 0, link: 0, links: 0, phase: 'scene', seals: [], scene: null, last: false, plan: null }
+const IDLE: PlayerView = { active: false, linkKey: 0, key: null, prebuilt: false, link: 0, links: 0, phase: 'scene', seals: [], scene: null, last: false, plan: null }
 
 export class CutinPlayer {
   readonly controller: CutinController
@@ -96,6 +101,7 @@ export class CutinPlayer {
     this.sealT = 0
     this.history = []
     this.ready = false
+    perf.trigger(plan.links.length > 1 ? 'chain' : plan.full ? 'full' : 'short', plan.links.map((l) => l.scene), plan.enemy)
     audio.cutinStart(plan.full ? 'full' : 'short', t.seconds)
     this.beginLink(0, [])
     this.startLoop()
@@ -105,6 +111,8 @@ export class CutinPlayer {
   markReady(): void {
     if (!this.view.active) return
     this.ready = true
+    this.controller.hold = false
+    perf.mark('ready')
     this.last = performance.now()
   }
 
@@ -113,7 +121,10 @@ export class CutinPlayer {
     if (!this.view.active) return
     this.stopLoop()
     this.controller.pause()
+    this.controller.hold = false
     audio.cutinSkip()
+    perf.end()
+    prep.endSequence()
     this.hooks = null
     this.set({ ...IDLE, linkKey: this.key })
   }
@@ -131,10 +142,16 @@ export class CutinPlayer {
     const plan = this.plan!
     this.i = i
     const link = plan.links[i]!
-    const scene = buildScene(link)
+    perf.link(i)
+    const prev = this.view.key
+    const { key, scene, prebuilt } = perf.measure('scene-plan', () => prep.live(link))
+    if (prev && prev !== key) prep.drop(prev)
+    perf.mark(prebuilt ? 'prebuilt-hit' : 'built-at-start')
     this.history.push(scene)
     const tm = this.timing[i]!
     const c = this.controller
+    // nothing is drawn until the layer reports the link's world on screen (markReady)
+    c.hold = true
     c.setScene(scene)
     c.windowEnd = tm.end
     c.speed = tm.rate
@@ -143,7 +160,7 @@ export class CutinPlayer {
     c.playing = false
     c.playExternal()
     this.ready = false
-    this.set({ active: true, linkKey: ++this.key, link: i, links: plan.links.length, phase: 'scene', seals, scene, last: i === plan.links.length - 1, plan })
+    this.set({ active: true, linkKey: ++this.key, key, prebuilt, link: i, links: plan.links.length, phase: 'scene', seals, scene, last: i === plan.links.length - 1, plan })
   }
 
   /** Advance the clock by dt real seconds. No-op until the world of the current link is mounted. */
@@ -179,8 +196,11 @@ export class CutinPlayer {
     }
     const hooks = this.hooks
     this.stopLoop()
+    this.controller.hold = false
     this.hooks = null
     audio.cutinEnd()
+    perf.end()
+    prep.endSequence()
     this.set({ ...IDLE, linkKey: this.key })
     hooks?.onDone()
   }
@@ -241,13 +261,15 @@ export interface CutinTestApi {
   /** Stop the wall clock from advancing the cut-in; the caller steps it with `step`. */
   manual(on: boolean): void
   step(dt: number): void
-  /** Advance until the sequence is over, `dt` per step; returns the steps taken. */
+  /** Advance until the sequence is over (or a later link's world is still mounting: call again once ready), `dt` per step; returns the steps taken. */
   run(dt?: number, max?: number): number
   skip(): void
   /** Play a sequence of sample links (scene ids, each with plan overrides) with no engine behind it: for the capture tools. */
   play(links: { scene: string; over?: Record<string, unknown> }[], full?: boolean): void
   history(): { id: string; officer: string; title: string; damage: string; params: unknown }[]
   time(): number
+  /** The persistent canvas's warm-up and prebuilt worlds (docs/spec/51 "Performance"). */
+  prep(): { warm: { running: boolean; done: boolean; total: number; step: number }; slots: { kind: string; mounted: boolean; ready: boolean; scene: string | null }[]; stats: { prebuilt: number; built: number; warmed: number }; attached: boolean }
 }
 export function cutinTestApi(): CutinTestApi {
   return {
@@ -260,7 +282,7 @@ export function cutinTestApi(): CutinTestApi {
     step: (dt) => player.step(dt),
     run: (dt = 1 / 15, max = 4000) => {
       let n = 0
-      while (player.active && n < max) {
+      while (player.active && player.isReady && n < max) {
         player.step(dt)
         n++
       }
@@ -278,5 +300,6 @@ export function cutinTestApi(): CutinTestApi {
     },
     history: () => player.history.map((s) => ({ id: s.id, officer: s.officer, title: s.title, damage: s.overlays.damage.text, params: s.params })),
     time: () => player.controller.t,
+    prep: () => ({ warm: prep.getWarm(), slots: prep.getSnapshot().map((s) => ({ kind: s.kind, mounted: s.mounted, ready: s.ready, scene: s.scene?.id ?? null })), stats: { ...prep.stats }, attached: prep.attached }),
   }
 }
