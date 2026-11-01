@@ -35,6 +35,7 @@ An original 3D grid tactics game set in the Three Kingdoms era, built as a spiri
 - **D25** (owner, 2026-11-01) **Keep the procedural figures for now** ("they're surprisingly good"). The M5 Hunyuan switch and its rigging decision are deferred until the owner reopens them.
 - **D26** (owner, 2026-11-01) **Touch controls:** one-finger drag pans; two-finger twist rotates; pinch zooms. Allow **zooming in until a single unit fills much of the screen**. **Nothing may block sight of the board from a low camera angle.** The **unit card is compact** (pertinent info only) and opens a detail sheet on demand. **Portraits show the general's face**: rendered from our 3D figures now, and generated with Hugging Face once an `HF_TOKEN` secret exists (owner: "use hugging face to gen that if needed"). As built: mouse drag scrolls, right-drag or Q/E rotates, wheel zooms to the cursor; the pitch eases lower as you zoom in; the tent cloth that blocked a low camera now fades; the card has a More detail sheet. See `docs/spec/50-presentation.md`.
 - **D27** (owner, 2026-11-01) **Cut-ins happen inside a larger war:** "It would be cool to see troops to be fighting each other from each side around the stratagem move, so it doesn't look like it's an isolated battle, it's happening inside of a larger war." Every full scene (lighter in shorts) gets a background battle layer: both sides' troops skirmishing in the mid and far ground for the whole scene, built on the instanced crowd module, never blocking the hero action or the lens.
+- **D28** (owner, 2026-11-01) **Roguelike mode "Roads to War"** (plan: `docs/spec/15-roguelike.md`). Owner: "reimagine this as a roguelike ... each scenario would be a major battle (yellow turban rebellion, chi bi, etc), and we'd go through 2-3 minor battles leading up to that battle (from history)." Answers: it sits **beside** the "Liu Bei's Rise" campaign (roguelike is the main mode, the campaign stays as a story mode); **Liu Bei's path first** (eras 1–4: Yellow Turbans, Coalition, Xu Province, Red Cliffs; other lords later); **one era per run** (a chained full-history run unlocks after all v1 eras); a routed officer is **wounded first and falls on a second rout in the run** (Iron Oath: one rout is fatal; the lord routed ends the run). Defaults pending objection: unlocks-only meta-progression; history first with novel set pieces labelled.
 
 ## Milestones
 | M | What | Where | Status |
@@ -49,6 +50,11 @@ An original 3D grid tactics game set in the Three Kingdoms era, built as a spiri
 | M7 | Polish, phone layout, settings, end screen | cloud | |
 | M8 | Campaign framework: progression, camp, roster, saves, story scenes, Iron Oath | cloud | done 2026-11-01 |
 | M9 | Campaign battles 2–9 (specs + data + scenes + per-battle AI checks) | cloud | done 2026-11-01 (AI-vs-AI balanced; human playtest pending) |
+| RL0 | Roguelike research + design: era tables checked against sources, RL- rules, treasures/events/omens, road template, wireframes (owner gate) | cloud | |
+| RL1 | Run layer `src/run/` + road UI + rewards + camp/market/event nodes + saves; era 1 end to end (+ Changshe, Wancheng) | cloud | |
+| RL2 | Seeded battle variants, treasures/omens as engine modifiers, bonus objectives, Mandate 1–5, daily seed | cloud | |
+| RL3 | Eras 2–4 content: ~6 new minor battles, events, draft pools, story lines | cloud | |
+| RL4 | Annals meta-progression, Mandate 6–10, run bench + balance, KB | cloud | |
 
 ## Rulings / balance log
 (`RULING: <rule> | <what we did> | <why>`)

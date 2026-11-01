@@ -1,4 +1,4 @@
-# 15 — Roguelike mode "Roads to War" (plan v0.1, 2026-11-01, for owner review)
+# 15 — Roguelike mode "Roads to War" (plan v0.2, 2026-11-01; decisions 1–4 answered, PLAN D28)
 
 **Owner request (2026-11-01):** "I would love to reimagine this as a roguelike, so that you're fighting up to the final battle of that era. It would be cool to go through the minor battles of the era leading up to the major battle of each era - each scenario would be a major battle (yellow turban rebellion, chi bi, etc), and we'd go through 2-3 minor battles leading up to that battle (from history). Let's make a plan for that."
 
@@ -106,10 +106,10 @@ Each finished run, won or lost, writes an entry in the **Annals**: the era, the 
 
 v1 (RL0–RL4) is about **5M tokens**, done as two or three overnight sessions. The cut-ins, crowds, portraits and audio already built all carry over unchanged.
 
-## 9. Decisions for the owner
-1. **[decide] Does the roguelike replace the campaign or sit beside it?** *Recommend: beside it.* "Roads to War" becomes the main mode on the title, and "Liu Bei's Rise" stays as a story mode. It's already built, and it teaches the rules.
-2. **[decide] Whose road?** *Recommend: Liu Bei's eras for v1* (the figures, portraits and stories already exist), with Cao Cao and the Sun family as later lords. Each lord would add their own eras, such as Guandu.
-3. **[decide] How long is a run?** *Recommend: one era per run* (45–90 min), and after all v1 eras are won, unlock one long run that chains all four.
-4. **[decide] Officer loss?** *Recommend: wounded first, fall on the second rout in a run*, with Iron Oath as the one-rout hardcore toggle.
-5. **[decide] Meta-progression?** *Recommend: unlocks only* (eras, officers into the draft pools, treasures, events, Mandate levels), with no permanent stat upgrades.
-6. **[decide] History or the novel?** You said "from history". *Recommend: history first, with the novel's best-known set pieces kept and labelled.* That keeps Daxing Hill, Qingzhou, Sishui Gate and Hulao Gate, which are novel events.
+## 9. Decisions (owner answered 1–4 on 2026-11-01, all as recommended; 5–6 are defaults unless the owner objects)
+1. **[decided: as recommended] Does the roguelike replace the campaign or sit beside it?** *Recommend: beside it.* "Roads to War" becomes the main mode on the title, and "Liu Bei's Rise" stays as a story mode. It's already built, and it teaches the rules.
+2. **[decided: as recommended] Whose road?** *Recommend: Liu Bei's eras for v1* (the figures, portraits and stories already exist), with Cao Cao and the Sun family as later lords. Each lord would add their own eras, such as Guandu.
+3. **[decided: as recommended] How long is a run?** *Recommend: one era per run* (45–90 min), and after all v1 eras are won, unlock one long run that chains all four.
+4. **[decided: as recommended] Officer loss?** *Recommend: wounded first, fall on the second rout in a run*, with Iron Oath as the one-rout hardcore toggle.
+5. **[default] Meta-progression?** *Recommend: unlocks only* (eras, officers into the draft pools, treasures, events, Mandate levels), with no permanent stat upgrades.
+6. **[default] History or the novel?** You said "from history". *Recommend: history first, with the novel's best-known set pieces kept and labelled.* That keeps Daxing Hill, Qingzhou, Sishui Gate and Hulao Gate, which are novel events.
