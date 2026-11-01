@@ -76,6 +76,74 @@ At the end the camera rises back out to the table, and the board shows the resul
 - **Music**: a high-energy orchestral charge layer plays during each cut-in and is removed after it (PLAN D21, docs/spec/60-audio.md).
 - **Frequency**: full scenes for stratagems and chains; 2–3 s short versions for normal attacks (PLAN D20).
 
+---
+
+# v0.3 direction: cut-ins inside real battles (2026-11-01)
+The owner asked for cut-ins in actual battles (PLAN D20): **full scenes for stratagems and chains, 2–3 s short scenes for every normal attack**. The charge music layer plays over both (D21). The figures stay procedural (D25). Every number shown comes from the engine event being presented.
+
+## Which scene plays (by stratagem tag)
+| Tag | Stratagems (examples) | Scene |
+|---|---|---|
+| Fire | Fire Attack, Torch Raid, Kindling, Valley Blaze, Fire Ships | **A**, Fire Arrows: the caster's troop kind looses or throws fire; the target tile's terrain burns if the event ignites it |
+| Volley | Arrow Rain, Massed Arrows | **A′**: scene A without the brazier and fire; plain arrows, same arc and slow motion |
+| Charge | Thundering Charge, Lone Rider | **B**, Thundering Charge |
+| Strike | Twin Blades, Crescent Sweep, Serpent Thrust, Mob Rush, Green Dragon Cleave | **C**, Duel Strike (below) |
+| Shout | Thunder Roar, Rebel War Cry, Bridge Roar | **D**, Thunder Roar (below) |
+| Ruse | Sow Discord, Yellow Sky Hex, Envoy's Tongue | **R**, a 3 s short: the caster gestures and ink-smoke drifts over the targets, which turn dizzy (brush spirals) |
+| Command | Call the Storm, Borrow the Wind | **W**, a 3 s short: banners whip round, the incense smoke swings, and a wind-arrow brush stroke shows the new direction |
+| Command | Rally, banners, Eight Trigrams, Supply Train | no cut-in (board effect only) |
+
+**The scene is built from the event:**
+- The caster appears as their hero rig, or the officer kit, mounted if cavalry.
+- The caster's troops use their kind and side palette.
+- The defenders use their kind and side palette, standing on the target tile's terrain: millet, forest, hill slope, village, shallows, ship deck or plain sand.
+- Damage, falls and routs come from the event: falls = max(1, round(damage / defender troops before × front-rank count)); if the unit was routed, everyone falls or flees.
+
+## Scene C: "Duel Strike" (6.0 s)
+| Beat | Time | Shot | Action |
+|---|---|---|---|
+| C1 | 0.0–0.6 | Dive into the caster's tile | The pieces wake; the title brushes in |
+| C2 | 0.6–1.6 | Medium shot tracking beside the hero | The hero goes from walk to run toward the enemy front rank, weapon drawn back, their own troops advancing behind |
+| C3 | 1.6–2.4 | Low close-up, **0.5× slow motion 1.9–2.2** | The wind-up for the weapon: twin swords cross, the glaive goes overhead, the spear is drawn back; call-out "Strike!" |
+| C4 | 2.4–3.4 | Impact, **0.14 s hit-stop** | The weapon's own trail: twin blades leave an X of two slashes, the glaive a wide arc that hits three, the spear a straight piercing line. The front rank is knocked back and N fall |
+| C5 | 3.4–4.8 | Wide | Both lines crash together and the hero's troops pour in; dust |
+| C6 | 4.8–6.0 | Pull out | Damage painted, seal |
+
+## Scene D: "Thunder Roar" (6.0 s)
+| Beat | Time | Shot | Action |
+|---|---|---|---|
+| D1 | 0.0–0.6 | Dive | — |
+| D2 | 0.6–1.8 | Slow push-in on the hero's face | A deep breath, chest swelling |
+| D3 | 1.8–2.6 | Front, camera shake | **ROAR**: mouth wide open, ink-brush shockwave rings expanding across the sand, dust lifting, the lantern bokeh shuddering |
+| D4 | 2.6–4.0 | Reverse shot as the rings hit the enemy line | Weapons dropped, rebels stagger and cover their ears, N fall, brush spirals over the confused ones (from the event's confused list) |
+| D5 | 4.0–5.0 | Wide | Enemy horses rear (if cavalry); the survivors back away |
+| D6 | 5.0–6.0 | Pull out | Damage plus a "Confused ×N" slip, seal |
+
+## Chains
+Links play back to back, separated by a 0.4 s seal-stamp interstitial that adds a seal to the chain row. **Links 2 and later skip their dive beat and start at the action beat**, at about 60% of their length, so a 4-link chain stays under about 18 s. The charge music layer plays straight through the chain.
+
+## Short scenes for normal attacks (2.4–3.0 s)
+There is no title slip, only a small troop-kind slip. The dive is 0.3 s.
+- **S-melee** (infantry attacker):
+  - 0.3–1.2: the front rank runs in.
+  - 1.2–1.8: the clash, with a 0.10 s hit-stop; N fall.
+  - 1.8–2.4: **if there's a counter event**, the defenders shove back and M attackers fall; otherwise the attackers press on.
+  - 2.4–2.7: pull out, showing the damage and counter numbers.
+- **S-cavalry:** the riders canter in, ride through, then wheel round; then the numbers.
+- **S-archer:** the archers loose, the arrows land and N fall; then the numbers. There's never a counter.
+- **Facing pays off:** when the arc is side or rear, the camera shows the hit from that side and the call-out reads "**Flank!**" or "**Rear!**". This makes the facing rule visible.
+
+## Settings and pacing
+- **Battle scenes:** "Full and short" (default) / "Stratagems and chains only" / "Off".
+- **Enemy scenes:** "Same as mine" (default) / "Stratagems only" / "Off".
+- **Speed:** Quick plays scenes at 1.5×; Instant skips them.
+- **Skipping:** any click skips the current scene and sends `audio.cutinSkip()`.
+- **Board sync:** the board result (troop bars, routs, fire) appears as the camera rises back out, never behind a scene that is still playing.
+
+## More troops (D22)
+About **20–30 troops per side** on screen. The hero and front rank are full rigs; the ranks behind use instanced, lower-detail troops sharing the same clips (or simplified ones). Formations follow troop kind: the infantry block, the archer line, the cavalry wedge.
+
 ## Revision log
 - v0.1 2026-11-01: first direction (scenes A and B).
 - v0.2 2026-11-01: bases removed, locomotion animated (owner: "I don't want them on bases. I want their movement on feet and on horse to be animated"). Archers kneel; B3 riders trot, canter and gallop on a distance-driven footfall cycle with hoof dust on the footfalls; rebels stagger back a step (B4, A5) and the flung rebels land and lie flat (B5); the charge's top speed is lowered so the gallop cadence reads.
+- v0.3 2026-11-01: in-battle integration direction: scenes C (Duel Strike) and D (Thunder Roar), the R and W shorts, short normal-attack scenes, chains, settings, crowd sizes.
