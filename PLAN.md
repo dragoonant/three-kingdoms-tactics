@@ -33,6 +33,7 @@ An original 3D grid tactics game set in the Three Kingdoms era, built as a spiri
 - **D23** (owner, 2026-11-01) **No bases on troops or heroes** ("I don't want them on bases"), on the board, in cut-ins, in the figure lab and in future concept art (owner: "Correct everywhere."); **movement on foot and on horse is animated** (walk/run, horse gaits, feet planted). On the board a flat painted ground ring on the sand carries side colour, facing and selection states.
 - **D24** (owner, 2026-11-01) Brothers' heights follow the novel: **Guan Yu tallest** (about 1.15× Liu Bei), Zhang Fei about 1.07×, Liu Bei 1.0, on figures and in concept edits. **Zhang Fei wears red**: a red cape, sash and spear tassel over black and blue armour; his face stays dark.
 - **D25** (owner, 2026-11-01) **Keep the procedural figures for now** ("they're surprisingly good"). The M5 Hunyuan switch and its rigging decision are deferred until the owner reopens them.
+- **D26** (owner, 2026-11-01) **Touch controls:** one-finger drag pans; two-finger twist rotates; pinch zooms. Allow **zooming in until a single unit fills much of the screen**. **Nothing may block sight of the board from a low camera angle.** The **unit card is compact** (pertinent info only) and opens a detail sheet on demand. **Portraits show the general's face**: rendered from our 3D figures now, and generated with Hugging Face once an `HF_TOKEN` secret exists (owner: "use hugging face to gen that if needed").
 
 ## Milestones
 | M | What | Where | Status |
