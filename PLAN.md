@@ -31,6 +31,7 @@ An original 3D grid tactics game set in the Three Kingdoms era, built as a spiri
 - **D21** (owner, 2026-11-01) Music: during a cut-in a **high-energy charge layer plays over the battle music and is removed when the cut-in ends**. Style: **full orchestral surge** (strings, brass and war drums), same key and BPM as the battle bed. Files come from the owner's **Audio Studio on evilaegis** (no CC0 placeholders); the system is built now and stays silent until they exist.
 - **D22** (owner, 2026-11-01) Cut-ins need **more troops on screen**; the current 6–9 per side is accepted as interim.
 - **D23** (owner, 2026-11-01) **No bases on troops or heroes** ("I don't want them on bases"), on the board, in cut-ins, in the figure lab and in future concept art (owner: "Correct everywhere."); **movement on foot and on horse is animated** (walk/run, horse gaits, feet planted). On the board a flat painted ground ring on the sand carries side colour, facing and selection states.
+- **D24** (owner, 2026-11-01) Brothers' heights follow the novel: **Guan Yu tallest** (about 1.15× Liu Bei), Zhang Fei about 1.07×, Liu Bei 1.0, on figures and in concept edits. **Zhang Fei wears red**: a red cape, sash and spear tassel over black and blue armour; his face stays dark.
 
 ## Milestones
 | M | What | Where | Status |
