@@ -27,7 +27,9 @@ An original 3D grid tactics game set in the Three Kingdoms era, built as a spiri
 - **D18** Overnight budget **~6M tokens**; Sonnet agents implement; **multi-agent workflows approved**; **KB pushes approved**.
 
 - **D19** (owner, 2026-11-01) Figures: the procedural hero/troop rigs (docs/spec/31) are the interim look ("impressed"); **we will switch to the owner's modelling pipeline** (Gemini concept → Hunyuan GLB on the PC, M5). GLBs must keep the rig joint contract (`src/client/figures/rig.ts`) so the board and cut-ins keep working; the procedural rigs stay as the fallback.
-
+- **D20** (owner, 2026-11-01) Battle cut-ins: **full scene (5–8 s) for stratagems and chains, a 2–3 s short version for every normal attack**; any click skips; Instant skips; setting to change it.
+- **D21** (owner, 2026-11-01) Music: during a cut-in a **high-energy charge layer plays over the battle music and is removed when the cut-in ends**. Style: **full orchestral surge** (strings, brass and war drums), same key and BPM as the battle bed. Files come from the owner's **Audio Studio on evilaegis** (no CC0 placeholders); the system is built now and stays silent until they exist.
+- **D22** (owner, 2026-11-01) Cut-ins need **more troops on screen**; the current 6–9 per side is accepted as interim.
 
 ## Milestones
 | M | What | Where | Status |

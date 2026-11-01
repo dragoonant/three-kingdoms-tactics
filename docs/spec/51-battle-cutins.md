@@ -70,5 +70,11 @@ At the end the camera rises back out to the table, and the board shows the resul
 2. Shorter normal-attack variants for each troop matchup.
 3. Add the setting, and respect the speed modes (Instant skips cut-ins; Quick plays them at 1.5×).
 
+## Owner notes on v0.1 (2026-11-01)
+- "I like it so far!!"
+- **More troops on screen**: the current 6–9 per side is interim. For v0.2, aim for about 20–30 per side using instanced troop rigs, with the hero and the front rank at full detail.
+- **Music**: a high-energy orchestral charge layer plays during each cut-in and is removed after it (PLAN D21, docs/spec/60-audio.md).
+- **Frequency**: full scenes for stratagems and chains; 2–3 s short versions for normal attacks (PLAN D20).
+
 ## Revision log
 - v0.1 2026-11-01: first direction (scenes A and B).
