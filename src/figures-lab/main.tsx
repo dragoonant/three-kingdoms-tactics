@@ -4,6 +4,7 @@
 //   ?test=1  sets window.__lab = { ready: true } after the first render
 //   ?mode=front|threequarter|silhouette&rotate=0&scale=board&group=heroes|officers|troops|variants|horses|all
 //   ?view=locomotion&gait=walk|run|trot|canter|gallop&t=<seconds>  side-on treadmill of a hero, infantry, archer and riders (locomotion.tsx)
+//   ?view=crowds&scene=infantry|archers|cavalry|rebels|all|perf&cam=side|three|front&t=<seconds>  instanced troop formations of the cut-ins (crowds.tsx, docs/spec/52-crowds.md)
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
@@ -15,6 +16,7 @@ import { OFFICER_IDS, buildOfficer } from '../client/figures/officerKit'
 import { buildTroopRig } from '../client/figures/troops'
 import type { Rig, SidePalette, TroopKind } from '../client/figures/rig'
 import { Locomotion } from './locomotion'
+import { Crowds } from './crowds'
 
 type Mode = 'front' | 'threequarter' | 'silhouette'
 type GroupKey = 'heroes' | 'officers' | 'troops' | 'variants' | 'horses' | 'brothers' | 'all'
@@ -338,5 +340,5 @@ const CSS = `
 .lab-label i{font:500 11px 'Alegreya Sans',system-ui,sans-serif;color:#c9b27c;font-style:normal;text-transform:uppercase;letter-spacing:.08em}
 `
 
-createRoot(document.getElementById('root')!).render(Q.get('view') === 'locomotion' ? <Locomotion /> : <Lab />)
+createRoot(document.getElementById('root')!).render(Q.get('view') === 'locomotion' ? <Locomotion /> : Q.get('view') === 'crowds' ? <Crowds /> : <Lab />)
 
