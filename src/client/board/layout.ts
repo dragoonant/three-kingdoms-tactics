@@ -114,13 +114,25 @@ export function angleDelta(a: number, b: number): number {
   return d
 }
 
-/** Screen-projection hooks filled by the canvas (used by tests and by HUD pointers). */
+/** Screen-projection and camera hooks filled by the canvas (used by tests, tools and HUD pointers). */
 export const viewApi: {
   tileToScreen: (x: number, y: number) => { x: number; y: number } | null
   unitToScreen: (id: string) => { x: number; y: number } | null
   rotate: (dir: -1 | 1) => void
+  /** Glide back to the fitted overview. */
+  reset: () => void
+  /** The camera right now: position, orbit target (x, z), azimuth, zoom (0 overview, 1 closest), tilt and near plane. */
+  camera: () => { x: number; y: number; z: number; tx: number; tz: number; az: number; zoom: number; tilt: number; dist: number; near: number } | null
+  /** Set the view at once (target x/z in world units, azimuth, zoom, tilt). */
+  setView: (p: { x?: number; z?: number; az?: number; zoom?: number; tilt?: number }) => void
+  /** Glide to a unit at a zoom (1 = as close as the camera goes). */
+  focusUnit: (id: string, zoom?: number) => void
 } = {
   tileToScreen: () => null,
   unitToScreen: () => null,
   rotate: () => undefined,
+  reset: () => undefined,
+  camera: () => null,
+  setView: () => undefined,
+  focusUnit: () => undefined,
 }

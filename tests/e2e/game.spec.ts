@@ -245,7 +245,7 @@ test('a linked stratagem stamps a seal per link and counts the chain', async ({ 
   expect(errors).toEqual([])
 })
 
-test('phone portrait layout: no scrollbars, the officer panel is a bottom sheet', async ({ page }) => {
+test('phone portrait layout: no scrollbars, the unit card is a slim bar above the action slips', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   const errors = await boot(page, 'seed=7&speed=instant')
   await noScrollbars(page)
@@ -260,8 +260,12 @@ test('phone portrait layout: no scrollbars, the officer panel is a bottom sheet'
   await expect(panel).toBeVisible()
   const box = await panel.boundingBox()
   expect(box).not.toBeNull()
-  expect(box!.y + box!.height).toBeGreaterThan(830)
   expect(box!.width).toBeGreaterThan(380)
+  expect(box!.height).toBeLessThanOrEqual(76)
+  const fan = await page.locator('.fan').boundingBox()
+  expect(fan).not.toBeNull()
+  expect(box!.y + box!.height).toBeLessThanOrEqual(fan!.y + 1)
+  expect(fan!.y + fan!.height).toBeGreaterThan(830)
   await page.getByTestId('act-wait').click()
   await page.getByTestId('face-N').click()
   await expect(page.getByTestId('seal')).toBeVisible()

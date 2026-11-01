@@ -43,6 +43,10 @@ function installTestHook(): void {
     query,
     tileToScreen: (x: number, y: number) => viewApi.tileToScreen(x, y),
     unitToScreen: (id: string) => viewApi.unitToScreen(id),
+    camera: () => viewApi.camera(),
+    setView: (p: Parameters<typeof viewApi.setView>[0]) => viewApi.setView(p),
+    focusUnit: (id: string, zoom?: number) => viewApi.focusUnit(id, zoom),
+    resetView: () => viewApi.reset(),
     ...installCampaignHook(),
   }
 }

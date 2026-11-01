@@ -34,6 +34,8 @@ An original 3D grid tactics game set in the Three Kingdoms era, built as a spiri
 - **D24** (owner, 2026-11-01) Brothers' heights follow the novel: **Guan Yu tallest** (about 1.15× Liu Bei), Zhang Fei about 1.07×, Liu Bei 1.0, on figures and in concept edits. **Zhang Fei wears red**: a red cape, sash and spear tassel over black and blue armour; his face stays dark.
 - **D25** (owner, 2026-11-01) **Keep the procedural figures for now** ("they're surprisingly good"). The M5 Hunyuan switch and its rigging decision are deferred until the owner reopens them.
 
+- **D26** (owner, 2026-11-01) Board UX: **touch = one-finger drag scrolls the map, two-finger twist rotates, pinch zooms** (mouse: drag scrolls, right-drag or Q/E rotates, wheel zooms to the cursor); zoom in far enough to see a unit up close with the pitch easing lower; the tent cloth that blocked a low camera now fades; the officer panel became a **small unit card with a More detail sheet**; **portraits are faces** (rendered now from our own figures, Hugging Face generation built for later). See `docs/spec/50-presentation.md`.
+
 ## Milestones
 | M | What | Where | Status |
 |---|---|---|---|

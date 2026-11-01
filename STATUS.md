@@ -15,6 +15,8 @@
   - wind, buff and provoke stratagems.
 - **Enemy AI:** a utility AI in a worker that understands objectives, behaviour hints (ambush, guard, hold, pursue) and timeline changes. `?bot=random|easy|normal` overrides its strength.
 
+- **Board UX (2026-11-01, D26):** touch controls (one-finger scroll, two-finger twist to rotate, pinch to zoom), mouse (drag scrolls, right-drag or Q/E turns, wheel zooms to the cursor), a close zoom to 2.8 tiles with the pitch easing side-on, the tent cloth that blocked a low camera now fades, a small unit card (252 x 72 desktop, 64 px phone bar) with a More detail sheet, and face portraits (rendered from our own figures; `tools/portraits/gen-hf.mjs` is built for Hugging Face generation once an `HF_TOKEN` exists). See `docs/spec/50-presentation.md`.
+
 ## Verified (2026-11-01)
 - typecheck; 472 unit tests; `validate:data`; sim `--all` (11 battles × 30 games, 0 invariant failures); build; e2e 9/9 (incl. a campaign through battle 2 with save, Continue and retry, the proving ground, phone layouts).
 - Every battle renders in a real browser with 0 page errors (screenshots checked: Red Cliffs fleet, Hulao wall and gate).

@@ -154,8 +154,15 @@ export function HowTo() {
               joins you at once.
             </p>
           </article>
+          <article data-testid="howto-controls">
+            <h3>Controls</h3>
+            <p>
+              <b>Touch:</b> drag with one finger to scroll the map, twist two fingers to turn the table, pinch to zoom toward your fingers. A tap selects; a drag never does.{' '}
+              <b>Mouse:</b> drag to scroll, right-drag (or Q and E) to turn and tilt, the wheel zooms toward the cursor, R resets the view. Zoom all the way in to look a unit in the face.
+            </p>
+          </article>
         </div>
-        <p className="muted">Any click skips the replay of what just happened. Speed (Full, Quick, Instant) is on the top bar. Q and E turn the table.</p>
+        <p className="muted">Any click skips the replay of what just happened. Speed (Full, Quick, Instant) is on the top bar. More on the unit card opens the full details.</p>
         <div className="row">
           <button type="button" className="plain" onClick={() => go('title')} data-testid="howto-back">
             Back
@@ -176,6 +183,7 @@ export function End() {
   const won = r.winner === 'han'
   const daxing = state.battleId === 'daxing-hill'
   const foe = state.sideOrder.find((x) => x !== 'han') ?? 'yellow'
+  const foeId = state.units.find((u) => u.id === state.commanders[foe])?.officer ?? state.commanders[foe] ?? ''
   const foeCommander = nameOfUnit(state, state.commanders[foe] ?? '')
   const why = !daxing
     ? r.reason === 'commander'
@@ -203,7 +211,7 @@ export function End() {
   return (
     <div className="modal" data-testid="end-screen">
       <section className={`panel endpanel ${won ? 'won' : 'lost'}`}>
-        <Portrait name={won ? 'Liu Bei' : foeCommander} side={won ? 'han' : foe} size={72} />
+        <Portrait id={won ? 'liu-bei' : foeId} name={won ? 'Liu Bei' : foeCommander} side={won ? 'han' : foe} size={72} />
         <h2 data-testid="end-title">{won ? 'Victory' : 'Defeat'}</h2>
         <p className="why" data-testid="end-reason">
           {why}

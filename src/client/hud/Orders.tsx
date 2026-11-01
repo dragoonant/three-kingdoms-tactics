@@ -198,7 +198,7 @@ export function OrdersCard() {
       body = (
         <>
           <h3>Stratagem</h3>
-          <p className="muted">Pick a slip from the officer panel.</p>
+          <p className="muted">Pick a stratagem slip.</p>
         </>
       )
     } else if (!stratPv) {

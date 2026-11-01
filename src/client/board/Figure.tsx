@@ -101,6 +101,7 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
   const root = useRef<Group>(null)
   const spin = useRef<Group>(null)
   const swirl = useRef<Group>(null)
+  const bar = useRef<Group>(null)
   const ring = useRef<Mesh>(null)
   const fill = useRef<Mesh>(null)
   const fillMat = useRef<MeshBasicMaterial>(null)
@@ -338,6 +339,11 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
       swirl.current.visible = u.confused
       swirl.current.rotation.y = t * 3.2
     }
+    // the bar is world-sized: shrink it when the camera is close so a close-up face is never covered (about constant size under 9 tiles away)
+    if (bar.current && root.current) {
+      const cd = state.camera.position.distanceTo(root.current.position)
+      bar.current.scale.setScalar(Math.max(0.3, Math.min(1, cd / 9)))
+    }
     if (fill.current) {
       fill.current.scale.x = Math.max(0.001, Math.min(1, frac))
     }
@@ -410,6 +416,7 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
 
       {/* troops brush bar, always facing the camera */}
       <Billboard position={[0, 1.34 + rider, 0]}>
+        <group ref={bar}>
         <group position={[-0.35, 0, 0]}>
           <mesh geometry={barBg} renderOrder={20}>
             <meshBasicMaterial color="#120d0a" transparent opacity={0.88} depthTest={false} />
@@ -417,6 +424,7 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
           <mesh ref={fill} geometry={barFillGeo} position={[0.04, 0.02, 0.001]} renderOrder={21}>
             <meshBasicMaterial ref={fillMat} color={faction} depthTest={false} transparent opacity={dim < 1 ? 0.7 : 1} />
           </mesh>
+        </group>
         </group>
       </Billboard>
 
