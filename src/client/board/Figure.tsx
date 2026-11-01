@@ -1,5 +1,8 @@
-// Procedural MGSD stand-in: head about 40% of the figure's height and as wide as the shoulders,
-// oversized weapon hint, back banner in the faction colour, round black base with a facing notch.
+// Every unit on the board is a figure rig (docs/spec/31-hero-figures.md): heroes get their own design, named officers the
+// officer kit, everyone else a troop rig by troop type and side. The figures have no base: they stand on the sand, and the
+// jobs the base used to do (side colour, facing, "you can act", selected, targetable, done) are painted on the sand as a flat
+// ring decal under the figure (docs/spec/50-presentation.md). Moves are locomotion: the legs run on the distance covered along
+// the engine's path, the figure turns on the spot with small steps and swings through the corners, and arrives into idle.
 import { Billboard } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { memo, useEffect, useMemo, useRef } from 'react'
@@ -15,18 +18,21 @@ import {
   type MeshBasicMaterial,
   type MeshStandardMaterial,
 } from 'three'
-import { applyClip, idle } from '../figures/clips'
+import { applyClip, drawBow, fallBack, idle, locomotion, stepTurn, thrust, type Clip } from '../figures/clips'
 import { buildHeroRig, isHeroId } from '../figures/heroes'
-import type { Rig } from '../figures/rig'
+import { buildOfficer, hasOfficerStyle } from '../figures/officerKit'
+import type { Rig, SidePalette, TroopKind } from '../figures/rig'
+import { buildTroopRig } from '../figures/troops'
 import { anim, animProgress } from '../presentation/director'
 import type { UnitVis } from '../presentation/scene'
-import { figureGeometry, swirlGeometry } from './figureGeometry'
+import { swirlGeometry } from './figureGeometry'
 import { edgePoint } from './frame'
-import { angleDelta, board, COLORS, facingAngle, sideColour, tileX, tileZ } from './layout'
+import { angleDelta, board, COLORS, facingAngle, sideColour, sideToken, tileX, tileZ } from './layout'
+import { pathLength, samplePath, trapezoid, movePhases, type PathPoint } from './travel'
 
 const ease = (t: number): number => t * t * (3 - 2 * t)
 
-/** Every distinct standard material of a hero rig (the rig owns them, so the board may tint them per unit). */
+/** Every distinct standard material of a rig (the rig owns them, so the board may tint them per unit). */
 function rigMaterials(rig: Rig): MeshStandardMaterial[] {
   const set = new Set<MeshStandardMaterial>()
   rig.group.traverse((o) => {
@@ -37,6 +43,24 @@ function rigMaterials(rig: Rig): MeshStandardMaterial[] {
   return [...set]
 }
 const tint = new Color()
+
+const PALETTES = new Set(['han', 'yellow', 'cao', 'dong', 'lu'])
+function hashOf(id: string): number {
+  let h = 2166136261
+  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619)
+  return h >>> 0
+}
+
+/** The rig for a unit: a hero design, the officer kit for any other named officer, otherwise a troop of its type and side. */
+export function buildUnitRig(u: Pick<UnitVis, 'id' | 'officer' | 'side' | 'type'>): Rig {
+  const token = sideToken(u.side)
+  const pal: SidePalette = PALETTES.has(token) ? (token as SidePalette) : 'han'
+  const cav = u.type === 'cavalry'
+  const kind: TroopKind = u.type === 'archers' ? 'archer' : cav ? 'cavalry' : pal === 'yellow' ? 'rebel' : 'infantry'
+  if (isHeroId(u.officer)) return buildHeroRig(u.officer, { mounted: cav, own: true })!
+  if (hasOfficerStyle(u.officer)) return buildOfficer(u.officer, { type: kind, side: pal, mounted: cav, own: true })
+  return buildTroopRig(kind, pal, hashOf(u.id) % 3, true)
+}
 
 const notchShape = new Shape()
 notchShape.moveTo(0, 0.2)
@@ -69,6 +93,10 @@ interface Props {
   onLeave: () => void
 }
 
+/** Decal layers sit a hair above the sand so they never z-fight with it. */
+const DECAL = { disc: 0.012, rim: 0.016, notch: 0.02, actable: 0.024, selected: 0.028, target: 0.032 }
+const polygon = { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 } as const
+
 function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, onHover, onLeave }: Props) {
   const root = useRef<Group>(null)
   const spin = useRef<Group>(null)
@@ -76,24 +104,22 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
   const ring = useRef<Mesh>(null)
   const fill = useRef<Mesh>(null)
   const fillMat = useRef<MeshBasicMaterial>(null)
+  const rimMat = useRef<MeshBasicMaterial>(null)
+  const notchMat = useRef<MeshBasicMaterial>(null)
+  const lastTint = useRef('')
   const han = u.side === 'han'
   const cav = u.type === 'cavalry'
   const dim = u.done ? 0.55 : 1
   const faction = han ? COLORS.han : sideColour(u.side)
   const phase = useMemo(() => (u.id.length * 1.37) % 6, [u.id])
+  const stride0 = useMemo(() => (hashOf(u.id) % 100) / 100, [u.id])
 
-  // Heroes with a unique design (docs/spec/31-hero-figures.md) render their rig; every other unit keeps the merged stand-in.
-  const heroRig = useMemo(() => (isHeroId(u.officer) ? (buildHeroRig(u.officer, { mounted: cav, own: true }) ?? null) : null), [u.officer, cav])
-  useEffect(() => () => heroRig?.dispose(), [heroRig])
-  const heroMats = useMemo(() => (heroRig ? rigMaterials(heroRig) : []), [heroRig])
-  const geos = useMemo(
-    () => (heroRig ? null : figureGeometry({ id: u.id, han, type: u.type, commander: u.commander, colour: han ? undefined : sideColour(u.side) })),
-    [heroRig, u.id, han, u.type, u.commander, u.side],
-  )
-  const dimColor = useMemo(() => new Color(dim, dim, dim), [dim])
-  const bodyMat = useRef<MeshStandardMaterial>(null)
+  const rig = useMemo(() => buildUnitRig(u), [u.id, u.officer, u.side, u.type]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => rig.dispose(), [rig])
+  const mats = useMemo(() => rigMaterials(rig), [rig])
   const rider = cav ? 0.34 : 0
-  const baseR = heroRig ? ((heroRig.group.userData.baseRadius as number | undefined) ?? 0.35) : cav ? 0.4 : 0.35
+  const R = rig.footprint ?? (cav ? 0.44 : 0.35)
+  const rimColor = useMemo(() => new Color(faction).multiplyScalar(dim), [faction, dim])
 
   useFrame((state) => {
     const g = root.current
@@ -112,44 +138,78 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
     let glow = 0
     let hop = 0
     let frac = u.troops / u.maxTroops
+    let clip: Clip | null = null
+    let attack: 'thrust' | 'bow' | null = null
+    /** Run the legs: `d` distance covered (tiles), `v` speed (tiles per second). */
+    const bs = rig.bodyScale ?? 1
+    const go = (d: number, v: number): Clip => locomotion(rig, d / bs + stride0 * 3, v / bs, t * 0.8 + phase)
     if (fx) {
       switch (fx.t) {
         case 'move':
           if (fx.unit === u.id) {
-            const pts = fx.path
-            const n = pts.length - 1
-            if (n >= 1) {
-              const sp = Math.min(0.9999, p * n)
-              const i = Math.floor(sp)
-              const f = sp - i
-              const a = pts[i]!
-              const b = pts[i + 1]!
-              const ax = tileX(a.x)
-              const az = tileZ(a.y)
-              const bx = tileX(b.x)
-              const bz = tileZ(b.y)
-              const ay = tops(a.x, a.y)
-              const by = tops(b.x, b.y)
-              const ff = fx.dash ? ease(p) : f
-              if (fx.dash) {
-                const A = pts[0]!
-                const B = pts[n]!
-                x = tileX(A.x) + (tileX(B.x) - tileX(A.x)) * ff
-                z = tileZ(A.y) + (tileZ(B.y) - tileZ(A.y)) * ff
-                y = tops(A.x, A.y) + (tops(B.x, B.y) - tops(A.x, A.y)) * ff
-                hop = Math.sin(ff * Math.PI) * 0.25
+            const pts: PathPoint[] = fx.path.map((q) => ({ x: tileX(q.x), z: tileZ(q.y), y: tops(q.x, q.y) }))
+            const L = pathLength(pts)
+            const sec = Math.max(0.001, anim.ms / 1000)
+            const a0 = pts[0]!
+            const aN = pts[pts.length - 1]!
+            if (fx.dash) {
+              // the Charge dash: a short gallop straight to the tile
+              const { q, dq } = trapezoid(p, 0.2, 0.25)
+              const sm = samplePath(pts, L * q)
+              x = a0.x + (aN.x - a0.x) * q
+              z = a0.z + (aN.z - a0.z) * q
+              y = a0.y + (aN.y - a0.y) * q
+              if (L > 0.01) ang = Math.atan2(aN.x - a0.x, aN.z - a0.z)
+              clip = go(L * q, (L * dq) / sec)
+              void sm
+            } else if (fx.undo || L < 0.001) {
+              x = a0.x + (aN.x - a0.x) * ease(p)
+              z = a0.z + (aN.z - a0.z) * ease(p)
+              y = a0.y + (aN.y - a0.y) * ease(p)
+              clip = go(L * ease(p), (L * 6 * p * (1 - p)) / sec)
+            } else {
+              const { tin, tout } = movePhases(fx.turnIn, fx.turnOut, anim.ms)
+              const start = samplePath(pts, 0)
+              const end = samplePath(pts, L)
+              if (p < tin) {
+                // turn on the spot before setting off: small steps
+                const k = ease(p / tin)
+                ang = facingAngle(u.facing) + fx.turnIn * k
+                x = a0.x
+                z = a0.z
+                y = a0.y
+                clip = stepTurn(fx.turnIn * k)
+              } else if (p > 1 - tout) {
+                const k = ease((p - (1 - tout)) / tout)
+                ang = end.heading + fx.turnOut * k
+                x = aN.x
+                z = aN.z
+                y = aN.y
+                clip = stepTurn(fx.turnOut * k)
               } else {
-                x = ax + (bx - ax) * ff
-                z = az + (bz - az) * ff
-                y = ay + (by - ay) * ff
-                hop = Math.abs(Math.sin(f * Math.PI)) * 0.07
+                const pp = (p - tin) / Math.max(1e-6, 1 - tin - tout)
+                const { q, dq } = trapezoid(pp)
+                const d = L * q
+                const sm = samplePath(pts, d)
+                x = sm.x
+                z = sm.z
+                y = sm.y
+                // ease the heading from the pre-move facing to the path's, over the first stretch when there was no on-the-spot turn
+                ang = tin > 0 ? sm.heading : sm.heading + angleDelta(sm.heading, facingAngle(u.facing)) * (1 - ease(Math.min(1, d / 0.3)))
+                if (tout === 0) ang = ang + angleDelta(ang, facingAngle(fx.facingTo)) * ease(Math.min(1, Math.max(0, (d - (L - 0.3)) / 0.3)))
+                void start
+                clip = go(d, (L * dq) / (sec * Math.max(1e-6, 1 - tin - tout)))
               }
-              if (!fx.undo && (bx !== ax || bz !== az)) ang = Math.atan2(bx - ax, bz - az)
             }
           }
           break
         case 'turn':
-          if (fx.unit === u.id) ang = facingAngle(fx.from) + angleDelta(facingAngle(fx.from), facingAngle(fx.to)) * ease(p)
+          if (fx.unit === u.id) {
+            const k = ease(p)
+            const a = angleDelta(facingAngle(fx.from), facingAngle(fx.to))
+            ang = facingAngle(fx.from) + a * k
+            clip = stepTurn(a * k)
+          }
           break
         case 'lunge':
           if (fx.unit === u.id) {
@@ -159,8 +219,9 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
             const off = Math.sin(Math.min(1, p) * Math.PI) * 0.4
             x += (dx / len) * off
             z += (dz / len) * off
-            hop = Math.sin(Math.min(1, p) * Math.PI) * 0.06
             ang = Math.atan2(dx, dz)
+            attack = u.type === 'archers' ? 'bow' : cav ? null : 'thrust'
+            if (!attack) hop = Math.sin(Math.min(1, p) * Math.PI) * 0.06
           }
           break
         case 'damage':
@@ -174,8 +235,11 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
           break
         case 'rout':
           if (fx.unit === u.id) {
-            tilt = ease(p) * 1.45
-            y -= p * 0.12
+            // a foot soldier falls and lies flat; a rider tips over; then the figure shrinks away
+            if (rig.mount) {
+              tilt = ease(p) * 1.45
+              y -= p * 0.12
+            } else clip = fallBack(ease(p))
             sc = p > 0.7 ? Math.max(0.05, 1 - ((p - 0.7) / 0.3) * 0.95) : 1
           }
           break
@@ -208,10 +272,10 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
             const k = Math.min(1, p)
             x = sx + (ex - sx) * k
             z = sz + (ez - sz) * k
-            const steps = Math.max(1, Math.hypot(ex - sx, ez - sz))
-            hop = Math.abs(Math.sin(k * steps * Math.PI)) * 0.07
+            const total = Math.hypot(ex - sx, ez - sz)
             const heading = Math.atan2(ex - sx, ez - sz)
             ang = k > 0.85 ? heading + angleDelta(heading, facingAngle(u.facing)) * ease((k - 0.85) / 0.15) : heading
+            clip = go(total * k, k < 1 ? total / Math.max(0.001, anim.ms / 1000) : 0)
           }
           break
         case 'leave':
@@ -223,11 +287,12 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
             const k = Math.min(1, p)
             const dx = ex - x
             const dz = ez - z
+            const total = Math.hypot(dx, dz)
             x += dx * k
             z += dz * k
-            hop = Math.abs(Math.sin(k * Math.hypot(dx, dz) * Math.PI)) * 0.07
-            if (Math.hypot(dx, dz) > 0.01) ang = Math.atan2(dx, dz)
+            if (total > 0.01) ang = Math.atan2(dx, dz)
             sc = k > 0.7 ? Math.max(0.05, 1 - ((k - 0.7) / 0.3) * 0.95) : 1
+            clip = go(total * k, total / Math.max(0.001, anim.ms / 1000))
           }
           break
         case 'buff':
@@ -243,18 +308,25 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
           break
       }
     }
-    const bob = Math.sin(t * 1.7 + phase) * 0.006
-    g.position.set(x, y + hop + bob, z)
+    // a unit that is not travelling breathes (the cut-in rest pose); a swing or a draw plays on top of it
+    if (!clip) {
+      const base = idle(t * 0.8 + phase)
+      if (attack === 'thrust') clip = thrust(Math.min(1, Math.sin(Math.min(1, p) * Math.PI) * 0.7))
+      else if (attack === 'bow') clip = drawBow(Math.min(1, Math.sin(Math.min(1, p) * Math.PI) * 1.2))
+      else clip = base
+    }
+    applyClip(rig, clip)
+    g.position.set(x, y + hop, z)
     s.rotation.y = ang
     g.rotation.x = -tilt
     g.scale.setScalar(sc)
+    // done units dim, hits flash, stratagems glow: the rig's own materials are tinted (only when the values change)
     const lerpE = Math.max(flash, 0)
-    if (bodyMat.current) bodyMat.current.emissive.setRGB(lerpE * 0.9 + glow * 0.05, glow * 0.45 + lerpE * 0.05, glow * 0.2)
-    if (heroRig) {
-      // static rest pose with a gentle breathe; done units dim, hits flash, stratagems glow (same cues as the stand-ins)
-      applyClip(heroRig, idle(t * 0.8 + phase))
+    const key = `${dim}|${lerpE.toFixed(3)}|${glow.toFixed(3)}`
+    if (key !== lastTint.current) {
+      lastTint.current = key
       tint.setRGB(lerpE * 0.9 + glow * 0.05, glow * 0.45 + lerpE * 0.05, glow * 0.2)
-      for (const m of heroMats) {
+      for (const m of mats) {
         const ud = m.userData as { c?: Color; e?: Color }
         const c0 = (ud.c ??= m.color.clone())
         const e0 = (ud.e ??= m.emissive.clone())
@@ -280,58 +352,52 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
   return (
     <group ref={root} position={[tileX(u.x), top, tileZ(u.y)]}>
       <group ref={spin}>
-        <mesh geometry={notchGeo} position={[0, 0.074, baseR - 0.12]} scale={[1.15, 1, 1.35]}>
-          <meshBasicMaterial color={u.done ? '#8f8466' : '#f6e2a4'} side={DoubleSide} />
-        </mesh>
-        {heroRig && geos === null ? (
-          <>
-            <primitive object={heroRig.group} />
-            {/* side colour stays readable: a rim on the base and a small back banner */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.062, 0]}>
-              <ringGeometry args={[baseR - 0.045, baseR - 0.005, 40]} />
-              <meshBasicMaterial color={faction} />
-            </mesh>
-            <group position={[0, 0.06, -(baseR - 0.1)]}>
-              <mesh position={[0, (1.25 + rider) / 2, 0]}>
-                <cylinderGeometry args={[0.014, 0.014, 1.25 + rider, 6]} />
-                <meshStandardMaterial color="#6b4a2a" roughness={0.8} />
-              </mesh>
-              <mesh position={[0.15, 1.1 + rider, 0.004]}>
-                <planeGeometry args={[0.3, 0.38]} />
-                <meshStandardMaterial color={faction} side={DoubleSide} roughness={0.8} />
-              </mesh>
-              <mesh position={[0.15, 1.1 + rider, 0.008]}>
-                <planeGeometry args={[0.05, 0.26]} />
-                <meshStandardMaterial color={han ? '#e9dfc2' : '#2a1d10'} side={DoubleSide} roughness={0.8} />
-              </mesh>
-            </group>
-          </>
-        ) : (
-          geos && (
-            <mesh geometry={geos.body} castShadow receiveShadow>
-              <meshStandardMaterial ref={bodyMat} vertexColors color={dimColor} side={DoubleSide} roughness={0.75} metalness={0.12} />
-            </mesh>
-          )
-        )}
+        <primitive object={rig.group} />
+        {/* back banner in the side colour, so allegiance reads from far away */}
+        <group position={[0, 0, -(R - 0.1)]}>
+          <mesh position={[0, (1.25 + rider) / 2, 0]}>
+            <cylinderGeometry args={[0.014, 0.014, 1.25 + rider, 6]} />
+            <meshStandardMaterial color="#6b4a2a" roughness={0.8} />
+          </mesh>
+          <mesh position={[0.15, 1.1 + rider, 0.004]}>
+            <planeGeometry args={[0.3, 0.38]} />
+            <meshStandardMaterial color={faction} side={DoubleSide} roughness={0.8} />
+          </mesh>
+          <mesh position={[0.15, 1.1 + rider, 0.008]}>
+            <planeGeometry args={[0.05, 0.26]} />
+            <meshStandardMaterial color={han ? '#e9dfc2' : '#2a1d10'} side={DoubleSide} roughness={0.8} />
+          </mesh>
+        </group>
       </group>
 
-      {/* actable pulse and selection rings */}
+      {/* the ground ring: a flat painted decal on the sand (side-colour rim, a facing notch, then the interaction states) */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, DECAL.disc, 0]} renderOrder={1}>
+        <circleGeometry args={[R - 0.02, 40]} />
+        <meshBasicMaterial color="#17110c" transparent opacity={0.2} depthWrite={false} {...polygon} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, DECAL.rim, 0]} renderOrder={2}>
+        <ringGeometry args={[R - 0.055, R, 48]} />
+        <meshBasicMaterial ref={rimMat} color={rimColor} depthWrite={false} {...polygon} />
+      </mesh>
+      <FacingNotch spinRef={spin} R={R} done={u.done} notchMat={notchMat} />
+
+      {/* actable pulse and selection rings, painted on the sand */}
       {actable && !selected && (
-        <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.085, 0]}>
-          <ringGeometry args={[baseR + 0.04, baseR + 0.1, 36]} />
-          <meshBasicMaterial color={COLORS.lantern} transparent opacity={0.6} depthWrite={false} />
+        <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]} position={[0, DECAL.actable, 0]} renderOrder={3}>
+          <ringGeometry args={[R + 0.04, R + 0.1, 36]} />
+          <meshBasicMaterial color={COLORS.lantern} transparent opacity={0.6} depthWrite={false} {...polygon} />
         </mesh>
       )}
       {selected && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.09, 0]}>
-          <ringGeometry args={[baseR + 0.04, baseR + 0.13, 40]} />
-          <meshBasicMaterial color="#c9923c" />
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, DECAL.selected, 0]} renderOrder={4}>
+          <ringGeometry args={[R + 0.04, R + 0.13, 40]} />
+          <meshBasicMaterial color="#c9923c" depthWrite={false} {...polygon} />
         </mesh>
       )}
       {targeted && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.095, 0]}>
-          <ringGeometry args={[baseR + 0.03, baseR + 0.1, 36]} />
-          <meshBasicMaterial color={COLORS.cinnabar} />
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, DECAL.target, 0]} renderOrder={5}>
+          <ringGeometry args={[R + 0.03, R + 0.1, 36]} />
+          <meshBasicMaterial color={COLORS.cinnabar} depthWrite={false} {...polygon} />
         </mesh>
       )}
 
@@ -370,6 +436,21 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
       >
         <cylinderGeometry args={[0.36, 0.36, 1.3 + rider, 8]} />
         <meshBasicMaterial />
+      </mesh>
+    </group>
+  )
+}
+
+/** The facing notch: a cream wedge on the ring that turns with the figure. */
+function FacingNotch({ spinRef, R, done, notchMat }: { spinRef: React.RefObject<Group | null>; R: number; done: boolean; notchMat: React.RefObject<MeshBasicMaterial | null> }) {
+  const g = useRef<Group>(null)
+  useFrame(() => {
+    if (g.current && spinRef.current) g.current.rotation.y = spinRef.current.rotation.y
+  })
+  return (
+    <group ref={g}>
+      <mesh geometry={notchGeo} position={[0, DECAL.notch, R - 0.17]} scale={[1.15, 1, 1.35]} renderOrder={3}>
+        <meshBasicMaterial ref={notchMat} color={done ? '#8f8466' : '#f6e2a4'} side={DoubleSide} depthWrite={false} {...polygon} />
       </mesh>
     </group>
   )

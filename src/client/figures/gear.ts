@@ -16,7 +16,7 @@ export function mountRider(fb: FB, h: Humanoid, horse: HorseOpts): HorseRig {
   const body = rig.joints.body
   h.root.removeFromParent()
   body.add(h.root)
-  h.root.position.set(0, rig.saddleY - 0.05 - body.position.y, -0.07)
+  h.root.position.set(0, rig.saddleY - 0.07 - body.position.y, -0.07)
   h.legL.rotation.set(-0.3, 0, -0.62)
   h.legR.rotation.set(-0.3, 0, 0.62)
   return rig
@@ -171,7 +171,7 @@ export function glaive(fb: FB, parent: Object3D, len = 1.0): Group {
 }
 
 /** Wavy snake blade (Zhang Fei's serpent spear). */
-export function serpentSpear(fb: FB, parent: Object3D, len = 1.1): Group {
+export function serpentSpear(fb: FB, parent: Object3D, len = 1.1, tassel = '#d3241b'): Group {
   const node = fb.node('serpent-spear', parent)
   fb.cyl(node, '#241a2a', [0, (len - 0.28) / 2, 0], [0.016, len + 0.28, 0.016], undefined, { name: 'pole' })
   fb.sph(node, fb.metal('#8d8d96'), [0, -0.28, 0], [0.024, 0.03, 0.024])
@@ -205,7 +205,7 @@ export function serpentSpear(fb: FB, parent: Object3D, len = 1.1): Group {
   )
   // a snake-head socket and a red tassel
   fb.sph(node, fb.metal('#8d8d96'), [0, len + 0.05, 0.02], [0.034, 0.04, 0.05])
-  fb.tube(node, 'serpent-tassel', [[0, 0, 0], [0.01, -0.07, 0.03], [0.02, -0.15, 0.03], [0.03, -0.24, 0.04]], 0.026, 0.01, '#8c1e24', { p: [0, len - 0.02, 0.02] })
+  fb.tube(node, 'serpent-tassel', [[0, 0, 0], [0.01, -0.07, 0.03], [0.02, -0.17, 0.03], [0.035, -0.29, 0.045]], 0.04, 0.014, tassel, { p: [0, len - 0.02, 0.02] })
   return node
 }
 

@@ -2,7 +2,7 @@
 // Joints follow rig.ts HORSE_JOINTS; legs pivot at the shoulders / hips so a gallop cycle works.
 import type { Group, Shape } from 'three'
 import { FB, G, shade, shapeFrom, type V3 } from './kit'
-import type { HorseJoint, HorseRig } from './rig'
+import type { HoofJoint, HorseJoint, HorseRig } from './rig'
 
 export interface HorseOpts {
   body: string
@@ -20,6 +20,8 @@ export interface HorseOpts {
 }
 
 export const HORSE_BODY_Y = 0.3
+/** Pastern joint height above the sole of the hoof. */
+export const HOOF_H = 0.047
 
 const flameShape = (h: number, w: number): Shape =>
   shapeFrom((s) => {
@@ -31,7 +33,7 @@ const flameShape = (h: number, w: number): Shape =>
   })
 
 export function makeHorse(fb: FB, parent: Group, o: HorseOpts): HorseRig {
-  const horse = fb.node('horse', parent, [0, 0.06, 0])
+  const horse = fb.node('horse', parent, [0, 0, 0])
   const bodyMat = fb.mat(o.body)
   const body = fb.node('body', horse, [0, HORSE_BODY_Y, 0])
   fb.capsule(body, bodyMat, [0, 0, 0], 0.16, 0.3, [Math.PI / 2, 0, 0], { s: [0.96, 1, 1], name: 'barrel' })
@@ -49,6 +51,7 @@ export function makeHorse(fb: FB, parent: Group, o: HorseOpts): HorseRig {
 
   // legs: stubby and chunky; pivot at the shoulder / hip
   const legs: Record<string, Group> = {}
+  const hoofs: Record<string, Group> = {}
   const legDefs: [string, number, number, number][] = [
     ['legFL', -0.088, 0.2, -0.08],
     ['legFR', 0.088, 0.2, -0.08],
@@ -59,9 +62,12 @@ export function makeHorse(fb: FB, parent: Group, o: HorseOpts): HorseRig {
     const leg = fb.node(name, body, [x, y, z])
     const drop = HORSE_BODY_Y + y
     fb.add(leg, G.frustum(0.062, 0.044), bodyMat, { p: [0, -(drop - 0.05) / 2, 0], s: [1, drop - 0.05, 1] })
-    fb.cyl(leg, o.dark, [0, -drop + 0.05, 0], [0.056, 0.055, 0.058])
-    fb.cyl(leg, shade(o.dark, -0.06), [0, -drop + 0.012, 0.004], [0.062, 0.026, 0.066], undefined, { shadow: false })
+    // the hoof hangs from a pastern joint 0.047 above the sole, so it can stay level while the leg swings
+    const hoof = fb.node(name.replace('leg', 'hoof'), leg, [0, -drop + HOOF_H, 0])
+    fb.cyl(hoof, o.dark, [0, 0.003, 0], [0.056, 0.055, 0.058])
+    fb.cyl(hoof, shade(o.dark, -0.06), [0, -HOOF_H + 0.012, 0.004], [0.062, 0.026, 0.066], undefined, { shadow: false })
     legs[name] = leg
+    hoofs[name.replace('leg', 'hoof')] = hoof
   }
 
   // neck and head
@@ -120,7 +126,8 @@ export function makeHorse(fb: FB, parent: Group, o: HorseOpts): HorseRig {
   const joints = {
     body, neck, head, tail,
     legFL: legs.legFL!, legFR: legs.legFR!, legBL: legs.legBL!, legBR: legs.legBR!,
-  } as Record<HorseJoint, Group>
+    hoofFL: hoofs.hoofFL!, hoofFR: hoofs.hoofFR!, hoofBL: hoofs.hoofBL!, hoofBR: hoofs.hoofBR!,
+  } as Record<HorseJoint | HoofJoint, Group>
   return { group: horse, joints, saddleY: HORSE_BODY_Y + 0.18 }
 }
 
@@ -135,7 +142,6 @@ export const HORSE_PRESETS: Record<string, HorseOpts> = {
 
 export function buildBareHorse(preset: string): { group: Group; dispose(): void } {
   const fb = new FB()
-  fb.cyl(fb.group, fb.mat('#0b0a09', { rough: 0.5 }), [0, 0.03, 0], [0.44, 0.06, 0.44], undefined, { name: 'base', shadow: false })
   const horse = makeHorse(fb, fb.group, HORSE_PRESETS[preset] ?? HORSE_PRESETS.bay!)
   horse.group.position.z = -0.1
   return { group: fb.group, dispose: () => fb.dispose() }

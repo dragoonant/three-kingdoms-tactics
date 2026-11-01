@@ -1,13 +1,16 @@
 // Pure beat planner: turns one batch of engine events into timed beats. No timers, no React, no three.
 // Each beat carries the engine events it "commits" to the presented scene when it finishes.
-import type { BattleState, Facing, GameEvent, Pos, Side } from '../../engine'
+import type { BattleState, Facing, GameEvent, Pos, Side, TroopType } from '../../engine'
+import { FACING_ANGLE } from '../board/layout'
+import { angDiff, travelSpeed, turnAllowance } from '../board/travel'
 import { sideTitle } from '../names'
 import type { UnitVis } from './scene'
 
 export type Speed = 'full' | 'quick' | 'instant'
 
 export type Fx =
-  | { t: 'move'; unit: string; path: Pos[]; dash: boolean; undo: boolean }
+  /** `turnIn`: radians to turn on the spot before setting off; `turnOut`: after arriving, to the final facing `facingTo`. */
+  | { t: 'move'; unit: string; path: Pos[]; dash: boolean; undo: boolean; type: TroopType; turnIn: number; turnOut: number; facingTo: Facing }
   | { t: 'turn'; unit: string; from: Facing; to: Facing }
   | { t: 'lunge'; unit: string; toward: Pos; counter: boolean }
   | { t: 'damage'; unit: string; at: Pos; amount: number; before: number; after: number; source: 'attack' | 'counter' | 'stratagem' | 'fire'; link: number }
@@ -46,7 +49,9 @@ export const BANNER_MS = 1600
 export const ARRIVE_MS = 1100
 export const TERRAIN_MS = 800
 export const LEAVE_MS = 900
-const MOVE_MS_PER_TILE = 170
+/** A dash (the Charge stratagem) is a short gallop. */
+const DASH_MS = 360
+const UNDO_MS = 220
 
 /** Playback duration in ms for a beat at a speed. */
 export function beatDuration(b: Beat, speed: Speed): number {
@@ -65,6 +70,8 @@ export function planBeats(events: GameEvent[], before: BattleState): Beat[] {
   }
   // Track unit positions as events move them so effects land where the unit stands at that moment.
   const positions = new Map<string, Pos>(before.units.map((u) => [u.id, { x: u.x, y: u.y }]))
+  const facings = new Map<string, Facing>(before.units.map((u) => [u.id, u.facing]))
+  const types = new Map<string, TroopType>(before.units.map((u) => [u.id, u.type]))
   const ctx = { at: (id: string): Pos => positions.get(id) ?? { x: 0, y: 0 } }
   const stratName = (id: string): { name: string; tag: string } => {
     const s = before.data.stratagems[id]
@@ -87,14 +94,26 @@ export function planBeats(events: GameEvent[], before: BattleState): Beat[] {
         const from = ctx.at(ev.unit)
         const path = ev.undo || ev.dash || ev.path.length === 0 ? [from, ev.to] : [from, ...ev.path]
         const tiles = Math.max(1, path.length - 1)
-        push({ t: 'move', unit: ev.unit, path, dash: !!ev.dash, undo: !!ev.undo }, ev.dash ? 260 : ev.undo ? 220 : tiles * MOVE_MS_PER_TILE + 60, ev)
+        const type = types.get(ev.unit) ?? 'infantry'
+        // headings of the first and last step (the board's yaw): the figure turns on the spot before and after if they differ from its facing
+        const head = (a: Pos, b: Pos): number => Math.atan2(b.x - a.x, b.y - a.y)
+        const first = head(path[0]!, path[1] ?? path[0]!)
+        const last = head(path[Math.max(0, path.length - 2)]!, path[path.length - 1]!)
+        const turnIn = ev.dash || ev.undo || path.length < 2 ? 0 : angDiff(FACING_ANGLE[facings.get(ev.unit) ?? ev.facing], first)
+        const turnOut = ev.dash || ev.undo || path.length < 2 ? 0 : angDiff(last, FACING_ANGLE[ev.facing])
+        // the legs run on the distance covered, so the time follows the path: tiles at the unit's own pace, plus the turns
+        const ms = ev.dash ? DASH_MS : ev.undo ? UNDO_MS : Math.round((tiles / travelSpeed(type)) * 1000) + 60 + turnAllowance(turnIn, turnOut)
+        push({ t: 'move', unit: ev.unit, path, dash: !!ev.dash, undo: !!ev.undo, type, turnIn, turnOut, facingTo: ev.facing }, ms, ev)
         positions.set(ev.unit, { ...ev.to })
+        facings.set(ev.unit, ev.facing)
         break
       }
       case 'turned':
+        facings.set(ev.unit, ev.to)
         push({ t: 'turn', unit: ev.unit, from: ev.from, to: ev.to }, 150, ev)
         break
       case 'waited':
+        facings.set(ev.unit, ev.facing)
         push({ t: 'wait', unit: ev.unit, facing: ev.facing }, 220, ev)
         break
       case 'attacked': {
@@ -202,6 +221,8 @@ export function planBeats(events: GameEvent[], before: BattleState): Beat[] {
         break
       case 'reinforced':
         positions.set(ev.unit, { x: ev.x, y: ev.y })
+        types.set(ev.unit, ev.type)
+        facings.set(ev.unit, ev.facing)
         push(
           {
             t: 'arrive',

@@ -7,7 +7,11 @@ import { type FigureFactory, type SidePalette, type TroopKind } from './rig'
 import { buildTroopRig } from './troops'
 
 export * from './rig'
-export { applyClip, drawBow, fallBack, gallop, idle, rest, swingOverhead, thrust, travel, walk } from './clips'
+export {
+  applyClip, canter, drawBow, fallBack, fallForward, gaitBlend, gaitClip, gallop, horseWalk, idle, kneel, locomotion, rest, run, stagger, staggerShift, stepTurn, swingOverhead, thrust, travel, trot, walk,
+} from './clips'
+export { strideOf } from './gait'
+export type { Gait } from './gait'
 export type { Clip } from './clips'
 export { buildOfficer, OFFICER_IDS } from './officerKit'
 export { disposeFigureCaches } from './kit'

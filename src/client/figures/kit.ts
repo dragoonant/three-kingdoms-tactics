@@ -26,7 +26,7 @@ import {
   Vector2,
   Vector3,
 } from 'three'
-import { HORSE_JOINTS, HUMAN_JOINTS, OPTIONAL_JOINTS, type HorseRig, type HumanJoint } from './rig'
+import { HOOF_JOINTS, HORSE_JOINTS, HUMAN_JOINTS, OPTIONAL_JOINTS, type HorseRig, type HumanJoint } from './rig'
 
 export type V3 = [number, number, number]
 export type P2 = [number, number]
@@ -301,8 +301,9 @@ export function captureRest(joints: Record<string, Object3D | undefined>, horse?
     if (j) (j.userData as { rest?: RestState }).rest = { r: [j.rotation.x, j.rotation.y, j.rotation.z], p: [j.position.x, j.position.y, j.position.z] }
   }
   if (horse) {
-    for (const k of HORSE_JOINTS) {
+    for (const k of [...HORSE_JOINTS, ...HOOF_JOINTS]) {
       const j = horse.joints[k]
+      if (!j) continue
       j.userData.rest = { r: [j.rotation.x, j.rotation.y, j.rotation.z], p: [j.position.x, j.position.y, j.position.z] }
     }
   }

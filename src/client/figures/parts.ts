@@ -6,9 +6,16 @@ import type { HorseRig, Rig } from './rig'
 
 /** Figure dimensions in tile units. Head ~0.36 wide = shoulder width; total ~0.9 with headgear: ~2.4 heads tall. */
 export const D = {
-  baseH: 0.06,
-  baseR: 0.35,
-  hipY: 0.15,
+  /** Hip joint to the sole of the boot: also the hip height above the ground at rest (the legs reach exactly to the ground). */
+  legLen: 0.184,
+  /** Hip to the ankle joint (the leg proper) and the ankle to the sole. */
+  legAnkle: 0.132,
+  soleH: 0.052,
+  /** Where the root sits so the soles of the boots are at y = 0: no base, feet stand on the ground plane. */
+  footY: 0.014,
+  /** Radius of the painted ground ring decal on the board (0.44 mounted), not a physical base. */
+  ring: 0.35,
+  hipY: 0.17,
   neckY: 0.21,
   headR: 0.18,
   headY: 0.14,
@@ -38,7 +45,8 @@ export interface BodyOpts {
   mirrors?: boolean
   studs?: string
   collar?: boolean
-  baseR?: number | undefined
+  /** Radius of the ground ring decal under the figure (the board paints it; there is no physical base). */
+  ring?: number | undefined
   /** Fatter, broader chest (Zhang Fei, Xu Chu). */
   stout?: number
 }
@@ -56,6 +64,8 @@ export interface Humanoid {
   handR: Group
   legL: Group
   legR: Group
+  footL: Group
+  footR: Group
   weapon: Group
   offhand: Group
   skull: Mesh
@@ -65,10 +75,8 @@ export interface Humanoid {
 
 export function makeHumanoid(fb: FB, o: BodyOpts): Humanoid {
   const g = fb.group
-  const baseR = o.baseR ?? D.baseR
   const stout = o.stout ?? 1
-  fb.cyl(g, fb.mat('#0b0a09', { rough: 0.5 }), [0, D.baseH / 2, 0], [baseR, D.baseH, baseR], undefined, { name: 'base', shadow: false })
-  const root = fb.node('root', g, [0, D.baseH, 0])
+  const root = fb.node('root', g, [0, D.footY, 0])
   const hips = fb.node('hips', root, [0, D.hipY, 0])
   const skin = fb.mat(o.skin)
 
@@ -76,11 +84,14 @@ export function makeHumanoid(fb: FB, o: BodyOpts): Humanoid {
   const legsC = o.legs ?? o.boots
   const legs = [-1, 1].map((sd) => {
     const leg = fb.node(sd < 0 ? 'legL' : 'legR', hips, [sd * 0.075, 0, 0])
-    fb.capsule(leg, legsC, [0, -0.065, 0], 0.052, 0.04)
-    fb.sph(leg, o.boots, [0, -0.112, 0.028], [0.08, 0.052, 0.112])
-    fb.sph(leg, shade(o.boots, 0.08), [0, -0.092, 0.075], [0.06, 0.04, 0.05], { shadow: false })
+    fb.capsule(leg, legsC, [0, -0.075, 0], 0.052, 0.05)
+    // the boot hangs from an ankle joint so the sole can stay level on the sand while the leg swings
+    const foot = fb.node(sd < 0 ? 'footL' : 'footR', leg, [0, -D.legAnkle, 0])
+    fb.sph(foot, o.boots, [0, 0, 0.028], [0.08, D.soleH, 0.112], { name: 'boot' })
+    fb.sph(foot, shade(o.boots, 0.08), [0, 0.02, 0.075], [0.06, 0.04, 0.05], { shadow: false })
     return leg
   })
+  const feet = legs.map((l) => l.children.find((c) => c.name.startsWith('foot'))!) as Group[]
 
   // skirt / robe hangs from the hips, so the legs swing underneath it
   if (o.skirt !== 'none') {
@@ -164,6 +175,8 @@ export function makeHumanoid(fb: FB, o: BodyOpts): Humanoid {
     handR: hands[1]!,
     legL: legs[0]!,
     legR: legs[1]!,
+    footL: feet[0]!,
+    footR: feet[1]!,
     weapon,
     offhand,
     skull,
@@ -176,7 +189,7 @@ export function makeHumanoid(fb: FB, o: BodyOpts): Humanoid {
 export function finishRig(h: Humanoid, kind: Rig['kind'], extra: Record<string, Object3D | undefined> = {}, mount?: HorseRig): Rig {
   const joints = {
     root: h.root, hips: h.hips, torso: h.torso, head: h.head, armL: h.armL, armR: h.armR, handL: h.handL, handR: h.handR,
-    legL: h.legL, legR: h.legR, weapon: h.weapon, offhand: h.offhand, ...extra,
+    legL: h.legL, legR: h.legR, footL: h.footL, footR: h.footR, weapon: h.weapon, offhand: h.offhand, ...extra,
   } as Rig['joints']
   captureRest(joints, mount)
   const rig: Rig = {
@@ -187,7 +200,8 @@ export function finishRig(h: Humanoid, kind: Rig['kind'], extra: Record<string, 
     dispose: () => h.fb.dispose(),
     ...(mount ? { mount } : {}),
   }
-  h.group.userData.baseRadius = h.opts.baseR ?? D.baseR
+  rig.footprint = h.opts.ring ?? D.ring
+  h.group.userData.ringRadius = rig.footprint
   return rig
 }
 

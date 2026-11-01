@@ -44,6 +44,25 @@ function check(b: Batch): Beat[] {
   return beats
 }
 
+describe('move beats follow the path (locomotion on the board)', () => {
+  it('the time grows with the path length, riders cover ground faster than foot soldiers, and turns are noted', () => {
+    const seen: { type: string; tiles: number; ms: number; turnIn: number; turnOut: number }[] = []
+    for (const b of batches(2, greedyAction)) {
+      for (const x of planBeats(b.events, b.before)) {
+        if (x.fx.t === 'move' && !x.fx.dash && !x.fx.undo) seen.push({ type: x.fx.type, tiles: x.fx.path.length - 1, ms: x.ms, turnIn: x.fx.turnIn, turnOut: x.fx.turnOut })
+      }
+    }
+    expect(seen.length).toBeGreaterThan(5)
+    const perTile = (t: string): number[] => seen.filter((m) => m.type === t && m.turnIn === 0 && m.turnOut === 0 && m.tiles > 1).map((m) => (m.ms - 60) / m.tiles)
+    for (const v of perTile('infantry')) expect(v).toBeCloseTo(1000 / 1.5, 0)
+    for (const v of perTile('cavalry')) expect(v).toBeCloseTo(1000 / 3.3, 0)
+    for (const m of seen) {
+      expect(Number.isFinite(m.turnIn + m.turnOut)).toBe(true)
+      expect(m.ms).toBeGreaterThanOrEqual(Math.round((m.tiles / (m.type === 'cavalry' ? 3.3 : 1.5)) * 1000) + 60)
+    }
+  }, 60_000)
+})
+
 describe('presentation director: beat planning (pure)', () => {
   it('commits every event once and the presented scene converges to the live state, over whole games', () => {
     const seen = new Set<string>()

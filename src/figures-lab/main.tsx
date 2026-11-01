@@ -3,6 +3,7 @@
 // "board scale" layout that shows the figures about 60 px tall, as they are on the board.
 //   ?test=1  sets window.__lab = { ready: true } after the first render
 //   ?mode=front|threequarter|silhouette&rotate=0&scale=board&group=heroes|officers|troops|variants|horses|all
+//   ?view=locomotion&gait=walk|run|trot|canter|gallop&t=<seconds>  side-on treadmill of a hero, infantry, archer and riders (locomotion.tsx)
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
@@ -13,9 +14,10 @@ import { buildBareHorse, HORSE_PRESETS } from '../client/figures/horse'
 import { OFFICER_IDS, buildOfficer } from '../client/figures/officerKit'
 import { buildTroopRig } from '../client/figures/troops'
 import type { Rig, SidePalette, TroopKind } from '../client/figures/rig'
+import { Locomotion } from './locomotion'
 
 type Mode = 'front' | 'threequarter' | 'silhouette'
-type GroupKey = 'heroes' | 'officers' | 'troops' | 'variants' | 'horses' | 'all'
+type GroupKey = 'heroes' | 'officers' | 'troops' | 'variants' | 'horses' | 'brothers' | 'all'
 
 const Q = new URLSearchParams(window.location.search)
 const modeParam = Q.get('mode')
@@ -34,12 +36,12 @@ function previewClip(rig: Rig, t: number): Clip {
     case 'swing': return swingOverhead(CLIP_P)
     case 'thrust': return thrust(CLIP_P)
     case 'fall': return fallBack(CLIP_P)
-    case 'walk': return travel(rig, t)
-    case 'gallop': return gallop(t)
+    case 'walk': return travel(rig, t * 0.8)
+    case 'gallop': return gallop(t * 3)
     default: return idle(t)
   }
 }
-const INITIAL_GROUP: GroupKey = gp === 'heroes' || gp === 'officers' || gp === 'troops' || gp === 'variants' || gp === 'horses' ? gp : 'all'
+const INITIAL_GROUP: GroupKey = gp === 'heroes' || gp === 'officers' || gp === 'troops' || gp === 'variants' || gp === 'horses' || gp === 'brothers' ? gp : 'all'
 
 const NAMES: Record<string, string> = {
   'liu-bei': 'Liu Bei', 'guan-yu': 'Guan Yu', 'zhang-fei': 'Zhang Fei', 'zhao-yun': 'Zhao Yun', 'zhuge-liang': 'Zhuge Liang', 'lu-bu': 'Lu Bu', 'cao-cao': 'Cao Cao',
@@ -98,6 +100,11 @@ function items(group: GroupKey, board: boolean): Item[] {
     return out
   }
   switch (group) {
+    case 'brothers':
+      // Liu Bei, Guan Yu and Zhang Fei at their true relative scale (Guan Yu 1.15, Zhang Fei 1.07, Liu Bei 1), on foot and mounted
+      ;(['liu-bei', 'guan-yu', 'zhang-fei'] as const).forEach((id, i) => out.push({ key: `b-${id}`, label: pretty(id), sub: 'on foot', build: () => buildHeroRig(id, { mounted: false })!, row: 0, col: i }))
+      ;(['guan-yu'] as const).forEach((id, i) => out.push({ key: `bm-${id}`, label: `${pretty(id)} (mounted)`, sub: 'for scale', build: () => buildHeroRig(id)!, row: 0, col: 3 + i }))
+      break
     case 'heroes':
       heroRow(0)
       footRow(1)
@@ -308,7 +315,7 @@ function Lab(): ReactNode {
           Board scale
         </button>
         {!board &&
-          (['all', 'heroes', 'officers', 'troops', 'variants', 'horses'] as GroupKey[]).map((g) => (
+          (['all', 'heroes', 'brothers', 'officers', 'troops', 'variants', 'horses'] as GroupKey[]).map((g) => (
             <button key={g} className={group === g ? 'on' : ''} onClick={() => setGroup(g)}>
               {g}
             </button>
@@ -329,5 +336,5 @@ const CSS = `
 .lab-label i{font:500 11px 'Alegreya Sans',system-ui,sans-serif;color:#c9b27c;font-style:normal;text-transform:uppercase;letter-spacing:.08em}
 `
 
-createRoot(document.getElementById('root')!).render(<Lab />)
+createRoot(document.getElementById('root')!).render(Q.get('view') === 'locomotion' ? <Locomotion /> : <Lab />)
 
