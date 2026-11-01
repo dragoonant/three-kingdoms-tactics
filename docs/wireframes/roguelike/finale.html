@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Finale Briefing Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700&family=Ma+Shan+Zheng&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="rl.css" />
+<style>
+  .main { flex: 1; display: grid; grid-template-columns: 1fr 340px; gap: 16px; padding: 14px 16px; min-height: 0; }
+  .brief { padding: 14px 18px 12px; overflow: hidden; display: flex; flex-direction: column; gap: 6px; align-self: start; }
+  .brief .sub { font-size: 13px; color: var(--ink-soft); }
+  .group { margin-top: 4px; }
+  .group h3 { margin: 4px 0 2px; font-family: var(--font-display); font-weight: 400; font-size: 19px; color: var(--lacquer); }
+  .line { display: grid; grid-template-columns: 110px 1fr 1.15fr; gap: 12px; align-items: baseline; padding: 6px 0; border-bottom: 1px dashed rgba(27, 26, 23, 0.25); font-size: 14px; }
+  .line .tag { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 6px; border-radius: 2px; text-align: center; }
+  .tag.hidden { background: var(--cinnabar); color: #fff4ea; }
+  .tag.stated { background: var(--han); color: var(--silk); }
+  .tag.day { background: var(--ink); color: var(--lantern); }
+  .tag.ren { background: var(--bronze); color: var(--ink); }
+  .line .cause { color: var(--ink-soft); }
+  .line .cause b { color: var(--ink); }
+  .line .eff b { color: var(--lacquer); }
+  .side { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+  .field { padding: 12px 14px; font-size: 13.5px; }
+  .field h2 { color: var(--lantern); margin-bottom: 6px; }
+  .field table { width: 100%; border-collapse: collapse; }
+  .field td { padding: 3px 0; border-bottom: 1px solid rgba(160, 122, 58, 0.25); }
+  .field td:last-child { text-align: right; font-weight: 700; }
+  .field .gone td { color: var(--silk-edge); text-decoration: line-through; font-weight: 400; }
+  .field .new td:first-child::after { content: ' · new'; color: var(--lantern); font-size: 11px; }
+  .band { padding: 10px 14px; font-size: 13.5px; color: var(--ink); }
+  .band div { display: flex; justify-content: space-between; padding: 2px 0; }
+  @media (max-width: 600px) {
+    .main { display: flex; flex-direction: column; gap: 8px; padding: 8px 10px 0; overflow: auto; }
+    .brief { padding: 10px 12px; flex: none; }
+    .brief .sub { display: none; }
+    .line { grid-template-columns: 1fr; gap: 2px; padding: 5px 0; font-size: 13px; }
+    .line .tag { justify-self: start; }
+    .line .cause { font-size: 12px; }
+    .group h3 { font-size: 17px; }
+    .side { flex: none; }
+    .field { display: none; }
+    .band { padding: 8px 12px; font-size: 13px; }
+    .main { padding-bottom: 84px; }
+    .seal { position: fixed; left: 10px; right: 10px; bottom: 8px; width: auto; z-index: 6; }
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+  <div class="topbar">
+    <div class="era">Guangzong <small>THE FINALE · BRIEFING</small></div>
+    <div class="stat"><span class="k">Rice</span><span class="v">37 bags <em>· lasts 7 days</em></span><span class="sub">upkeep 5 a day</span></div>
+    <div class="stat"><span class="k">Soldiers</span><span class="v">2,120 <em>+ 280 wounded</em></span><span class="sub">4 officers</span></div>
+    <div class="stat bad"><span class="k">Renown</span><span class="v">5 <em>· −1 Qi</em></span><div class="meter"><i style="width:5%"></i><b style="left:20%"></b><b style="left:40%"></b><b style="left:50%"></b><b style="left:60%"></b><b style="left:70%"></b></div></div>
+    <div class="stat"><span class="k">Day</span><span class="v">8 <em>· very early</em></span><span class="sub">the earliest bracket: 12 or before</span></div>
+  </div>
+  <div class="main">
+    <div class="silk brief">
+      <div><h1 class="brush">What your road has made of Guangzong</h1><div class="sub">Every change below has its cause. Lines in red were hidden until now.</div></div>
+      <div class="group"><h3>The calendar</h3>
+        <div class="line"><span class="tag day">day 8</span><span class="cause">You arrived on <b>day 8</b> (very early: 12 or before).</span><span class="eff">The palisade is <b>a line of stakes</b>: 4 rampart tiles stand. The <b>two palisade archers are not posted</b>. Zhang Liang has <b>85%</b> of his men; his levies are still in the villages.</span></div>
+      </div>
+      <div class="group"><h3>What the road brought back</h3>
+        <div class="line"><span class="tag hidden">echo</span><span class="cause">Qingzhou Besieged: <b>you left Qingzhou to its walls.</b></span><span class="eff">Qingzhou fell. Its besiegers have joined Zhang Liang: <b>+1 rebel unit</b> (infantry 2,000) north of the camp.</span></div>
+        <div class="line"><span class="tag hidden">echo</span><span class="cause">The Deserters: <b>you carried out the no-quarter order.</b></span><span class="eff">The rebels expect no mercy: <b>no rebel can be swayed</b>, and every rebel unit has <b>+5%</b> troops.</span></div>
+        <div class="line"><span class="tag stated">you chose</span><span class="cause">The Rebel Granary: <b>you burned it.</b></span><span class="eff">Zhang Liang fields <b>2 fewer units</b>: Captain Qin and Raider Meng are not here.</span></div>
+        <div class="line"><span class="tag stated">you chose</span><span class="cause">Zhang Bao's Sorcery: <b>your night raid won its 55%.</b></span><span class="eff">Zhang Bao starts with <b>60%</b> of his troops (1,130).</span></div>
+      </div>
+      <div class="group"><h3>Your name: Renown 5</h3>
+        <div class="line"><span class="tag ren">under 20</span><span class="cause">The imperial generals keep their distance from a lord with such a name.</span><span class="eff"><b>Crossbow Captain Shi stays in camp</b>: one imperial guest instead of two.</span></div>
+        <div class="line"><span class="tag ren">under 20</span><span class="cause">Battle spirit.</span><span class="eff">Every officer starts with <b>−1 Qi</b> (1 instead of 2).</span></div>
+        <div class="line"><span class="tag ren">sway</span><span class="cause">Liu Bei's name goes before him.</span><span class="eff">Liu Bei's sway chance <b>−3</b> (no rebel can be swayed anyway).</span></div>
+      </div>
+    </div>
+    <div class="side">
+      <div class="lacquer field">
+        <h2 class="brush">On the field</h2>
+        <table>
+          <tr><td>Zhang Liang (commander)</td><td>2,680</td></tr>
+          <tr><td>Zhang Bao (the altar)</td><td>1,130</td></tr>
+          <tr><td>Altar Warden Pei</td><td>2,310</td></tr>
+          <tr><td>Captain Zhou</td><td>2,420</td></tr>
+          <tr class="new"><td>Qingzhou band</td><td>2,100</td></tr>
+          <tr class="gone"><td>Captain Qin · Raider Meng</td><td>burned out</td></tr>
+          <tr class="gone"><td>Palisade archers Yan · Feng</td><td>not posted</td></tr>
+          <tr><td style="color:var(--bamboo)">Your guest: Imperial Captain Ren</td><td>1,800</td></tr>
+        </table>
+      </div>
+      <div class="silk band">
+        <div><span>Deploy slots</span><b>5 (you have 4 officers)</b></div>
+        <div><span>Healthy soldiers to field</span><b>2,120</b></div>
+        <div><span>Fielding all of them costs</span><b>9 bags</b></div>
+        <div><span>Then rice lasts</span><b style="color:var(--han)">5 days · fed</b></div>
+        <div><span>Starting Qi</span><b>1 each (2 − 1)</b></div>
+      </div>
+      <button class="seal"><span class="stamp">令</span><span>Seal: to the deploy table · 5 slots<small>2,120 healthy · rice 37 · day 8</small></span></button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,4 +1,4 @@
-# 15 — Roguelike mode "Roads to War" (plan v0.3, 2026-11-01; PLAN D28)
+# 15 — Roguelike mode "Roads to War" (plan v0.4, 2026-11-01; PLAN D28)
 
 **Owner request (2026-11-01):** "I would love to reimagine this as a roguelike, so that you're fighting up to the final battle of that era ... each scenario would be a major battle (yellow turban rebellion, chi bi, etc), and we'd go through 2-3 minor battles leading up to that battle."
 
@@ -7,7 +7,9 @@
 - "Boring ass stages that just give gold are worthless… each node in the grid should be some heavy decision. Like save a village under siege->go into a battle and lose some troops, or push troops forward instead of resting->less rice lost on the next stage, but lose some troops due to attrition."
 - "rice/provisions should be a part of the game - it will drive how many troops each unit can bring into each battle. If you run out of rice - game over."
 
-This is the agreed design. All numbers are first-pass values for tuning in RL4 (the run bench). Nothing is built yet.
+This is the agreed design. Nothing is built yet.
+
+**v0.4 (RL0 design pass, 2026-11-01).** Era 1 is designed in full in [`16-roguelike-era1.md`](16-roguelike-era1.md): the road template, 20 stops and an aftermath with exact effects, 3 new minor battles, the echo table, the Guangzong day table and the deploy rules. Every mechanic has an `RL-` rule in [`10-rules.md`](10-rules.md) §11. The numbers were tuned with a paper sim (`tools/roguelike/paper-sim.mjs`, data `docs/spec/data/era1-stops.json`); its report is [`16-roguelike-era1-sim.md`](16-roguelike-era1-sim.md). Wireframes of the road, a stop, deploy and the finale briefing are in `docs/wireframes/roguelike/`. Numbers below that tuning changed are marked *(v0.4)*; they stay values for the RL4 run bench to confirm with the real battles.
 
 ## 1. The shape
 - A **scenario** is one era of the novel, named for its major battle.
@@ -19,10 +21,10 @@ This is the agreed design. All numbers are first-pass values for tuning in RL4 (
 ## 2. The economy: three numbers and a calendar (always shown in the road HUD)
 | | What it is | Rules |
 |---|---|---|
-| **Rice** (bags) | The clock | <ul><li>Daily upkeep is 1 bag per 500 soldiers in the pool, rounded up.</li><li>A battle also eats 1 bag per 250 soldiers fielded.</li><li>**Hungry:** with less than 3 days of upkeep left, officers start battles at 0 Qi.</li><li>**At 0 rice the army scatters: game over.**</li><li>The HUD always shows "Rice lasts N days".</li></ul> |
-| **Soldiers** | One shared army pool | <ul><li>Before each battle you fill each deployed officer's unit from the pool, up to their command cap (from Leadership and level).</li><li>Fewer soldiers on the field means a cheaper battle, but a weaker one.</li><li>Losses: half are killed and half are **wounded**. The wounded only return when you rest.</li><li>A routed officer is wounded first and falls on a second rout in the run. Iron Oath makes the first rout fatal, and a routed Liu Bei ends the run.</li></ul> |
+| **Rice** (bags) | The clock, and the only currency | <ul><li>Daily upkeep is 1 bag per 500 soldiers in the pool (healthy and wounded), rounded up.</li><li>A battle also eats 1 bag per 250 soldiers fielded.</li><li>**Hungry:** if the rice lasts less than 3 days after a battle's cost, officers start that battle at 0 Qi *(v0.4: judged after the battle's rice)*.</li><li>**At 0 rice the army scatters: game over.**</li><li>The HUD always shows "Rice lasts N days".</li><li>*(v0.4)* There is no gold, so markets sell levies for rice: 100 soldiers per 5 bags, up to 500 a market stop.</li><li>*(v0.4)* Era 1 starts with 50 bags and 1,500 soldiers.</li></ul> |
+| **Soldiers** | One shared army pool | <ul><li>Before each battle you fill each deployed officer's unit from the pool, up to their command cap (from Leadership and level).</li><li>Fewer soldiers on the field means a cheaper battle, but a weaker one.</li><li>Losses: half are killed and half are **wounded**. The wounded only return when you rest, and they still eat.</li><li>*(v0.4)* Command cap = 20 × Leadership + 100 × level (Liu Bei 1,850, Guan Yu 2,200, Zhang Fei 2,000 at level 3).</li><li>A routed officer is wounded first and falls on a second rout in the run. Iron Oath makes the first rout fatal, and a routed Liu Bei ends the run.</li></ul> |
 | **Renown** | Liu Bei's benevolence, 0–100 (starts at 30 in era 1) | See §3 |
-| **Days** | The calendar | <ul><li>Every leg of the road and every rest costs days, and the road shows them.</li><li>The finale gets harder with each day taken: its stockade or defences build up and enemy reinforcements arrive, on a per-finale table.</li><li>The finale briefing names the effect, e.g. "You arrived on day 11: the stockade is half built."</li></ul> |
+| **Days** | The calendar | <ul><li>Every leg of the road and every rest costs days, and the road shows them.</li><li>The finale gets harder with each day taken: its stockade or defences build up and enemy reinforcements arrive, on a per-finale table.</li><li>The finale briefing names the effect, e.g. "You arrived on day 15: the palisade is half built."</li><li>*(v0.4)* Guangzong's brackets: 12 or earlier, 13–16, 17–20 (as built), 21–24, 25–28, 29+. A fast, ruthless road arrives around day 11, a generous one around day 21.</li></ul> |
 
 There is no gold. Battles never pay a flat reward; whatever you gain comes from the situation a battle was part of.
 
@@ -33,13 +35,13 @@ There is no gold. Battles never pay a flat reward; whatever you gain comes from 
 
 **What it does.** The exact numbers are shown wherever an effect applies.
 1. **Volunteers:** at each town or village stop, Renown × 10 soldiers offer to join.
-2. **Rice:** at 50+, some stops give rice for free and market rice is cheaper. Below 20, villages hide their rice and markets charge double.
-3. **Recruit thresholds:** some officers join only a lord of good name, e.g. Mi Zhu 40+, Zhao Yun 50+, Zhuge Liang 60+ (plus days spent on the three visits). Below the threshold they don't join, and some appear later as enemies.
+2. **Rice:** at 50+, some stops give rice for free and market rice is cheaper. Below 20, villages hide their rice and markets charge double. *(v0.4: at 50+ every town or village stop brings a gift of Renown ÷ 5 bags; rice from a trade is ×1.25 at 50+ and ×0.5 under 20; market prices ×0.8 and ×2.)*
+3. **Recruit thresholds:** some officers join only a lord of good name, e.g. Mi Zhu 40+, Zhao Yun 50+, Zhuge Liang 60+ (plus days spent on the three visits). Below the threshold they don't join, and some appear later as enemies. *(v0.4, era 1: Zhou Cang 40+ and Liao Hua 55+, both met early as an alt-history liberty.)*
 4. **Battle spirit:** officers start a battle with +2 Qi at 70+, +1 at 40+, and −1 below 20. Below 20, 5% of the soldiers also desert at each rest.
-5. **Sway:** Liu Bei's sway chance gets a bonus from Renown (an engine modifier with a rule id).
-6. **Finales:** some finales read Renown. At Changban, the refugees slow you but block the enemy cavalry. At Red Cliffs, Sun Quan's alliance terms decide how many allied ships fight.
+5. **Sway:** Liu Bei's sway chance gets a bonus from Renown (an engine modifier with a rule id). *(v0.4: + ⌊(Renown − 30) ÷ 10⌋ points, RL-REN-6.)*
+6. **Finales:** some finales read Renown. At Changban, the refugees slow you but block the enemy cavalry. At Red Cliffs, Sun Quan's alliance terms decide how many allied ships fight. *(v0.4, Guangzong: 60+ a village militia joins, 80+ two rebel captains waver, under 20 one imperial company stays in camp.)*
 
-**Design aim:** the ruthless road (fast and well fed, but short of men, low in spirit and missing some officers) and the benevolent road (slow and hungry, but a growing army and the best officers) must both be winnable. The run bench checks this.
+**Design aim:** the ruthless road (fast and well fed, but short of men, low in spirit and missing some officers) and the benevolent road (slow and hungry, but a growing army and the best officers) must both be winnable. The run bench checks this. *(v0.4: in the paper sim, benevolent wins 51–58% and ruthless 48–51% over three seed sets; a careless battle-hungry run starves 20%.)*
 
 ## 4. Stops are dilemmas
 - Each stop is a scene from the novel on the sand table, with **2–3 choices**. Every choice button shows its exact cost and gain in rice, soldiers, days and Renown.
@@ -48,15 +50,15 @@ There is no gold. Battles never pay a flat reward; whatever you gain comes from 
 - Now and then a choice is an **open gamble with stated odds** ("60%: the gates open").
 - The map shows two stops ahead, and roads branch: a short mountain path (fewer days, attrition) or the long road (more days and rice, safe).
 
-**Era 1 examples** (first-pass numbers):
+**Era 1 examples** *(v0.4: tuned numbers; the full list of 20 stops is in `16-roguelike-era1.md` §3)*:
 | Stop | Choices |
 |---|---|
-| **The recruiting notice at Zhuo** (novel ch. 1, the opening) | <ul><li>Zhang Fei sells his estate: +500 soldiers, +20 rice.</li><li>Accept the horse merchants' gift: a cavalry unit, the brothers' weapons forged, +8 rice.</li></ul> |
-| **A village under siege** | <ul><li>Fight: a battle, about −300 soldiers, then +10 Renown, +200 volunteers, +15 rice.</li><li>Send Zhang Fei alone with 100 men: a duel set piece, 40% chance he returns wounded, +5 Renown.</li><li>March past: no cost now, −10 Renown. *Echo:* the village falls and one more rebel unit waits at the finale.</li></ul> |
-| **Rest or push on** | <ul><li>Rest 2 days: 2 days of upkeep, the wounded return, +1 Qi next battle.</li><li>Forced march: arrive 2 days earlier, but −8% soldiers to attrition, and they start the next battle tired (−1 move in round 1).</li></ul> |
-| **A captured granary** | <ul><li>Take it: +40 rice, but the wagons cost +2 days.</li><li>Burn it: the finale enemy fields 2 fewer units.</li><li>Give it to the starving: +15 Renown and volunteers on the spot.</li></ul> |
-| **Lu Zhi in chains** (novel ch. 2: your teacher, arrested on a eunuch's word) | <ul><li>Free him: a battle against the imperial escort, after which officials stop supplying rice.</li><li>Let him go. *Echo:* Zhang Fei refuses one order in a later battle.</li></ul> |
-| **Zhang Fei flogs the inspector** (novel ch. 2) | <ul><li>Let him: +10 Renown and Zhang Fei +1 Qi, but you lose the county post and its rice.</li><li>Stop him: keep the rice, and Zhang Fei broods (−1 Qi for one battle).</li></ul> |
+| **The recruiting notice at Zhuo** (novel ch. 1, the opening) | <ul><li>Zhang Fei sells his estate: +600 soldiers, +10 rice.</li><li>Open the peach garden to the county: −8 rice, 1 day, +15 Renown.</li><li>Take the county's levy: +30 rice, +300 pressed men, −10 Renown.</li><li>(The horse merchants are their own stop: their gift forges the brothers' weapons, War +4 all run.)</li></ul> |
+| **A village under siege** | <ul><li>Fight: a battle (`village-siege`); a win gives +20 rice, +10 Renown, then Renown × 10 volunteers.</li><li>Send Zhang Fei with 100 men: +5 Renown, half the volunteers; 50%: he comes back hurt (half his command until you rest) and 100 die.</li><li>March past: −10 Renown, no volunteers. *Echo:* the village falls and one more rebel unit waits at the finale.</li></ul> |
+| **Rest or push on** | <ul><li>Rest 2 days: the wounded return, hurt officers recover, +1 Qi next battle.</li><li>Forced march: the next leg is 2 days shorter, but −12% soldiers to attrition, and they arrive tired (−1 move in round 1).</li><li>Rest a day and strip the orchard: +10 rice, half the wounded back, −3 Renown.</li></ul> |
+| **A captured granary** | <ul><li>Take it: +40 rice, but the wagons cost 3 days.</li><li>Burn it: the finale enemy fields 2 fewer units.</li><li>Give it to the starving: +15 Renown and volunteers on the spot.</li></ul> |
+| **Lu Zhi in chains** (novel ch. 1: your teacher, arrested on a eunuch's word) | <ul><li>Free him: a battle against the imperial escort (`prison-cart`); his veterans join you at the finale, but you are outlaws (imperial camps give no rice).</li><li>Pay the escort: −10 rice, +5 Renown.</li><li>Let him go: −6 Renown. *Echo:* Zhang Fei ignores your first order in the next battle.</li></ul> |
+| **Zhang Fei flogs the inspector** (novel ch. 2) | <ul><li>Let him: +12 Renown and Zhang Fei +1 Qi, but you lose the county post's rice and become outlaws.</li><li>Stop him and pay: +22 rice, −5 Renown, and Zhang Fei broods (−1 Qi for one battle).</li></ul> |
 
 **Finale briefing:** before deploy, every echo, every day effect and every Renown effect is listed with its cause. Example: "Because you burned the granary: Zhang Bao fields 2 fewer units."
 
@@ -107,7 +109,7 @@ The run seed fixes the whole run, so daily and shared seeds come free. Each fina
 ## 8. Milestones
 | M | What | Est. |
 |---|---|---|
-| RL0 | Design pass: the full era 1 stop list with numbers, the finale day table, the `RL-` rules, wireframes of the road, a stop and deploy; a paper sim of 3 runs (owner gate) | ~0.4M |
+| RL0 | Design pass: the full era 1 stop list with numbers, the finale day table, the `RL-` rules, wireframes of the road, a stop and deploy; a paper sim of 3 runs (owner gate). **Done 2026-11-01:** `16-roguelike-era1.md`, `16-roguelike-era1-sim.md`, `10-rules.md` §11, `docs/wireframes/roguelike/` | ~0.4M |
 | RL1 | The run layer and era 1 end to end: road UI, stops, upkeep, pool deploy, Renown, echoes, saves; e2e of a whole run with the bot | ~1.2M |
 | RL2 | Seeded variants, modifiers in the engine, Mandate levels 1–5, daily seed | ~0.9M |
 | RL3 | Eras 2–4: stops, about 6 new battles, scenes in our own prose | ~1.8M |

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Deploy Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700&family=Ma+Shan+Zheng&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="rl.css" />
+<style>
+  .main { flex: 1; display: grid; grid-template-columns: 1fr 360px; gap: 16px; padding: 14px 16px; min-height: 0; }
+  .col { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+  .hd { display: flex; justify-content: space-between; align-items: baseline; }
+  .hd h2 { color: var(--lantern); }
+  .hd span { font-size: 13px; color: var(--silk-edge); }
+  .officer { display: grid; grid-template-columns: 52px 1fr 92px; gap: 6px 12px; align-items: center; }
+  .officer .name { font-family: var(--font-display); font-size: 21px; line-height: 1; }
+  .officer .meta { font-size: 12.5px; color: var(--ink-soft); }
+  .officer .num { text-align: right; font-weight: 700; font-size: 20px; }
+  .officer .num small { display: block; font-size: 11.5px; font-weight: 500; color: var(--ink-soft); }
+  .slider { grid-column: 2 / 4; position: relative; height: 22px; }
+  .slider .track { position: absolute; left: 0; right: 0; top: 9px; height: 4px; background: rgba(27, 26, 23, 0.35); border-radius: 2px; }
+  .slider .fill { position: absolute; left: 0; top: 9px; height: 4px; background: var(--han); border-radius: 2px; }
+  .slider .knob { position: absolute; top: 2px; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%; background: var(--silk); border: 2px solid var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.5); }
+  .slider .ends { position: absolute; top: 14px; left: 0; right: 0; display: flex; justify-content: space-between; font-size: 10.5px; color: var(--ink-soft); padding-top: 6px; }
+  .bench { display: flex; gap: 10px; }
+  .bench .slip { flex: 1; display: flex; gap: 10px; align-items: center; padding: 8px 12px 8px 14px; }
+  .bench .portrait { width: 40px; height: 40px; }
+  .bench .name { font-family: var(--font-display); font-size: 18px; }
+  .ledger { padding: 12px 14px; }
+  .ledger table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  .ledger td { padding: 5px 0; border-bottom: 1px dashed rgba(27, 26, 23, 0.25); }
+  .ledger td:last-child { text-align: right; font-weight: 700; }
+  .ledger tr.big td { font-size: 18px; }
+  .ledger .ok { color: var(--han); }
+  .ledger h2 { margin-bottom: 4px; }
+  .qi { padding: 10px 12px; font-size: 13.5px; color: var(--silk); }
+  .qi div { display: flex; justify-content: space-between; padding: 2px 0; }
+  .qi b { color: var(--lantern); }
+  .foe { padding: 10px 12px; font-size: 13.5px; }
+  .hint { font-size: 12.5px; color: var(--silk-edge); }
+  @media (max-width: 600px) {
+    .main { display: flex; flex-direction: column; gap: 8px; padding: 8px 10px 0; overflow: auto; }
+    .col { flex: none; gap: 7px; }
+    .hd span { display: none; }
+    .officer { grid-template-columns: 40px 1fr 80px; gap: 2px 8px; padding: 8px 10px 8px 12px; }
+    .officer .portrait { width: 40px; height: 40px; }
+    .officer .name { font-size: 18px; }
+    .officer .meta { font-size: 11px; }
+    .officer .num { font-size: 17px; }
+    .bench, .benchhd, .qi .opt { display: none; }
+    .ledger { padding: 8px 12px; }
+    .ledger table { font-size: 13px; }
+    .ledger tr.big td { font-size: 15px; }
+    .ledger td { padding: 3px 0; }
+    .ledger h2, .foe, .hint, .ledger tr.opt { display: none; }
+    .qi { font-size: 12px; padding: 6px 10px; }
+    .seal { position: sticky; bottom: 0; margin-bottom: 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+  <div class="topbar">
+    <div class="era">Deploy <small>A VILLAGE UNDER SIEGE · DAY 13</small></div>
+    <div class="stat warn"><span class="k">Rice</span><span class="v">33 bags <em>· lasts 4 days</em></span><span class="sub">upkeep 7 a day</span></div>
+    <div class="stat"><span class="k">Soldiers</span><span class="v">2,840 <em>+ 330 wounded</em></span><span class="sub">the wounded cannot be fielded</span></div>
+    <div class="stat"><span class="k">Renown</span><span class="v">65 <em>· +1 Qi</em></span><div class="meter"><i style="width:65%"></i><b style="left:20%"></b><b style="left:40%"></b><b style="left:50%"></b><b style="left:60%"></b><b style="left:70%"></b></div></div>
+    <div class="stat"><span class="k">Field</span><span class="v">2,800 <em>· 12 bags</em></span><span class="sub">1 bag per 250 fielded</span></div>
+  </div>
+  <div class="main">
+    <div class="col">
+      <div class="hd"><h2 class="brush">Officers · 3 of 3 slots</h2><span>slider from 250 to the command cap, steps of 50</span></div>
+      <div class="slip officer">
+        <div class="portrait" style="background-image:url(../../../public/portraits/liu-bei.webp)"></div>
+        <div><div class="name">Liu Bei</div><div class="meta">commander · always deployed · level 5 · cap 2,050</div></div>
+        <div class="num">1,000<small>of 2,050</small></div>
+        <div class="slider"><div class="track"></div><div class="fill" style="width:41.7%"></div><div class="knob" style="left:41.7%"></div><div class="ends"><span>250</span><span>2,050</span></div></div>
+      </div>
+      <div class="slip officer">
+        <div class="portrait" style="background-image:url(../../../public/portraits/guan-yu.webp)"></div>
+        <div><div class="name">Guan Yu</div><div class="meta">cavalry · level 5 · cap 2,400 (forged glaive: War +4)</div></div>
+        <div class="num">1,000<small>of 2,400</small></div>
+        <div class="slider"><div class="track"></div><div class="fill" style="width:34.9%"></div><div class="knob" style="left:34.9%"></div><div class="ends"><span>250</span><span>2,400</span></div></div>
+      </div>
+      <div class="slip officer">
+        <div class="portrait" style="background-image:url(../../../public/portraits/zhang-fei.webp)"></div>
+        <div><div class="name">Zhang Fei</div><div class="meta">infantry · level 5 · cap 2,200</div></div>
+        <div class="num">800<small>of 2,200</small></div>
+        <div class="slider"><div class="track"></div><div class="fill" style="width:28.2%"></div><div class="knob" style="left:28.2%"></div><div class="ends"><span>250</span><span>2,200</span></div></div>
+      </div>
+      <div class="hd benchhd"><h2 class="brush" style="font-size:19px">Staying in camp</h2><span>tap to swap into a slot</span></div>
+      <div class="bench">
+        <div class="slip"><div class="portrait" style="background-image:url(../../../public/portraits/jian-yong.webp)"></div><div><div class="name">Jian Yong</div><div class="meta" style="font-size:12px;color:var(--ink-soft)">archers · cap 1,300 · <span class="chip minus" style="font-size:11px">wounded mark: one more rout and he falls</span></div></div></div>
+        <div class="slip"><div class="portrait" style="background-image:url(../../../public/portraits/generic-han-infantry.webp)"></div><div><div class="name">Zhou Cang</div><div class="meta" style="font-size:12px;color:var(--ink-soft)">infantry · cap 1,400</div></div></div>
+      </div>
+      <div class="lacquer foe"><b style="color:var(--lantern)">The enemy:</b> a Raider Chief and 4 rebel units, about 2,100 troops. Your guest: the village militia, 600, on the village tiles. Lose if Liu Bei or the militia is routed, or at the end of round 10.</div>
+    </div>
+    <div class="col">
+      <div class="silk ledger">
+        <h2 class="brush">The quartermaster's slip</h2>
+        <table>
+          <tr><td>Fielded</td><td>2,800</td></tr>
+          <tr><td>Battle rice (⌈2,800 ÷ 250⌉)</td><td>−12 bags</td></tr>
+          <tr class="big"><td>Rice after the battle's cost</td><td>21</td></tr>
+          <tr class="big"><td>After this battle rice lasts</td><td class="ok">3 days</td></tr>
+          <tr><td>Hungry under 3 days (all officers 0 Qi)</td><td class="ok">fed</td></tr>
+          <tr class="opt"><td>Then the battle day's upkeep</td><td>−7</td></tr>
+          <tr class="opt"><td>Left in camp</td><td>40 + 330 wounded</td></tr>
+          <tr class="opt"><td>Field up to 3,000 for the same 12 bags</td><td>+200</td></tr>
+        </table>
+      </div>
+      <div class="lacquer qi">
+        <div><span>Renown 65 (40+)</span><b>+1 Qi each</b></div>
+        <div class="opt"><span>Rested before this battle</span><span>—</span></div>
+        <div class="opt"><span>Tired (forced march)</span><span>—</span></div>
+        <div class="opt"><span>Hungry</span><span>—</span></div>
+        <div><span>Starting Qi this battle</span><b>3 each (2 + 1)</b></div>
+      </div>
+      <div class="hint">Losses after the battle: half of every soldier lost is killed, half come back wounded and return when you rest. A routed officer gets the wounded mark; a second rout and he falls.</div>
+      <button class="seal"><span class="stamp">戰</span><span>Seal: march 2,800 to the village · 12 bags<small>rice 33 → 21 · lasts 3 days after the battle</small></span></button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

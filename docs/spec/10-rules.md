@@ -99,3 +99,68 @@ Rule IDs in brackets (e.g. `[R-ATK-1]`) are what tests are named after.
 
 ## 10. Randomness
 - `[R-RNG-1]` Every random draw comes from the engine's seeded RNG in a fixed order. The same seed and action list always reproduce the same battle.
+
+## 11. Roguelike run rules (RL-) — design, not yet implemented (RL1)
+These rules govern a run of "Roads to War" (`15-roguelike.md`), between battles. Era 1's numbers are in `docs/spec/data/era1-stops.json` and `16-roguelike-era1.md`; the paper sim (`tools/roguelike/paper-sim.mjs`) follows them. Constants are per era (`rules` in the era data); the values below are era 1's. The run layer (`src/run/`) will be pure and deterministic like the engine; battle modifiers become engine rules with these ids.
+
+**The run**
+- `[RL-RUN-1]` A run is one era. It starts with the era's start state (era 1: 50 rice, 1,500 soldiers, 0 wounded, Renown 30, day 0, Liu Bei, Guan Yu and Zhang Fei at level 3) and a run seed. The run state holds rice, healthy soldiers, wounded soldiers, Renown, day, flags, the band (each officer's level, XP, cap bonus, hurt and wounded marks) and the seed.
+- `[RL-RUN-2]` A run ends **won** when the finale is won; it ends **lost** when a battle is lost (`RL-END-1`), when Liu Bei is routed (`RL-END-2`) or when the army scatters (`RL-SCATTER-1`). Every ended run is written to the Annals.
+
+**Road**
+- `[RL-ROAD-1]` The road is drawn once from the run seed: a fixed first tier, anchor tiers, mid tiers and a late tier from the era's template, two lanes per tier, then the finale. Era 1 draws a short road (7 stops) or a long road (8 stops) with equal chance.
+- `[RL-ROAD-2]` Each tier's stops come from that tier's pool, each stop at most once a run. Aftermath stops never appear on the road; a battle's win opens them.
+- `[RL-ROAD-3]` A node connects to the same lane in the next tier, and to the other lane with chance 1/2. A single-node tier connects to every node of the next tier; the last tier connects to the finale.
+- `[RL-ROAD-4]` Every connection has a length in days (era 1: 1, 2 or 3 days with weights 2, 5, 3; the last leg 2 days). Travelling a leg passes that many days.
+- `[RL-ROAD-5]` A mountain path joins a node to the same lane two tiers on. It takes its own days (era 1: 2), costs a share of the healthy soldiers (era 1: 5%, split as `RL-LOSS-1`), skips the stop between and cannot be force-marched.
+- `[RL-ROAD-6]` Every mid tier holds at least one stop with a battle choice, so every path offers battles before the finale. The road shows the next two tiers: each stop's title and marks (battle, town or village, market, camp) and every leg's days; a stop's choices are read on arrival.
+
+**Rice, upkeep and scattering**
+- `[RL-UPKEEP-1]` Each day passed costs ⌈(healthy + wounded) ÷ 500⌉ bags. Days pass on legs, on choices that cost days, on rests and on battles.
+- `[RL-UPKEEP-2]` "Rice lasts N days" = ⌊rice ÷ today's daily upkeep⌋. The road HUD, every choice slip and the deploy screen show it (after the choice or the battle where relevant).
+- `[RL-SCATTER-1]` If a day's upkeep cannot be paid, or rice reaches 0 by any cost, the army scatters and the run is lost.
+- `[RL-HUNGER-1]` A battle is fought **hungry** if, after its rice cost is paid, the rice lasts fewer than 3 days. Every officer then starts that battle at 0 Qi (the opening +2 of `R-UNIT-4` is not given, and every other start-Qi modifier is ignored).
+
+**The soldier pool and deploy**
+- `[RL-POOL-1]` The army is one pool of healthy and wounded soldiers. Only healthy soldiers can be fielded.
+- `[RL-POOL-2]` An officer's command cap = 20 × Leadership + 100 × level, rounded down to 50, plus cap bonuses from stops; halved (rounded down to 50, minimum 250) while he is hurt (`RL-FALL-2`).
+- `[RL-POOL-3]` Soldiers join the healthy pool from choices, volunteers (`RL-REN-3`) and markets (`RL-POOL-5`). Recruited officers bring no soldiers of their own unless the choice says so.
+- `[RL-POOL-4]` Between stops, and before deploying, the player may send any number of healthy or wounded soldiers home. They leave the run for good; nothing else changes.
+- `[RL-POOL-5]` At a stop tagged market, after the choice, rice buys paid levies: 100 healthy soldiers per 5 bags, priced through `RL-REN-2`, up to 500 a stop.
+- `[RL-DEPLOY-1]` Liu Bei is always deployed. The player fills the battle's other deploy slots from the band; a fallen officer cannot deploy.
+- `[RL-DEPLOY-2]` Each deployed officer is given 250 to his command cap healthy soldiers, in steps of 50; the total cannot exceed the healthy pool. These are his unit's troops (and max troops) in the battle. Guests' troops never come from the pool.
+- `[RL-DEPLOY-3]` A battle costs ⌈fielded ÷ 250⌉ bags, paid when the deploy is sealed. A deployment that would leave 0 rice is refused.
+- `[RL-DEPLOY-4]` A battle takes 1 day (its upkeep is paid after the battle).
+
+**Losses and officers**
+- `[RL-LOSS-1]` After a battle, for each deployed unit, lost = fielded − troops left (all of them if routed). Half the lost, rounded to the nearest 10, are killed; the rest become wounded. Survivors return to the healthy pool. Losses from stops, marches and paths are split the same way unless the effect says "all killed".
+- `[RL-LOSS-2]` Wounded soldiers return to the healthy pool only through a rest (`RL-REST-1`, `RL-REST-2`) or an effect that says so.
+- `[RL-FALL-1]` A non-commander officer routed in a won battle gets the **wounded** mark for the rest of the run and is hurt; if he already had the mark, he **falls** and leaves the band. With Iron Oath on, the first rout is a fall.
+- `[RL-FALL-2]` A **hurt** officer has half his command cap until a full rest (`RL-REST-1`). A stop can hurt an officer without a rout; that does not give the wounded mark.
+- `[RL-END-1]` Losing any battle ends the run.
+- `[RL-END-2]` Liu Bei routed loses the battle at once (`R-UNIT-5`), and so ends the run.
+- `[RL-XP-1]` Officers gain XP and levels from each battle's log as in the campaign (`xpFromLog`, `12-campaign.md` §3); a level raises the command cap by 100.
+
+**Rest and the march**
+- `[RL-REST-1]` A **rest** choice at a stop: all wounded return, hurt officers recover, tiredness clears, and the choice's own effects (days, Qi) apply.
+- `[RL-REST-2]` **Make camp**, between stops: 2 days; half the wounded (rounded down to 10) return and tiredness clears; hurt officers stay hurt.
+- `[RL-MARCH-1]` A **forced march** on a leg of L ≥ 2 days takes ⌈L ÷ 2⌉ days and costs 3% of the healthy soldiers per day saved (split as `RL-LOSS-1`); the band arrives tired.
+- `[RL-MARCH-2]` A **tired** band's units have −1 move in round 1 of their next battle. Tiredness clears after a battle, a rest, or a leg marched at the normal pace (a stop that makes the band tired lasts through the next leg).
+
+**Renown (0–100)**
+- `[RL-REN-1]` Renown changes only by the amounts printed on choices and is clamped to 0–100.
+- `[RL-REN-2]` **Rice and Renown.** There is no gold: rice is the price of things. At Renown 50+, a town or village stop brings a gift of ⌊Renown ÷ 5⌋ bags after the choice (not when the choice turns on the people: "no volunteers"), rice gained from a trade is ×1.25 (rounded), and market prices are ×0.8. Under 20, rice gained from a trade is ×0.5 and market prices are ×2. Elsewhere ×1.
+- `[RL-REN-3]` **Volunteers.** At a town or village stop, after the choice, Renown × 10 healthy soldiers join (Renown after the choice), unless the choice says "no volunteers"; a choice may scale this or grant it at another stop.
+- `[RL-REN-4]` **Battle spirit.** Every officer's starting Qi is +2 at Renown 70+, +1 at 40+, −1 under 20 (never below 0). Under 20, each rest (`RL-REST-1`, `RL-REST-2`) also loses 5% of the healthy soldiers to desertion.
+- `[RL-REN-5]` **Recruit thresholds.** Some recruits need Renown at least a value at the moment of the choice (era 1: Zhou Cang 40, Liao Hua 55). Below it the choice says so and gives its other branch.
+- `[RL-REN-6]` **Sway.** Liu Bei's sway chance (`R-SWAY-2`) gets + ⌊(Renown − 30) ÷ 10⌋ percentage points (−3 to +7), before the clamp.
+- `[RL-REN-7]` **Finales** read Renown through the finale's own table (era 1: §6 of `16-roguelike-era1.md`).
+
+**Calendar, echoes, gambles, choices**
+- `[RL-CAL-1]` The finale's setup depends on the arrival day through the finale's day table (era 1: brackets at days 12, 16, 20, 24, 28). The briefing names the bracket and its effects.
+- `[RL-ECHO-1]` A **hidden echo** is a flag set by a choice without being shown. When it pays off (a later stop's condition, a battle, or the finale) its cause is named in full.
+- `[RL-ECHO-2]` A **stated** flag is printed on its choice with its payoff. The finale briefing lists every flag, day and Renown effect with its cause before deploy.
+- `[RL-GAMBLE-1]` A gamble prints its odds and both outcomes. It is resolved by one draw from the run's seeded RNG.
+- `[RL-RNG-1]` Every run draw comes from sfc32 seeded (like `R-RNG-1`) from the run seed, the purpose (road or fate) and the stop index, so the same seed always draws the same road and a choice never shifts the draws of later stops. A battle's own seed is derived the same way.
+- `[RL-CHOICE-1]` Every choice slip prints its exact effects in rice, soldiers, wounded, days, Renown, recruits, Qi and stated flags, and the "rice lasts N days" after it.
+- `[RL-CHOICE-2]` A choice whose rice cost exceeds the rice held is shown greyed with the reason and cannot be sealed. A stop always offers at least one sealable choice; if none can be paid, the army scatters.

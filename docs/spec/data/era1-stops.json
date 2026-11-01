@@ -1,0 +1,1611 @@
+{
+  "era": "yellow-turbans",
+  "version": 1,
+  "note": "Era 1 'Yellow Turbans' road data (docs/spec/16-roguelike-era1.md). Seed for src/data/eras/ and src/data/stops/ in RL1. All prose is our own paraphrase of the novel. Numbers tuned by tools/roguelike/paper-sim.mjs (docs/spec/16-roguelike-era1-sim.md).",
+  "start": {
+    "rice": 50,
+    "soldiers": 1500,
+    "wounded": 0,
+    "renown": 30,
+    "day": 0,
+    "band": [
+      {
+        "officer": "liu-bei",
+        "level": 3
+      },
+      {
+        "officer": "guan-yu",
+        "level": 3
+      },
+      {
+        "officer": "zhang-fei",
+        "level": 3
+      }
+    ]
+  },
+  "rules": {
+    "upkeepPer": 500,
+    "battleRicePer": 250,
+    "hungryDays": 3,
+    "minPerOfficer": 250,
+    "sliderStep": 50,
+    "capPerLead": 20,
+    "capPerLevel": 100,
+    "killedShare": 0.5,
+    "volunteersPerRenown": 10,
+    "renownMax": 100,
+    "battleDays": 1,
+    "forcedMarchPctPerDaySaved": 0.03,
+    "mountainPathAttritionPct": 0.05,
+    "makeCampDays": 2,
+    "deserterPct": 0.05,
+    "tradeHigh": 1.25,
+    "tradeLow": 0.5,
+    "levyPrice": 5,
+    "marketMax": 500,
+    "giftAt": 50,
+    "giftDiv": 5
+  },
+  "officers": {
+    "liu-bei": {
+      "name": "Liu Bei",
+      "lead": 78,
+      "q": 1.0,
+      "commander": true
+    },
+    "guan-yu": {
+      "name": "Guan Yu",
+      "lead": 95,
+      "q": 1.12
+    },
+    "zhang-fei": {
+      "name": "Zhang Fei",
+      "lead": 85,
+      "q": 1.1
+    },
+    "jian-yong": {
+      "name": "Jian Yong",
+      "lead": 50,
+      "q": 0.85,
+      "joinLevel": 2
+    },
+    "zhou-cang": {
+      "name": "Zhou Cang",
+      "lead": 60,
+      "q": 0.95,
+      "joinLevel": 2,
+      "new": true,
+      "alt": "novel ch. 28 (joins Guan Yu years later)"
+    },
+    "liao-hua": {
+      "name": "Liao Hua",
+      "lead": 70,
+      "q": 0.9,
+      "joinLevel": 2,
+      "new": true,
+      "alt": "novel ch. 27 (joins Guan Yu years later)"
+    }
+  },
+  "road": {
+    "tiersShort": 7,
+    "tiersLong": 8,
+    "legDays": [
+      {
+        "days": 1,
+        "weight": 2
+      },
+      {
+        "days": 2,
+        "weight": 5
+      },
+      {
+        "days": 3,
+        "weight": 3
+      }
+    ],
+    "finaleLegDays": 2,
+    "mountainPath": {
+      "fromTiers": [
+        2,
+        3
+      ],
+      "days": 2,
+      "skips": 1
+    },
+    "tiers": [
+      {
+        "name": "Zhuo",
+        "kind": "fixed",
+        "stops": [
+          "zhuo-notice"
+        ]
+      },
+      {
+        "name": "Youzhou",
+        "kind": "anchor",
+        "anchor": "daxing-hill",
+        "pool": "early"
+      },
+      {
+        "name": "The Qingzhou road",
+        "kind": "anchor",
+        "anchor": "qingzhou-relief",
+        "pool": "early"
+      },
+      {
+        "name": "The southern campaign",
+        "kind": "mid",
+        "pool": "mid",
+        "battleRequired": true
+      },
+      {
+        "name": "The southern campaign",
+        "kind": "mid",
+        "pool": "mid",
+        "battleRequired": true
+      },
+      {
+        "name": "The southern campaign",
+        "kind": "mid",
+        "pool": "mid",
+        "battleRequired": true
+      },
+      {
+        "name": "The southern campaign",
+        "kind": "mid",
+        "pool": "mid",
+        "battleRequired": true,
+        "longOnly": true
+      },
+      {
+        "name": "Julu",
+        "kind": "late",
+        "pool": "late"
+      }
+    ],
+    "pools": {
+      "early": [
+        "horse-merchants",
+        "refugee-column",
+        "yellow-deserters",
+        "hungry-county",
+        "flooded-ford"
+      ],
+      "mid": [
+        "village-under-siege",
+        "bandit-offer",
+        "lu-zhi-in-chains",
+        "dong-zhuo-rescue",
+        "huangfu-song-fires",
+        "captured-granary",
+        "plague-camp",
+        "rest-or-push",
+        "inspector",
+        "refugee-column",
+        "yellow-deserters",
+        "hungry-county",
+        "flooded-ford"
+      ],
+      "late": [
+        "zhang-bao-sorcery",
+        "zhu-jun-camp",
+        "guangzong-eve",
+        "rest-or-push",
+        "captured-granary"
+      ]
+    },
+    "battleStops": [
+      "daxing-hill",
+      "qingzhou-relief",
+      "village-under-siege",
+      "bandit-offer",
+      "lu-zhi-in-chains",
+      "dong-zhuo-rescue"
+    ],
+    "tierScale": [
+      0.8,
+      0.85,
+      1.0,
+      1.05,
+      1.1,
+      1.15,
+      1.2,
+      1.25
+    ]
+  },
+  "battles": {
+    "daxing-hill": {
+      "new": false,
+      "E": 2000,
+      "guests": 800,
+      "slots": 4,
+      "variant": "rl-youzhou"
+    },
+    "qingzhou": {
+      "new": false,
+      "E": 2600,
+      "guests": 600,
+      "slots": 4,
+      "variant": "rl-relief"
+    },
+    "village-siege": {
+      "new": true,
+      "E": 1800,
+      "guests": 150,
+      "slots": 3,
+      "variant": "village"
+    },
+    "prison-cart": {
+      "new": true,
+      "E": 2000,
+      "guests": 0,
+      "slots": 3,
+      "variant": "base"
+    },
+    "dong-zhuo-rescue": {
+      "new": true,
+      "E": 2300,
+      "guests": 500,
+      "slots": 4,
+      "variant": "base"
+    },
+    "guangzong": {
+      "new": false,
+      "E": 5500,
+      "guests": 1500,
+      "slots": 5,
+      "variant": "rl-finale",
+      "finale": true
+    }
+  },
+  "finale": {
+    "battle": "guangzong",
+    "dayTable": [
+      {
+        "maxDay": 12,
+        "label": "very early",
+        "E": 0.75,
+        "text": "You arrived on day {day}: the palisade is a line of stakes, its north archers are not posted and Zhang Liang's levies are still in the villages."
+      },
+      {
+        "maxDay": 16,
+        "label": "early",
+        "E": 0.9,
+        "text": "You arrived on day {day}: the palisade is half built and its north archers are not yet posted."
+      },
+      {
+        "maxDay": 20,
+        "label": "on time",
+        "E": 1.0,
+        "text": "You arrived on day {day}: the palisade stands complete."
+      },
+      {
+        "maxDay": 24,
+        "label": "late",
+        "E": 1.1,
+        "text": "You arrived on day {day}: the palisade is complete and Zhang Liang's levies march in on round 4."
+      },
+      {
+        "maxDay": 28,
+        "label": "very late",
+        "E": 1.2,
+        "text": "You arrived on day {day}: a second levy arrives on round 7, and Zhang Bao has had time to gather his storm (he begins with 6 Qi)."
+      },
+      {
+        "maxDay": 999,
+        "label": "too late",
+        "E": 1.3,
+        "text": "You arrived on day {day}: Zhang Jiao's last rite is done. The yellow sky hangs over the field (every rebel adept's hex +20 confuse chance) and both levies come."
+      }
+    ],
+    "renown": [
+      {
+        "gte": 60,
+        "G": 600,
+        "text": "Renown {renown} (60+): the villages round Guangzong send a militia company to your line."
+      },
+      {
+        "gte": 80,
+        "E": -0.04,
+        "text": "Renown {renown} (80+): two rebel captains have heard of you and waver (loyalty -20)."
+      },
+      {
+        "lt": 20,
+        "G": -500,
+        "text": "Renown {renown} (under 20): the imperial generals keep one company back from a lord with such a name."
+      }
+    ]
+  },
+  "flags": {
+    "zou-jing-alone": {
+      "visible": false,
+      "set": "daxing-hill/hold-zhuo",
+      "pays": "qingzhou-relief (battle)",
+      "effect": {
+        "battleGuests": {
+          "qingzhou": -500
+        }
+      },
+      "text": "Zou Jing fought Daxing Hill alone and lost half his archers: he brings 1,250 to Qingzhou instead of 2,500."
+    },
+    "qingzhou-holds": {
+      "visible": false,
+      "set": "qingzhou-relief/smuggle (win)",
+      "pays": "finale",
+      "effect": {
+        "G": 500
+      },
+      "text": "Because your rice reached Qingzhou: Governor Gong Jing sends a company of his garrison to Guangzong."
+    },
+    "qingzhou-fell": {
+      "visible": false,
+      "set": "qingzhou-relief/march-on",
+      "pays": "finale",
+      "effect": {
+        "E": 0.05
+      },
+      "text": "Because Qingzhou fell: its besiegers have joined Zhang Liang (+1 rebel unit)."
+    },
+    "village-fell": {
+      "visible": false,
+      "set": "village-under-siege/pass",
+      "pays": "finale",
+      "effect": {
+        "E": 0.04
+      },
+      "text": "Because you marched past the burning village: its raiders wait at Guangzong (+1 rebel unit)."
+    },
+    "refugees-guided": {
+      "visible": false,
+      "set": "refugee-column/take-in",
+      "pays": "finale",
+      "effect": {
+        "E": -0.04
+      },
+      "text": "Because you sheltered the refugees: their men know the north ford, and one of your units may start on the far bank."
+    },
+    "turncoats": {
+      "visible": false,
+      "set": "yellow-deserters/enlist",
+      "pays": "finale",
+      "effect": {
+        "E": -0.03
+      },
+      "text": "Because you spared the deserters: Captain Zhou of the sortie is their cousin (loyalty -20)."
+    },
+    "no-quarter": {
+      "visible": false,
+      "set": "yellow-deserters/execute",
+      "pays": "finale",
+      "effect": {
+        "E": 0.03
+      },
+      "text": "Because you executed the deserters: the rebels expect no mercy (no rebel can be swayed; their captains' loyalty becomes null)."
+    },
+    "granary-burned": {
+      "visible": true,
+      "set": "captured-granary/burn",
+      "pays": "finale",
+      "effect": {
+        "E": -0.15
+      },
+      "text": "Because you burned the granary: Zhang Liang fields 2 fewer units."
+    },
+    "lu-zhi-freed": {
+      "visible": true,
+      "set": "lu-zhi-in-chains/free (win)",
+      "pays": "finale",
+      "effect": {
+        "G": 600
+      },
+      "text": "Because you freed Lu Zhi: his old officers lead a company of his veterans beside you."
+    },
+    "outlaw": {
+      "visible": true,
+      "set": "lu-zhi-in-chains/free (win), inspector/flog",
+      "pays": "zhu-jun-camp, guangzong-eve",
+      "effect": {},
+      "text": "The court calls you outlaws: imperial camps give you no rice and Huangfu Song will not wait for you."
+    },
+    "lu-zhi-letter": {
+      "visible": false,
+      "set": "lu-zhi-in-chains/bribe",
+      "pays": "finale",
+      "effect": {
+        "G": 250
+      },
+      "text": "Because you eased Lu Zhi's road: his letter reached the imperial camp; the imperial guests begin with +2 Qi."
+    },
+    "zhang-fei-sulks": {
+      "visible": false,
+      "set": "lu-zhi-in-chains/let-pass",
+      "pays": "next battle",
+      "effect": {
+        "nextBattleS": -0.04
+      },
+      "text": "Zhang Fei has not forgiven you for Lu Zhi's cart: he ignores your first order (he starts the battle confused)."
+    },
+    "rout-unchecked": {
+      "visible": false,
+      "set": "dong-zhuo-rescue/loot",
+      "pays": "finale",
+      "effect": {
+        "E": 0.04
+      },
+      "text": "Because Dong Zhuo's rout went unchecked: the rebels who chased him have joined Zhang Liang (+1 rebel unit)."
+    },
+    "dong-zhuo-grudge": {
+      "visible": false,
+      "set": "dong-zhuo-snub/storm-out",
+      "pays": "zhu-jun-camp",
+      "effect": {},
+      "text": "Word of the shouting in Dong Zhuo's tent has reached Zhu Jun: his commissary gives you half."
+    },
+    "blood-ward": {
+      "visible": true,
+      "set": "zhang-bao-sorcery/blood",
+      "pays": "finale",
+      "effect": {
+        "E": -0.15
+      },
+      "text": "Because you carried the blood ward: Zhang Bao's Call the Storm costs 8 Qi and lasts 1 round."
+    },
+    "zhang-bao-wounded": {
+      "visible": true,
+      "set": "zhang-bao-sorcery/night-raid (win)",
+      "pays": "finale",
+      "effect": {
+        "E": -0.06
+      },
+      "text": "Because your night raid struck the altar: Zhang Bao starts with 60% of his troops."
+    },
+    "zhu-jun-line": {
+      "visible": true,
+      "set": "zhu-jun-camp/serve",
+      "pays": "finale",
+      "effect": {
+        "G": 600
+      },
+      "text": "Because you served in Zhu Jun's line: one of his companies fights beside you."
+    },
+    "huangfu-column": {
+      "visible": true,
+      "set": "guangzong-eve/wait-column",
+      "pays": "finale",
+      "effect": {
+        "G": 1200
+      },
+      "text": "Because you waited for Huangfu Song: two of his companies form your left wing."
+    },
+    "stockade-burned": {
+      "visible": true,
+      "set": "guangzong-eve/night-raid (win)",
+      "pays": "finale",
+      "effect": {
+        "dayShift": -4
+      },
+      "text": "Because your raiders fired the stockade: the palisade is as it would be four days earlier."
+    },
+    "forged-weapons": {
+      "visible": true,
+      "set": "horse-merchants/gift",
+      "pays": "every battle",
+      "effect": {},
+      "text": "The brothers carry their forged weapons: Liu Bei, Guan Yu and Zhang Fei have War +4 for the run."
+    }
+  },
+  "stops": [
+    {
+      "id": "zhuo-notice",
+      "title": "The Notice at Zhuo",
+      "source": "novel ch. 1",
+      "tags": [
+        "town",
+        "market"
+      ],
+      "prologue": "peach-garden",
+      "scene": [
+        "A Han notice on the Zhuo county wall calls for men to fight the Yellow Turbans. Liu Bei, a straw-sandal seller of imperial blood, sighs in front of it; a black-whiskered butcher scolds him for sighing instead of acting.",
+        "In the wine shop a towering red-faced stranger joins them. Under the peach blossom behind Zhang Fei's farm the three swore to be brothers. Now the oath needs men and grain."
+      ],
+      "choices": [
+        {
+          "id": "estate",
+          "label": "Zhang Fei sells his farm and his butcher's stall",
+          "tension": "The biggest early army, but every man eats from day one.",
+          "effects": {
+            "soldiers": 600,
+            "rice": 10
+          }
+        },
+        {
+          "id": "feast",
+          "label": "Open the peach garden to the county and read the oath aloud",
+          "tension": "Spend scarce rice for a name that pays at every town.",
+          "effects": {
+            "rice": -8,
+            "days": 1,
+            "renown": 15
+          }
+        },
+        {
+          "id": "levy",
+          "label": "Take the county's grain levy and press its idle young men",
+          "tension": "A full cart and a bigger band now, and a poorer name everywhere after.",
+          "effects": {
+            "rice": 30,
+            "renown": -10,
+            "soldiers": 300
+          }
+        }
+      ]
+    },
+    {
+      "id": "horse-merchants",
+      "title": "The Horse Dealers of Zhongshan",
+      "source": "novel ch. 1",
+      "tags": [
+        "road"
+      ],
+      "scene": [
+        "Two horse dealers from Zhongshan, Zhang Shiping and Su Shuang, are stuck in Zhuo with their herd: the rebels hold the roads north.",
+        "They have heard about the oath, and they come to the camp to look the brothers over."
+      ],
+      "choices": [
+        {
+          "id": "gift",
+          "label": "Accept their horses, steel and silver, and forge the brothers' weapons",
+          "tension": "A day at the forge and a smaller rice gift, for brothers who hit harder all run long.",
+          "effects": {
+            "days": 1,
+            "rice": 15,
+            "flags": [
+              "forged-weapons"
+            ]
+          }
+        },
+        {
+          "id": "escort",
+          "label": "Escort the herd through the rebel country",
+          "tension": "Two days and a stated risk for the biggest rice haul of the early road.",
+          "effects": {
+            "days": 2,
+            "gamble": {
+              "odds": 0.7,
+              "win": {
+                "rice": 45,
+                "renown": 5
+              },
+              "lose": {
+                "rice": 15,
+                "casualties": {
+                  "n": 300
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "commandeer",
+          "label": "Take the herd for the war and sell it to the Youzhou quartermaster",
+          "tension": "Rice without days, paid for in name.",
+          "effects": {
+            "rice": 30,
+            "renown": -15
+          }
+        }
+      ]
+    },
+    {
+      "id": "daxing-hill",
+      "title": "Daxing Hill",
+      "source": "novel ch. 1",
+      "tags": [
+        "town",
+        "market"
+      ],
+      "scene": [
+        "Cheng Yuanzhi's turbaned host is marching on Zhuo. The Youzhou magistrate Zou Jing has few trained men, and he gladly takes the brothers' band into his column.",
+        "The rebels have camped in the millet below Daxing Hill. The wind is from the west."
+      ],
+      "choices": [
+        {
+          "id": "fight",
+          "label": "March with Zou Jing to Daxing Hill",
+          "tension": "The first real fight costs men and a battle's rice, and it brings Jian Yong and a name.",
+          "effects": {
+            "battle": {
+              "id": "daxing-hill",
+              "win": {
+                "rice": 30,
+                "renown": 8,
+                "recruit": "jian-yong"
+              }
+            }
+          }
+        },
+        {
+          "id": "raid",
+          "label": "Burn the rebel supply carts and the farms they camp in the night before, then fight",
+          "tension": "A day, a stated risk and a stain, for more rice and a weaker enemy; you fight either way.",
+          "effects": {
+            "days": 1,
+            "gamble": {
+              "odds": 0.65,
+              "win": {
+                "rice": 30,
+                "nextBattleE": -0.25
+              },
+              "lose": {
+                "casualties": {
+                  "n": 250
+                }
+              }
+            },
+            "battle": {
+              "id": "daxing-hill",
+              "win": {
+                "rice": 20,
+                "renown": 8,
+                "recruit": "jian-yong"
+              }
+            },
+            "renown": -5
+          }
+        },
+        {
+          "id": "hold-zhuo",
+          "label": "Guard Zhuo's walls and let Zou Jing fight",
+          "tension": "Safe and fed by the county, and the town keeps sending men, but the name and an ally pay.",
+          "effects": {
+            "days": 2,
+            "renown": -5,
+            "flags": [
+              "zou-jing-alone"
+            ],
+            "rice": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "qingzhou-relief",
+      "title": "Qingzhou Besieged",
+      "source": "novel ch. 1",
+      "tags": [
+        "town",
+        "market"
+      ],
+      "scene": [
+        "A rider from Governor Gong Jing: Qingzhou's walls are ringed with rebels and its granary is down to husks.",
+        "Zou Jing will lend his archers if Liu Bei leads. The rebels outnumber you; the only way in is to make them chase you."
+      ],
+      "choices": [
+        {
+          "id": "relieve",
+          "label": "Relieve Qingzhou: feign a retreat and spring the brothers from the ridges",
+          "tension": "The hardest early battle for the biggest early reward.",
+          "effects": {
+            "battle": {
+              "id": "qingzhou",
+              "win": {
+                "renown": 10,
+                "rice": 30
+              }
+            }
+          }
+        },
+        {
+          "id": "smuggle",
+          "label": "Run rice through the siege lines by night",
+          "tension": "No battle, rice spent on an ally you may see again, at stated odds.",
+          "effects": {
+            "rice": -12,
+            "days": 1,
+            "noVolunteers": true,
+            "gamble": {
+              "odds": 0.8,
+              "win": {
+                "renown": 10,
+                "flags": [
+                  "qingzhou-holds"
+                ]
+              },
+              "lose": {
+                "casualties": {
+                  "n": 150
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "march-on",
+          "label": "Leave Qingzhou to its walls and march south",
+          "tension": "Free now; what happens to Qingzhou is not shown.",
+          "effects": {
+            "renown": -10,
+            "noVolunteers": true,
+            "flags": [
+              "qingzhou-fell"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "village-under-siege",
+      "title": "A Village Under Siege",
+      "source": "road",
+      "tags": [
+        "village"
+      ],
+      "scene": [
+        "Smoke over a millet village: a rebel band has fired the threshing floor, and the elders have barred the gate with carts.",
+        "Women are on the walls with hoes. They have seen your banner."
+      ],
+      "choices": [
+        {
+          "id": "break",
+          "label": "Break the siege",
+          "tension": "A small battle's losses and rice, for name, rice and men.",
+          "effects": {
+            "battle": {
+              "id": "village-siege",
+              "win": {
+                "renown": 10,
+                "rice": 20
+              }
+            }
+          }
+        },
+        {
+          "id": "zhang-fei",
+          "label": "Send Zhang Fei with a hundred men",
+          "tension": "Cheap, but a hurt Zhang Fei leads half his men until you rest.",
+          "effects": {
+            "renown": 5,
+            "volunteersMult": 0.5,
+            "gamble": {
+              "odds": 0.5,
+              "win": {},
+              "lose": {
+                "woundOfficer": "zhang-fei",
+                "casualties": {
+                  "n": 100,
+                  "killed": 1
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "pass",
+          "label": "March past",
+          "tension": "Costs nothing today but the name; what the raiders do next is not shown.",
+          "effects": {
+            "renown": -10,
+            "noVolunteers": true,
+            "flags": [
+              "village-fell"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "refugee-column",
+      "title": "The Refugee Column",
+      "source": "road",
+      "tags": [
+        "road"
+      ],
+      "scene": [
+        "A column of families from the burned counties, carts and grandmothers and goats, begs to march under the Han banner.",
+        "They have eaten their seed grain. The road south is long."
+      ],
+      "choices": [
+        {
+          "id": "take-in",
+          "label": "Take them in",
+          "tension": "Slower and hungrier, for men and a name.",
+          "effects": {
+            "rice": -10,
+            "renown": 12,
+            "soldiers": 200,
+            "slowLegs": {
+              "legs": 2,
+              "days": 1
+            },
+            "flags": [
+              "refugees-guided"
+            ]
+          }
+        },
+        {
+          "id": "feed",
+          "label": "Give them rice and send them on",
+          "tension": "Name for rice, no delay.",
+          "effects": {
+            "rice": -15,
+            "renown": 8
+          }
+        },
+        {
+          "id": "press",
+          "label": "Take the young men and send the rest on",
+          "tension": "Men now, name lost.",
+          "effects": {
+            "soldiers": 300,
+            "renown": -12
+          }
+        }
+      ]
+    },
+    {
+      "id": "yellow-deserters",
+      "title": "The Deserters",
+      "source": "road",
+      "tags": [
+        "road"
+      ],
+      "scene": [
+        "Six hundred Yellow Turbans throw down their spears at your pickets. Their scarves are filthy and their bellies are empty.",
+        "Zou Jing's standing order is no quarter. One of them, a young officer named Liao Hua, asks to speak to Liu Bei."
+      ],
+      "choices": [
+        {
+          "id": "enlist",
+          "label": "Spare them and enlist them",
+          "tension": "More mouths, and rebels in the ranks; a good name brings an officer.",
+          "effects": {
+            "soldiers": 400,
+            "renown": 5,
+            "flags": [
+              "turncoats"
+            ],
+            "conditional": [
+              {
+                "if": {
+                  "renownGte": 55
+                },
+                "then": {
+                  "recruit": "liao-hua"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "release",
+          "label": "Disarm them and send them home with a sack each",
+          "tension": "Name for rice, no men.",
+          "effects": {
+            "rice": -6,
+            "renown": 10
+          }
+        },
+        {
+          "id": "execute",
+          "label": "Carry out the order and take their sacks",
+          "tension": "Rice and safety now.",
+          "effects": {
+            "rice": 15,
+            "renown": -15,
+            "flags": [
+              "no-quarter"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "hungry-county",
+      "title": "The Empty County",
+      "source": "road",
+      "tags": [
+        "town",
+        "market"
+      ],
+      "scene": [
+        "The magistrate of a small county fled at the first rumour of rebels. His granary is sealed, his fields are ripe and nobody is cutting them.",
+        "The farmers watch your column from their doorways."
+      ],
+      "choices": [
+        {
+          "id": "seize",
+          "label": "Break the granary seal and press the young men",
+          "tension": "The ruthless road in one choice.",
+          "effects": {
+            "rice": 35,
+            "soldiers": 300,
+            "renown": -15,
+            "noVolunteers": true
+          }
+        },
+        {
+          "id": "harvest",
+          "label": "Bring in the harvest with them for a fair share",
+          "tension": "Two days of work for rice, a name and willing men.",
+          "effects": {
+            "days": 2,
+            "riceTrade": 25,
+            "renown": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "flooded-ford",
+      "title": "The Flooded Ford",
+      "source": "road",
+      "tags": [
+        "road"
+      ],
+      "scene": [
+        "The autumn rains have filled the river to its banks. The ferryman's rope is gone, and the far bank is a smudge in the drizzle."
+      ],
+      "choices": [
+        {
+          "id": "wait",
+          "label": "Wait for the water to fall",
+          "tension": "Safe; two days of rice and two days nearer the finished palisade.",
+          "effects": {
+            "days": 2
+          }
+        },
+        {
+          "id": "cross",
+          "label": "Cross now",
+          "tension": "Stated odds against time.",
+          "effects": {
+            "gamble": {
+              "odds": 0.6,
+              "win": {},
+              "lose": {
+                "rice": -20,
+                "casualties": {
+                  "n": 400,
+                  "killed": 1
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "rafts",
+          "label": "Pull the doors off the nearest village for rafts",
+          "tension": "Half the delay, a little name.",
+          "effects": {
+            "days": 1,
+            "renown": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "bandit-offer",
+      "title": "Zhou Cang's Pass",
+      "source": "novel ch. 28 (moved earlier: alt-history)",
+      "tags": [
+        "road"
+      ],
+      "scene": [
+        "A band of hill bandits, once Yellow Turbans, blocks the pass road under two chiefs: Pei Yuanshao, and a dark giant named Zhou Cang who says he has heard of Guan Yu.",
+        "Zhou Cang would kneel to a lord worth following. Both of them would take a toll from one who isn't."
+      ],
+      "choices": [
+        {
+          "id": "accept",
+          "label": "Ask Zhou Cang to join you (Renown 40+)",
+          "tension": "Men and an officer who eat; only a lord of name can ask, otherwise he names a toll.",
+          "effects": {
+            "conditional": [
+              {
+                "if": {
+                  "renownGte": 40
+                },
+                "then": {
+                  "soldiers": 400,
+                  "recruit": "zhou-cang",
+                  "renown": -3
+                },
+                "else": {
+                  "rice": -18
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "clear",
+          "label": "Clear the pass by force",
+          "tension": "A fight for their hoard and a free road.",
+          "effects": {
+            "battle": {
+              "id": "village-siege",
+              "variant": "bandit-pass",
+              "win": {
+                "rice": 25,
+                "renown": 5
+              }
+            }
+          }
+        },
+        {
+          "id": "toll",
+          "label": "Pay the toll",
+          "tension": "The cheap peace: rice for a whole skin and an open road.",
+          "effects": {
+            "rice": -12
+          }
+        }
+      ]
+    },
+    {
+      "id": "huangfu-song-fires",
+      "title": "The Fires at Changshe",
+      "source": "novel ch. 1",
+      "tags": [
+        "road"
+      ],
+      "scene": [
+        "At Changshe the rebels camped in tall grass, and Huangfu Song set it alight on a night wind. The plain is a sea of fire.",
+        "Rebels run in every direction. A red-bannered troop of horse under a young officer named Cao Cao is cutting them down."
+      ],
+      "choices": [
+        {
+          "id": "pursue",
+          "label": "Ride with Cao Cao and take the baggage",
+          "tension": "Rice at stated odds.",
+          "effects": {
+            "gamble": {
+              "odds": 0.7,
+              "win": {
+                "rice": 30,
+                "renown": 3
+              },
+              "lose": {
+                "casualties": {
+                  "n": 300
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "firebreak",
+          "label": "Cut firebreaks round the villages in the fire's path",
+          "tension": "A day and no loot, for name and men.",
+          "effects": {
+            "days": 1,
+            "renown": 10,
+            "soldiers": 150,
+            "giftRice": 10
+          }
+        },
+        {
+          "id": "glean",
+          "label": "Gather the grain the rebels dropped",
+          "tension": "Rice for a day.",
+          "effects": {
+            "days": 1,
+            "rice": 20
+          }
+        }
+      ]
+    },
+    {
+      "id": "captured-granary",
+      "title": "The Rebel Granary",
+      "source": "road",
+      "tags": [
+        "road"
+      ],
+      "scene": [
+        "A walled rebel granary, its guards fled, the wagons still yoked. Starving farmers watch from the ditch.",
+        "It is a long haul to Guangzong with full wagons."
+      ],
+      "choices": [
+        {
+          "id": "take",
+          "label": "Load the wagons",
+          "tension": "The biggest rice haul, three days slower.",
+          "effects": {
+            "rice": 40,
+            "days": 3
+          }
+        },
+        {
+          "id": "burn",
+          "label": "Burn it so Guangzong never eats it",
+          "tension": "Nothing now, a weaker finale.",
+          "effects": {
+            "flags": [
+              "granary-burned"
+            ]
+          }
+        },
+        {
+          "id": "give",
+          "label": "Open it to the starving",
+          "tension": "Name and men, no rice.",
+          "effects": {
+            "renown": 15,
+            "volunteers": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "lu-zhi-in-chains",
+      "title": "Lu Zhi in Chains",
+      "source": "novel ch. 1",
+      "tags": [
+        "road"
+      ],
+      "scene": [
+        "A prison cart on the Guangzong road. Inside sits Lu Zhi, Liu Bei's old teacher: he would not bribe the court's envoy, so the envoy reported him for cowardice.",
+        "Zhang Fei already has his spear in his hand."
+      ],
+      "choices": [
+        {
+          "id": "free",
+          "label": "Free him from the escort",
+          "tension": "Honour and a finale ally, but the court calls you outlaws.",
+          "effects": {
+            "battle": {
+              "id": "prison-cart",
+              "win": {
+                "renown": 12,
+                "flags": [
+                  "lu-zhi-freed",
+                  "outlaw"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "bribe",
+          "label": "Pay the escort to treat him gently",
+          "tension": "Rice for a quiet favour.",
+          "effects": {
+            "rice": -10,
+            "renown": 5,
+            "flags": [
+              "lu-zhi-letter"
+            ]
+          }
+        },
+        {
+          "id": "let-pass",
+          "label": "Let the law take its course",
+          "tension": "No battle and no rice; the men see you do nothing, and Zhang Fei will remember.",
+          "effects": {
+            "flags": [
+              "zhang-fei-sulks"
+            ],
+            "renown": -6
+          }
+        }
+      ]
+    },
+    {
+      "id": "dong-zhuo-rescue",
+      "title": "Dong Zhuo's Rout",
+      "source": "novel ch. 1",
+      "tags": [
+        "road"
+      ],
+      "scene": [
+        "Dust on the plain: an imperial army in full rout, with Zhang Jiao's host on its heels.",
+        "The general in the middle of the flight is Dong Zhuo of Hedong, and he is losing."
+      ],
+      "choices": [
+        {
+          "id": "charge",
+          "label": "Charge into the rebels' flank",
+          "tension": "A real battle for a man who will not thank you, though some of his stragglers will.",
+          "effects": {
+            "battle": {
+              "id": "dong-zhuo-rescue",
+              "win": {
+                "renown": 10,
+                "soldiers": 200
+              },
+              "aftermath": "dong-zhuo-snub"
+            }
+          }
+        },
+        {
+          "id": "loot",
+          "label": "Shadow the rout and take what it drops",
+          "tension": "Rice now, a stain on the name, and the rebels who won here go on to Guangzong.",
+          "effects": {
+            "rice": 15,
+            "renown": -8,
+            "flags": [
+              "rout-unchecked"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "dong-zhuo-snub",
+      "title": "Dong Zhuo's Snub",
+      "source": "novel ch. 1",
+      "tags": [
+        "aftermath"
+      ],
+      "aftermathOnly": true,
+      "scene": [
+        "Back in his camp, Dong Zhuo asks what rank the brothers hold. Hearing 'none', he turns back to his wine without a word of thanks.",
+        "Zhang Fei's hand goes to his sword hilt."
+      ],
+      "choices": [
+        {
+          "id": "restrain",
+          "label": "Hold Zhang Fei back and take your leave",
+          "tension": "Name, and a brooding brother.",
+          "effects": {
+            "renown": 5,
+            "qiNextOfficer": {
+              "zhang-fei": -1
+            }
+          }
+        },
+        {
+          "id": "storm-out",
+          "label": "Let Zhang Fei say his piece, and take the spare rice as thanks",
+          "tension": "Rice and a fierce brother, and the story travels.",
+          "effects": {
+            "rice": 15,
+            "renown": -3,
+            "qiNextOfficer": {
+              "zhang-fei": 1
+            },
+            "flags": [
+              "dong-zhuo-grudge"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "plague-camp",
+      "title": "Fever in the Camp",
+      "source": "road",
+      "tags": [
+        "camp"
+      ],
+      "scene": [
+        "A fever comes off the marshes and runs through the ranks.",
+        "At the camp's edge, hedge priests of the Way of Great Peace sell charm water by the cup."
+      ],
+      "choices": [
+        {
+          "id": "quarantine",
+          "label": "Quarantine the sick and wait it out",
+          "tension": "A day for a light toll.",
+          "effects": {
+            "days": 1,
+            "casualties": {
+              "pct": 0.03,
+              "killed": 1
+            }
+          }
+        },
+        {
+          "id": "march-through",
+          "label": "March through it",
+          "tension": "No days, many men, and a tired army.",
+          "effects": {
+            "casualties": {
+              "pct": 0.12
+            },
+            "tired": true
+          }
+        },
+        {
+          "id": "charm-water",
+          "label": "Buy the charm water",
+          "tension": "Stated odds and a stain on the name.",
+          "effects": {
+            "renown": -5,
+            "gamble": {
+              "odds": 0.5,
+              "win": {},
+              "lose": {
+                "casualties": {
+                  "pct": 0.12
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "rest-or-push",
+      "title": "Rest or Push On",
+      "source": "road",
+      "tags": [
+        "camp"
+      ],
+      "scene": [
+        "The men's sandals are worn through after the hill roads. There is a dry riverbed for a camp and a farmer's orchard beside it.",
+        "Guangzong will not wait."
+      ],
+      "choices": [
+        {
+          "id": "rest",
+          "label": "Rest two days",
+          "tension": "Two days of rice and two days at Guangzong, for whole men and fresh spirit.",
+          "effects": {
+            "days": 2,
+            "rest": true,
+            "qiNext": 1
+          }
+        },
+        {
+          "id": "push",
+          "label": "Forced march",
+          "tension": "Spare rice and days, lose men.",
+          "effects": {
+            "nextLegDays": -2,
+            "casualties": {
+              "pct": 0.12
+            },
+            "tired": true
+          }
+        },
+        {
+          "id": "forage",
+          "label": "Rest a day and strip the orchard",
+          "tension": "A little of each.",
+          "effects": {
+            "days": 1,
+            "riceTrade": 10,
+            "healWounded": "half",
+            "renown": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "inspector",
+      "title": "The Inspector",
+      "source": "novel ch. 2 (moved before Guangzong)",
+      "tags": [
+        "town",
+        "market"
+      ],
+      "scene": [
+        "For their service the brothers are given a small county, Anxi. The court's inspector arrives, sneers at Liu Bei for bringing no gift, and threatens to report him.",
+        "Zhang Fei finds the inspector drunk at the post-house and ties him to the hitching post."
+      ],
+      "choices": [
+        {
+          "id": "flog",
+          "label": "Let Zhang Fei flog him, hang your seal of office on his neck and go",
+          "tension": "Name, a fierce Zhang Fei and the county's young men, but no county grain and no court favour.",
+          "effects": {
+            "renown": 12,
+            "qiNextOfficer": {
+              "zhang-fei": 1
+            },
+            "flags": [
+              "outlaw"
+            ]
+          }
+        },
+        {
+          "id": "pay",
+          "label": "Cut him down and pay him from the county granary",
+          "tension": "Rice and a post, at the cost of Zhang Fei's spirit and the name.",
+          "effects": {
+            "rice": 22,
+            "renown": -5,
+            "qiNextOfficer": {
+              "zhang-fei": -1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "zhu-jun-camp",
+      "title": "Zhu Jun's Camp",
+      "source": "novel ch. 1-2",
+      "tags": [
+        "camp",
+        "market"
+      ],
+      "scene": [
+        "General Zhu Jun's imperial camp is a city of tents. He offers the band a place in his line against the last rebel strongholds, and a share of the commissary.",
+        "Wancheng's rebels still hold out to the south."
+      ],
+      "choices": [
+        {
+          "id": "serve",
+          "label": "Serve in Zhu Jun's line",
+          "tension": "Two days of parades for rice and a finale ally; outlaws get nothing.",
+          "effects": {
+            "days": 2,
+            "conditional": [
+              {
+                "if": {
+                  "flag": "outlaw"
+                },
+                "then": {},
+                "else": {
+                  "rice": 40,
+                  "flags": [
+                    "zhu-jun-line"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "flag": "dong-zhuo-grudge",
+                  "notFlag": "outlaw"
+                },
+                "then": {
+                  "rice": -20
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "storm-wancheng",
+          "label": "Lead the storming party at Wancheng",
+          "tension": "The stated-odds glory road.",
+          "effects": {
+            "days": 1,
+            "gamble": {
+              "odds": 0.65,
+              "win": {
+                "renown": 12,
+                "rice": 25,
+                "soldiers": 300
+              },
+              "lose": {
+                "casualties": {
+                  "n": 400
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "horses",
+          "label": "Trade your spare horses for rice",
+          "tension": "Rice without days, and Guan Yu leads fewer riders.",
+          "effects": {
+            "riceTrade": 25,
+            "capBonus": {
+              "guan-yu": -300
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "zhang-bao-sorcery",
+      "title": "Zhang Bao's Sorcery",
+      "source": "novel ch. 2",
+      "tags": [
+        "road"
+      ],
+      "scene": [
+        "Captives from Zhang Bao's camp tell of black wind and paper soldiers falling from the sky.",
+        "Liu Bei remembers an old counter-charm: the blood of pigs, goats and dogs poured on the heights."
+      ],
+      "choices": [
+        {
+          "id": "blood",
+          "label": "Buy the beasts and carry the blood ward",
+          "tension": "A day and rice to blunt the finale's sorcery.",
+          "effects": {
+            "days": 1,
+            "rice": -6,
+            "flags": [
+              "blood-ward"
+            ]
+          }
+        },
+        {
+          "id": "night-raid",
+          "label": "Raid the altar hill tonight",
+          "tension": "Stated odds on a weaker sorcerer.",
+          "effects": {
+            "gamble": {
+              "odds": 0.55,
+              "win": {
+                "renown": 5,
+                "flags": [
+                  "zhang-bao-wounded"
+                ]
+              },
+              "lose": {
+                "casualties": {
+                  "n": 500
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "ignore",
+          "label": "Leave the sorcerer to the generals",
+          "tension": "No days, no rice, no risk; the sorcerer keeps his full strength.",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "guangzong-eve",
+      "title": "The Eve of Guangzong",
+      "source": "novel ch. 1",
+      "tags": [
+        "camp"
+      ],
+      "scene": [
+        "Guangzong's palisade rises on the far bank of the river; you can hear the mallets in the dark.",
+        "Huangfu Song's column is two days behind you."
+      ],
+      "choices": [
+        {
+          "id": "wait-column",
+          "label": "Wait for Huangfu Song (not open to outlaws)",
+          "tension": "Two days of stockade-building for an ally; outlaws wait for nothing.",
+          "effects": {
+            "days": 2,
+            "conditional": [
+              {
+                "if": {
+                  "flag": "outlaw"
+                },
+                "then": {},
+                "else": {
+                  "flags": [
+                    "huangfu-column"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "night-raid",
+          "label": "Send raiders to fire the stockade",
+          "tension": "Stated odds on a weaker palisade.",
+          "effects": {
+            "gamble": {
+              "odds": 0.6,
+              "win": {
+                "flags": [
+                  "stockade-burned"
+                ]
+              },
+              "lose": {
+                "casualties": {
+                  "n": 500
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "advance",
+          "label": "Cross at dawn",
+          "tension": "No days lost, nothing gained.",
+          "effects": {}
+        }
+      ]
+    }
+  ]
+}

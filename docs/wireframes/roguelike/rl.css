@@ -1,0 +1,146 @@
+/* Roguelike wireframes (RL0). Skin: docs/spec/50-presentation.md, tokens copied from src/client/theme.css.
+   Static mock-ups: every number is an example taken from the era-1 paper sim (docs/spec/16-roguelike-era1-sim.md). */
+:root {
+  --night: #14100d;
+  --lacquer: #3a1410;
+  --silk: #efe6d2;
+  --ink: #1b1a17;
+  --bamboo: #c9b27c;
+  --bronze: #a07a3a;
+  --lantern: #f2b45a;
+  --cinnabar: #c8372d;
+  --han: #2f6b5e;
+  --yellow: #d4a72c;
+  --bamboo-hi: #e0cd9a;
+  --bamboo-lo: #a38c57;
+  --silk-edge: #cdbf9c;
+  --ink-soft: #4a4338;
+  --sand: #b99b6b;
+  --sand-lo: #8f7249;
+  --river: #6f8c98;
+  --shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+  --font-display: 'Ma Shan Zheng', 'STKaiti', 'KaiTi', Georgia, serif;
+  --font-body: 'Alegreya Sans', 'Gill Sans', 'Trebuchet MS', system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background:
+    radial-gradient(ellipse 40% 30% at 12% 0%, rgba(242, 180, 90, 0.18), transparent 70%),
+    radial-gradient(ellipse 40% 30% at 88% 0%, rgba(242, 180, 90, 0.14), transparent 70%),
+    radial-gradient(ellipse 80% 60% at 50% 110%, rgba(58, 20, 16, 0.6), transparent 70%),
+    var(--night);
+  color: var(--silk);
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+}
+.screen { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; }
+
+/* ---- top bar: the four numbers (always shown on the road) ---- */
+.topbar {
+  display: flex; align-items: stretch; gap: 10px; padding: 8px 14px;
+  background: linear-gradient(180deg, #4a1b15, var(--lacquer));
+  border-bottom: 2px solid var(--bronze);
+  box-shadow: var(--shadow); z-index: 5;
+}
+.topbar .era { font-family: var(--font-display); font-size: 26px; color: var(--lantern); padding: 0 10px 0 2px; align-self: center; line-height: 1; white-space: nowrap; }
+.topbar .era small { display: block; font-family: var(--font-body); font-size: 11px; color: var(--bamboo); letter-spacing: 0.06em; margin-top: 3px; }
+.stat {
+  flex: 1; min-width: 0; padding: 6px 12px; border: 1px solid rgba(160, 122, 58, 0.55); border-radius: 3px;
+  background: rgba(20, 16, 13, 0.35); display: flex; flex-direction: column; justify-content: center;
+}
+.stat .k { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--bamboo); }
+.stat .v { font-size: 20px; font-weight: 700; color: var(--silk); line-height: 1.15; white-space: nowrap; }
+.stat .v em { font-style: normal; font-weight: 500; font-size: 14px; color: var(--bamboo-hi); }
+.stat .sub { font-size: 12px; color: var(--silk-edge); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat.warn .v { color: var(--lantern); }
+.stat.bad .v { color: #f08a7e; }
+.meter { position: relative; height: 5px; background: rgba(239, 230, 210, 0.15); margin-top: 4px; border-radius: 2px; }
+.meter i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--lantern); border-radius: 2px; }
+.meter b { position: absolute; top: -3px; width: 1px; height: 11px; background: var(--silk-edge); }
+
+/* ---- surfaces ---- */
+.silk {
+  background: linear-gradient(180deg, #f4ecda, var(--silk));
+  color: var(--ink); border: 1px solid var(--silk-edge); border-radius: 2px; box-shadow: var(--shadow);
+}
+.lacquer { background: linear-gradient(180deg, #46191a, var(--lacquer)); border: 1px solid var(--bronze); border-radius: 3px; box-shadow: var(--shadow); }
+.sand {
+  background:
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 6px),
+    radial-gradient(ellipse at 40% 35%, #c7aa79, var(--sand) 45%, var(--sand-lo) 100%);
+}
+.brush { font-family: var(--font-display); font-weight: 400; }
+h1.brush { margin: 0; font-size: 34px; line-height: 1.05; }
+h2.brush { margin: 0; font-size: 24px; line-height: 1.1; }
+
+/* bamboo slip (a choice, an order) */
+.slip {
+  position: relative; color: var(--ink);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 46px, rgba(60, 40, 10, 0.16) 46px 48px),
+    linear-gradient(180deg, var(--bamboo-hi), var(--bamboo) 55%, var(--bamboo-lo));
+  border: 1px solid #8a7444; border-radius: 3px; padding: 12px 14px 12px 16px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+}
+.slip::before, .slip::after { content: ''; position: absolute; left: 0; right: 0; height: 2px; background: rgba(40, 25, 10, 0.5); }
+.slip::before { top: 7px; } .slip::after { bottom: 7px; }
+.slip .t { font-family: var(--font-display); font-size: 21px; line-height: 1.15; }
+.slip .why { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+.slip.chosen { outline: 3px solid var(--lantern); outline-offset: 1px; }
+.slip.off { filter: grayscale(0.7) brightness(0.8); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.chip { font-size: 13px; padding: 2px 7px; border-radius: 2px; background: rgba(239, 230, 210, 0.82); border: 1px solid rgba(27, 26, 23, 0.25); color: var(--ink); white-space: nowrap; }
+.chip.minus { border-color: rgba(200, 55, 45, 0.6); color: #8e1f17; }
+.chip.plus { border-color: rgba(47, 107, 94, 0.6); color: #1d4a40; }
+.chip.days { border-color: rgba(27, 26, 23, 0.45); }
+.chip.dark { background: rgba(20, 16, 13, 0.6); color: var(--silk); border-color: var(--bronze); }
+.chip.battle { background: var(--lacquer); color: var(--silk); border-color: var(--cinnabar); }
+.after { margin-top: 7px; font-size: 13px; color: var(--ink); border-top: 1px dashed rgba(27, 26, 23, 0.35); padding-top: 5px; }
+.after b { font-weight: 700; }
+
+/* the cinnabar seal: confirm button */
+.seal {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 14px; border: 0; cursor: pointer;
+  background: linear-gradient(180deg, #d4473b, var(--cinnabar) 60%, #a52a21); color: #fff4ea;
+  border-radius: 3px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.55), inset 0 0 0 2px rgba(255, 236, 220, 0.25);
+  font-family: var(--font-body); font-size: 16px; font-weight: 700; text-align: left;
+}
+.seal .stamp {
+  flex: none; width: 42px; height: 42px; display: grid; place-items: center; transform: rotate(-4deg);
+  border: 2px solid #ffe3d6; border-radius: 3px; font-family: var(--font-display); font-size: 26px; line-height: 1; color: #fff4ea;
+}
+.seal small { display: block; font-weight: 500; font-size: 12.5px; opacity: 0.92; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 3px; cursor: pointer;
+  background: rgba(20, 16, 13, 0.55); color: var(--silk); border: 1px solid var(--bronze); font: 600 14px var(--font-body);
+}
+.mark { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 2px; font-size: 12px; font-weight: 700; vertical-align: -3px; }
+.mark.b { background: var(--lacquer); color: var(--lantern); border: 1px solid var(--cinnabar); }
+.mark.v { background: var(--han); color: var(--silk); }
+.mark.m { background: var(--bronze); color: var(--ink); }
+.mark.c { background: var(--ink-soft); color: var(--silk); }
+.gamble { margin-top: 8px; font-size: 13px; }
+.oddsbar { display: flex; height: 18px; border-radius: 2px; overflow: hidden; border: 1px solid rgba(27, 26, 23, 0.4); margin: 4px 0; font-size: 11.5px; font-weight: 700; }
+.oddsbar .w { background: var(--han); color: var(--silk); display: flex; align-items: center; padding-left: 6px; }
+.oddsbar .l { background: #7a2a22; color: var(--silk); display: flex; align-items: center; padding-left: 6px; }
+.portrait { width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--bronze); background: var(--ink-soft) center/cover; flex: none; }
+.note { font-size: 12px; color: var(--silk-edge); }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--silk-edge); }
+
+@media (max-width: 600px) {
+  .topbar { flex-wrap: wrap; gap: 6px; padding: 6px 8px; }
+  .topbar .era { flex-basis: 100%; font-size: 20px; padding: 0; }
+  .topbar .era small { display: inline; margin-left: 6px; }
+  .stat { flex: 1 1 calc(50% - 6px); padding: 4px 8px; }
+  .stat .v { font-size: 17px; }
+  .stat .v em { font-size: 12px; }
+  .stat .sub { font-size: 11px; }
+  h1.brush { font-size: 27px; }
+  .slip .t { font-size: 18px; }
+  .chip { font-size: 12px; }
+  .seal { font-size: 15px; }
+}

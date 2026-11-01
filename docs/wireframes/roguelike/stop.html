@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stop Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700&family=Ma+Shan+Zheng&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="rl.css" />
+<style>
+  .main { flex: 1; display: grid; grid-template-columns: 430px 1fr; gap: 16px; padding: 14px 16px; min-height: 0; }
+  .scene { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+  .scene .silk { padding: 14px 16px; }
+  .scene .src { font-size: 12px; color: var(--ink-soft); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; }
+  .scene p { margin: 8px 0 0; font-size: 15.5px; line-height: 1.42; }
+  .vignette { height: 200px; border: 1px solid var(--bronze); border-radius: 3px; overflow: hidden; }
+  .vignette svg { width: 100%; height: 100%; display: block; }
+  .speech { display: flex; gap: 10px; align-items: center; padding: 8px 12px; }
+  .speech .who { font-weight: 700; font-size: 13px; color: var(--ink-soft); }
+  .speech .line { font-size: 14.5px; }
+  .applied { padding: 10px 12px; font-size: 13px; color: var(--silk); }
+  .applied b { color: var(--lantern); }
+  .choices { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+  .choices .hd { display: flex; justify-content: space-between; align-items: baseline; }
+  .choices .hd h2 { color: var(--lantern); }
+  .choices .hd span { font-size: 13px; color: var(--silk-edge); }
+  .slip .head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+  .slip .head .k { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); white-space: nowrap; }
+  .slip.chosen .sealmark { position: absolute; right: 12px; top: 12px; width: 56px; height: 56px; transform: rotate(-8deg); border: 3px solid var(--cinnabar); color: var(--cinnabar); border-radius: 3px; display: grid; place-items: center; font-family: var(--font-display); font-size: 34px; opacity: 0.85; background: rgba(239, 230, 210, 0.25); }
+  .slip.chosen { padding-right: 84px; }
+  @media (max-width: 600px) {
+    .main { display: flex; flex-direction: column; gap: 8px; padding: 8px 10px 0; overflow: auto; }
+    .scene, .choices { flex: none; }
+    .choices .hd { display: none; }
+    .slip.chosen .sealmark { display: none; }
+    .chips { gap: 4px; margin-top: 6px; }
+    .chip { font-size: 11.5px; padding: 1px 6px; }
+    .slip .after.battle-after { display: none; }
+    .gamble .note { display: none; }
+    h1.brush { font-size: 25px; }
+    .scene { gap: 6px; }
+    .vignette { display: none; }
+    .scene .silk { padding: 10px 12px; }
+    .scene p { font-size: 14px; line-height: 1.35; margin-top: 4px; }
+    .speech { padding: 6px 10px; }
+    .speech .portrait { width: 40px; height: 40px; }
+    .speech .line { font-size: 13px; }
+    .applied { display: none; }
+    .choices { gap: 8px; }
+    .choices .hd span { display: none; }
+    .slip { padding: 9px 12px 9px 14px; }
+    .slip .why { display: none; }
+    .slip.chosen { padding-right: 12px; }
+    .slip.chosen .sealmark { width: 40px; height: 40px; font-size: 24px; top: 6px; right: 8px; }
+    .seal { position: sticky; bottom: 0; margin-bottom: 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+  <div class="topbar">
+    <div class="era">Roads to War <small>ERA 1 · YELLOW TURBANS</small></div>
+    <div class="stat warn"><span class="k">Rice</span><span class="v">33 bags <em>· lasts 4 days</em></span><span class="sub">upkeep 7 a day</span></div>
+    <div class="stat"><span class="k">Soldiers</span><span class="v">2,840 <em>+ 330 wounded</em></span><span class="sub">5 officers</span></div>
+    <div class="stat"><span class="k">Renown</span><span class="v">65 <em>· +1 Qi</em></span><div class="meter"><i style="width:65%"></i><b style="left:20%"></b><b style="left:40%"></b><b style="left:50%"></b><b style="left:60%"></b><b style="left:70%"></b></div></div>
+    <div class="stat"><span class="k">Day</span><span class="v">13 <em>· on time to day 20</em></span><span class="sub">stop 6 of 8</span></div>
+  </div>
+  <div class="main">
+    <div class="scene">
+      <div class="silk">
+        <h1 class="brush">A Village Under Siege</h1>
+        <div class="src">a road stop · village: volunteers come</div>
+        <p>Smoke over a millet village: a rebel band has fired the threshing floor, and the elders have barred the gate with carts. Women are on the walls with hoes. They have seen your banner.</p>
+      </div>
+      <div class="vignette sand">
+        <svg viewBox="0 0 430 200" preserveAspectRatio="xMidYMid slice" role="img" aria-label="The village on the sand table">
+          <g opacity="0.9">
+            <path d="M0 150 C 80 140 160 160 240 148 S 380 150 430 140" fill="none" stroke="#6f8c98" stroke-width="10" opacity="0.6"/>
+            <g fill="#8a6a44" stroke="#3a2a18" stroke-width="1">
+              <rect x="190" y="78" width="26" height="18"/><path d="M186 80 l17 -12 l17 12z" fill="#5a3a24"/>
+              <rect x="226" y="88" width="24" height="16"/><path d="M222 90 l16 -11 l16 11z" fill="#5a3a24"/>
+              <rect x="206" y="104" width="26" height="18"/><path d="M202 106 l17 -12 l17 12z" fill="#5a3a24"/>
+            </g>
+            <path d="M176 70 h96 v62 h-96 z" fill="none" stroke="#3a2a18" stroke-width="3" stroke-dasharray="10 4"/>
+            <g fill="#d8c08a" opacity="0.9"><circle cx="150" cy="60" r="3"/><circle cx="160" cy="64" r="3"/><circle cx="300" cy="72" r="3"/></g>
+            <g>
+              <circle cx="246" cy="60" r="14" fill="#5a5048" opacity="0.45"/><circle cx="256" cy="40" r="18" fill="#5a5048" opacity="0.32"/><circle cx="270" cy="20" r="22" fill="#5a5048" opacity="0.2"/>
+              <path d="M240 72 q6 -12 12 0 q-6 -6 -12 0" fill="#f2b45a"/>
+            </g>
+            <g stroke="#1b1a17" stroke-width="1.5">
+              <line x1="120" y1="80" x2="120" y2="50"/><path d="M120 50 h14 v18 l-7 -4 l-7 4z" fill="#d4a72c"/>
+              <line x1="320" y1="100" x2="320" y2="70"/><path d="M320 70 h14 v18 l-7 -4 l-7 4z" fill="#d4a72c"/>
+              <line x1="110" y1="140" x2="110" y2="110"/><path d="M110 110 h14 v18 l-7 -4 l-7 4z" fill="#d4a72c"/>
+              <line x1="40" y1="178" x2="40" y2="140"/><path d="M40 140 h18 v24 l-9 -5 l-9 5z" fill="#2f6b5e"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <div class="silk speech"><div class="portrait" style="background-image:url(../../../public/portraits/zhang-fei.webp)"></div><div><div class="who">Zhang Fei</div><div class="line">Brother, give me a hundred men and I'll have those turbans off the wall by noon.</div></div></div>
+      <div class="lacquer applied">After any choice except March past: <b>volunteers</b> = Renown × 10 join, and at Renown 50+ the elders bring Renown ÷ 5 bags. Each slip shows its own numbers.</div>
+    </div>
+    <div class="choices">
+      <div class="hd"><h2 class="brush">Choose</h2><span>exact costs on every slip · hidden consequences are never shown</span></div>
+      <div class="slip">
+        <div class="head"><div class="t">Break the siege</div><span class="k"><span class="mark b">✕</span> battle</span></div>
+        <div class="why">A small battle's losses and rice, for name, rice and men.</div>
+        <div class="chips"><span class="chip battle">Battle: Village Siege · rebels about 2,100 · up to 3 officers</span><span class="chip days">1 day</span><span class="chip minus">rice: 1 bag per 250 you field (set at deploy)</span></div>
+        <div class="chips"><span class="chip plus">If you win: rice +20</span><span class="chip plus">Renown +10 → 75 (+2 Qi)</span><span class="chip plus">750 volunteers</span><span class="chip plus">the elders bring 15 bags</span></div>
+        <div class="after battle-after">Losing the battle ends the run. Deploy shows the rice and "lasts N days" live.</div>
+      </div>
+      <div class="slip chosen">
+        <div class="sealmark">準</div>
+        <div class="head"><div class="t">Send Zhang Fei with a hundred men</div><span class="k">gamble</span></div>
+        <div class="why">Cheap, but a hurt Zhang Fei leads half his men until you rest.</div>
+        <div class="chips"><span class="chip plus">Renown +5 → 70</span><span class="chip plus">350 volunteers (half)</span><span class="chip plus">the elders bring 14 bags</span></div>
+        <div class="gamble">
+          <div class="oddsbar"><span class="w" style="width:50%">50% · they scatter: no loss</span><span class="l" style="width:50%">50% · −100 killed, Zhang Fei hurt</span></div>
+          <span class="note" style="color:var(--ink-soft)">Hurt: Zhang Fei's cap 2,200 → 1,100 until a full rest.</span>
+        </div>
+        <div class="after">After: rice <b>47</b> (+14), lasts <b>5 days</b> · 3,190 + 330 wounded</div>
+      </div>
+      <div class="slip">
+        <div class="head"><div class="t">March past</div><span class="k">no cost today</span></div>
+        <div class="why">Costs nothing today but the name; what the raiders do next is not shown.</div>
+        <div class="chips"><span class="chip minus">Renown −10 → 55 (still +1 Qi)</span><span class="chip">no volunteers</span><span class="chip">no gift</span></div>
+        <div class="after">After: rice <b>33</b>, lasts <b>4 days</b></div>
+      </div>
+      <button class="seal"><span class="stamp">準</span><span>Seal: send Zhang Fei · 50% gamble<small>rice 33 → 47 · Renown 65 → 70 · 350 volunteers</small></span></button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
