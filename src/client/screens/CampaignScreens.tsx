@@ -135,7 +135,7 @@ export function Scene() {
       </button>
       {heading && <p className="scene-heading">{heading}</p>}
       <div className={`speech${narrator ? ' narrator' : ''}`} key={`${sc.kind}-${sc.index}`} data-testid="speech">
-        {!narrator && <Portrait name={GAME_DATA.officers[line.speaker]?.name ?? line.speaker} side={sideOfOfficer(line.speaker, sc.battleId)} size={84} />}
+        {!narrator && <Portrait id={line.speaker} name={GAME_DATA.officers[line.speaker]?.name ?? line.speaker} side={sideOfOfficer(line.speaker, sc.battleId)} size={84} />}
         <div className="speech-body">
           <h3 data-testid="speaker">{name}</h3>
           <p data-testid="speech-text">{line.text}</p>
@@ -284,7 +284,7 @@ function RosterSlip({ rec, c }: { rec: OfficerRecord; c: CampaignState }) {
         </span>
       )}
       <header>
-        <Portrait name={base?.name ?? rec.officerId} side="han" size={52} />
+        <Portrait id={rec.officerId} name={base?.name ?? rec.officerId} side="han" size={52} />
         <div className="who">
           <h3>{shortName(base?.name ?? rec.officerId)}</h3>
           <p>
@@ -447,7 +447,7 @@ export function Deploy() {
                 <span className="slotno" aria-hidden="true">
                   {on ? slot + 1 : ''}
                 </span>
-                <Portrait name={base?.name ?? r.officerId} side="han" size={38} />
+                <Portrait id={r.officerId} name={base?.name ?? r.officerId} side="han" size={38} />
                 <span className="drow-body">
                   <b>{shortName(base?.name ?? r.officerId)}</b>
                   <small>
@@ -467,7 +467,7 @@ export function Deploy() {
           <ul>
             {def.guests!.map((g) => (
               <li key={g.id}>
-                <Portrait name={GAME_DATA.officers[g.officer]?.name ?? g.id} side="han" size={30} />
+                <Portrait id={g.officer} name={GAME_DATA.officers[g.officer]?.name ?? g.id} side="han" size={30} />
                 <span>
                   <b>{nameOf(g.officer)}</b> <small>{TYPE_LABEL[g.type]} · fights beside you, not on your roster</small>
                 </span>
@@ -501,7 +501,7 @@ function XpRow({ line }: { line: XpLine }) {
   ].filter(Boolean)
   return (
     <li className="xp-line" data-testid={`xpline-${line.officerId}`}>
-      <Portrait name={GAME_DATA.officers[line.officerId]?.name ?? line.officerId} side="han" size={38} />
+      <Portrait id={line.officerId} name={GAME_DATA.officers[line.officerId]?.name ?? line.officerId} side="han" size={38} />
       <span className="xp-who">
         <b>{nameOf(line.officerId)}</b>
         <small>{bits.join(' · ')}</small>
@@ -702,7 +702,7 @@ export function Summary() {
         <ul className="final-roster" data-testid="final-roster">
           {c.roster.map((r) => (
             <li key={r.officerId} className={r.status !== 'active' ? 'gone' : ''}>
-              <Portrait name={GAME_DATA.officers[r.officerId]?.name ?? r.officerId} side="han" size={32} />
+              <Portrait id={r.officerId} name={GAME_DATA.officers[r.officerId]?.name ?? r.officerId} side="han" size={32} />
               <span>
                 <b>{nameOf(r.officerId)}</b> <small>{r.status === 'active' ? `Level ${r.level}` : r.status === 'fallen' ? 'Fallen' : 'Departed'}</small>
               </span>

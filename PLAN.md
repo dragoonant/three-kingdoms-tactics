@@ -35,6 +35,8 @@ An original 3D grid tactics game set in the Three Kingdoms era, built as a spiri
 - **D25** (owner, 2026-11-01) **Keep the procedural figures for now** ("they're surprisingly good"). The M5 Hunyuan switch and its rigging decision are deferred until the owner reopens them.
 - **D26** (owner, 2026-11-01) **Touch controls:** one-finger drag pans; two-finger twist rotates; pinch zooms. Allow **zooming in until a single unit fills much of the screen**. **Nothing may block sight of the board from a low camera angle.** The **unit card is compact** (pertinent info only) and opens a detail sheet on demand. **Portraits show the general's face**: rendered from our 3D figures now, and generated with Hugging Face once an `HF_TOKEN` secret exists (owner: "use hugging face to gen that if needed").
 
+- **D26** (owner, 2026-11-01) Board UX: **touch = one-finger drag scrolls the map, two-finger twist rotates, pinch zooms** (mouse: drag scrolls, right-drag or Q/E rotates, wheel zooms to the cursor); zoom in far enough to see a unit up close with the pitch easing lower; the tent cloth that blocked a low camera now fades; the officer panel became a **small unit card with a More detail sheet**; **portraits are faces** (rendered now from our own figures, Hugging Face generation built for later). See `docs/spec/50-presentation.md`.
+
 ## Milestones
 | M | What | Where | Status |
 |---|---|---|---|

@@ -9,8 +9,8 @@ import { useGame } from '../store/game'
 import { canControl } from '../store/orders'
 import { SoundButton } from '../audio/SoundControl'
 import { Banners } from './Banners'
-import { OfficerPanel } from './OfficerPanel'
 import { ActionFan, OrdersCard } from './Orders'
+import { StratPicker, UnitCard } from './UnitCard'
 import { Pennant } from './parts'
 
 const SPEEDS: { id: Speed; label: string }[] = [
@@ -56,6 +56,9 @@ function TopBar() {
         </button>
         <button type="button" onClick={() => viewApi.rotate(1)} aria-label="Rotate view right" className="rot">
           ⟳
+        </button>
+        <button type="button" onClick={() => viewApi.reset()} aria-label="Reset view" className="rot" data-testid="reset-view">
+          ⌖
         </button>
         <button type="button" onClick={() => go('title')} data-testid="menu">
           Leave
@@ -260,8 +263,9 @@ export function Hud() {
       <TileSlip />
       <EndPhase />
       <div className="dock">
-        <OfficerPanel />
         <ActionFan />
+        <UnitCard />
+        <StratPicker />
         <OrdersCard />
       </div>
       <Banners />

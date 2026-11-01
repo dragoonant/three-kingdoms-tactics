@@ -1,11 +1,11 @@
-// Map camera: fitted so the whole 14x12 board sits inside the free part of the window, orbit/zoom/pan clamped.
-import { OrbitControls } from '@react-three/drei'
+// Map camera: fitted so the whole board sits inside the free part of the window; pan, rotate and zoom are the MapController's (touch and mouse, clamped).
 import { useFrame, useThree } from '@react-three/fiber'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo } from 'react'
 import { PerspectiveCamera, Vector3 } from 'three'
-import type { OrbitControls as OrbitControlsImpl } from 'three/examples/jsm/controls/OrbitControls.js'
-import { frameCorners, panLimits } from './frame'
+import { distFor } from './cameraModel'
+import { frameCorners, panLimits, tileAt } from './frame'
 import { tileX, tileZ, viewApi } from './layout'
+import { MapController } from './mapController'
 
 export interface Insets {
   left: number
@@ -24,8 +24,9 @@ export function insetsFor(width: number, height: number, mode: CamMode): Insets 
   if (mode === 'scene') return width >= 800 ? { left: 40, right: 40, top: 30, bottom: 250 } : { left: 8, right: 8, top: 40, bottom: Math.round(height * 0.42) }
   if (mode === 'backdrop') return { left: 20, right: 20, top: 20, bottom: 20 }
   if (mode === 'deploy') return width >= 800 ? { left: 20, right: 400, top: 80, bottom: 70 } : { left: 6, right: 6, top: 60, bottom: Math.round(height * 0.5) }
-  if (width >= 800) return { left: 12, right: 312, top: 140, bottom: 196 }
-  return { left: 6, right: 6, top: 156, bottom: Math.round(height * 0.4) }
+  // the unit card and the action slips are small: a 252 px column at the right and a slim bar (card + slips, about 130 px) at the foot of a phone
+  if (width >= 800) return { left: 12, right: 276, top: 140, bottom: 160 }
+  return { left: 6, right: 6, top: 156, bottom: Math.max(150, Math.round(height * 0.2)) }
 }
 
 const POLAR = 0.78 // radians from straight down
@@ -77,29 +78,38 @@ export function fitBoard(fov: number, w: number, h: number, ins: Insets, az: num
 }
 
 export function CameraRig({ mode, width, height, tops, unitPos }: { mode: CamMode; width: number; height: number; tops: (x: number, y: number) => number; unitPos: (id: string) => { x: number; y: number } | null }) {
-  const controls = useRef<OrbitControlsImpl | null>(null)
   const { camera, size, gl } = useThree()
-  const az = useRef(0)
-  const dist0 = useRef(20)
+  const ctl = useMemo(() => new MapController(camera as PerspectiveCamera, gl.domElement), [camera, gl])
 
+  useEffect(() => {
+    ctl.attach()
+    return () => ctl.detach()
+  }, [ctl])
+
+  // the highest surface at a world point: the camera never dips below it
+  useEffect(() => {
+    ctl.surface = (x, z) => {
+      if (Math.abs(x) > width / 2 + 0.3 || Math.abs(z) > height / 2 + 0.3) return 0
+      const t = tileAt(x, z, width, height)
+      return tops(t.x, t.y)
+    }
+  }, [ctl, tops, width, height])
+
+  // fit the board to the free part of the window (again on every resize); a new screen or a new board starts from the overview
   useEffect(() => {
     const cam = camera as PerspectiveCamera
     const ins = insetsFor(size.width, size.height, mode)
-    const fit = fitBoard(cam.fov, size.width, size.height, ins, az.current, width, height)
-    dist0.current = fit.dist
-    const dir = new Vector3(Math.sin(az.current) * Math.sin(POLAR), Math.cos(POLAR), Math.cos(az.current) * Math.sin(POLAR))
-    cam.position.copy(dir).multiplyScalar(fit.dist)
-    cam.lookAt(0, 0, 0)
-    cam.setViewOffset(size.width, size.height, -fit.shiftX, -fit.shiftY, size.width, size.height)
-    cam.updateProjectionMatrix()
-    const c = controls.current
-    if (c) {
-      c.target.set(0, 0, 0)
-      c.minDistance = fit.dist * 0.5
-      c.maxDistance = fit.dist * 1.35
-      c.update()
-    }
-  }, [camera, size.width, size.height, mode, width, height])
+    const fit = fitBoard(cam.fov, size.width, size.height, ins, 0, width, height)
+    const freeW = Math.max(120, size.width - ins.left - ins.right)
+    const freeH = Math.max(120, size.height - ins.top - ins.bottom)
+    ctl.interactive = mode === 'battle' || mode === 'deploy'
+    ctl.autoRotate = mode === 'title' || mode === 'scene' || mode === 'backdrop'
+    ctl.lim = panLimits(width, height)
+    ctl.setFit({ overview: fit.dist, shiftX: fit.shiftX, shiftY: fit.shiftY, centreX: ins.left + freeW / 2 - size.width / 2, centreY: ins.top + freeH / 2 - size.height / 2 })
+  }, [ctl, camera, size.width, size.height, mode, width, height])
+  useEffect(() => {
+    ctl.reset(false)
+  }, [ctl, mode, width, height])
 
   useEffect(() => {
     const project = (x: number, y: number, z: number): { x: number; y: number } | null => {
@@ -114,61 +124,32 @@ export function CameraRig({ mode, width, height, tops, unitPos }: { mode: CamMod
       const p = unitPos(id)
       return p ? project(tileX(p.x), tops(p.x, p.y) + 0.45, tileZ(p.y)) : null
     }
-    viewApi.rotate = (dir) => {
-      const c = controls.current
-      if (!c) return
-      const off = camera.position.clone().sub(c.target)
-      const a = (dir * Math.PI) / 8
-      const cs = Math.cos(a)
-      const sn = Math.sin(a)
-      const x = off.x * cs + off.z * sn
-      const z = -off.x * sn + off.z * cs
-      camera.position.set(c.target.x + x, camera.position.y, c.target.z + z)
-      c.update()
+    viewApi.rotate = (dir) => ctl.rotateBy(dir)
+    viewApi.reset = () => ctl.flyHome()
+    viewApi.camera = () => {
+      const v = ctl.view
+      const c = camera.position
+      return { x: c.x, y: c.y, z: c.z, tx: v.x, tz: v.z, az: v.az, zoom: v.zoom, tilt: v.tilt, dist: distFor(v.zoom, ctl.fit.overview), near: (camera as PerspectiveCamera).near }
     }
-  }, [camera, gl, tops, unitPos])
+    viewApi.setView = (p) => ctl.setView(p)
+    viewApi.focusUnit = (id, zoom = 1) => {
+      const p = unitPos(id)
+      if (p) ctl.flyTo(tileX(p.x), tileZ(p.y), zoom)
+    }
+  }, [camera, gl, ctl, tops, unitPos])
 
-  useFrame(() => {
-    const c = controls.current
-    if (!c) return
-    // keep the pan target over the board
-    const t = c.target
-    const lim = panLimits(width, height)
-    const cx = Math.max(-lim.x, Math.min(lim.x, t.x))
-    const cz = Math.max(-lim.z, Math.min(lim.z, t.z))
-    if (cx !== t.x || cz !== t.z) {
-      camera.position.x += cx - t.x
-      camera.position.z += cz - t.z
-      t.x = cx
-      t.z = cz
-    }
-  })
+  useFrame((_, dt) => ctl.update(Math.min(dt, 0.1)))
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
       if (e.target instanceof HTMLElement && /input|textarea/i.test(e.target.tagName)) return
       if (e.key === 'q' || e.key === 'Q') viewApi.rotate(-1)
       if (e.key === 'e' || e.key === 'E') viewApi.rotate(1)
+      if (e.key === 'r' || e.key === 'R' || e.key === 'Home') viewApi.reset()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  return (
-    <OrbitControls
-      ref={controls as never}
-      makeDefault
-      enabled={mode === 'battle' || mode === 'deploy'}
-      autoRotate={mode === 'title' || mode === 'scene' || mode === 'backdrop'}
-      autoRotateSpeed={0.5}
-      enableDamping
-      dampingFactor={0.12}
-      enablePan
-      screenSpacePanning={false}
-      minPolarAngle={0.25}
-      maxPolarAngle={1.18}
-      rotateSpeed={0.7}
-      zoomSpeed={0.8}
-    />
-  )
+  return null
 }

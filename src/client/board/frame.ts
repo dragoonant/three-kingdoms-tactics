@@ -84,3 +84,32 @@ export function edgePoint(x: number, y: number, w: number, h: number, out = 2.5)
   if (m === dt) return { x, y: -out }
   return { x, y: h - 1 + out }
 }
+
+const smoothstep = (a: number, b: number, v: number): number => {
+  const t = Math.max(0, Math.min(1, (v - a) / (b - a)))
+  return t * t * (3 - 2 * t)
+}
+const angleGap = (a: number, b: number): number => {
+  let d = (a - b) % (Math.PI * 2)
+  if (d > Math.PI) d -= Math.PI * 2
+  if (d < -Math.PI) d += Math.PI * 2
+  return Math.abs(d)
+}
+
+/**
+ * Occlusion fade of a tent-cloth panel standing at azimuth `panelAz` on the ring around the table, for a camera at azimuth `camAz`:
+ * 0 (gone) for the panels on the camera's side of the table, up to 1 (solid) behind and beside the board. The cloth never stands between the
+ * camera and the board, whatever the pitch. Azimuths are atan2(x, z) as everywhere in the camera model.
+ */
+export function drapeOpacity(panelAz: number, camAz: number): number {
+  return smoothstep(Math.PI * 0.3, Math.PI * 0.52, angleGap(panelAz, camAz))
+}
+
+/**
+ * Whether a lantern post at (px, pz) is shown: the two posts nearest the camera are hidden when the camera is low (elevation under about 35
+ * degrees) and outside the post, because a 9-unit pole there would cross the view of the table. 1 = shown, 0 = hidden.
+ */
+export function postOpacity(px: number, pz: number, camAz: number, camDist: number, elevation: number): number {
+  const near = angleGap(Math.atan2(px, pz), camAz) < Math.PI * 0.45 && camDist > Math.hypot(px, pz)
+  return near && elevation < 0.62 ? 0 : 1
+}

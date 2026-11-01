@@ -1,15 +1,53 @@
 // Small shared HUD pieces.
-import type { CSSProperties, ReactNode } from 'react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
 import type { Facing } from '../../engine'
 import { sideToken } from '../board/layout'
+import type { TroopType } from '../../data'
+import { genericPortraitId, portraitUrl } from '../portraits'
 import { surname } from '../names'
 
-export function Portrait({ name, side, size = 56 }: { name: string; side: string; size?: number }) {
+/**
+ * The officer's face: the rendered portrait (public/portraits/<id>.webp), else the generic one for the side and troop type, else the letter seal
+ * (the first letter of the family name on the side's colour). A missing file just moves on to the next.
+ */
+export function Portrait({ name, side, size = 56, id, type }: { name: string; side: string; size?: number; id?: string; type?: TroopType }) {
   const style: CSSProperties = { width: size, height: size, fontSize: size * 0.62 }
+  const token = sideToken(side)
+  const urls = [id ? portraitUrl(id) : null, type ? portraitUrl(genericPortraitId(token, type)) : null].filter((u): u is string => u !== null)
+  const [failed, setFailed] = useState<string[]>([])
+  const url = urls.find((u) => !failed.includes(u))
   return (
-    <span className={`portrait ${sideToken(side)}`} style={style} aria-hidden="true">
-      <span>{surname(name)}</span>
+    <span className={`portrait ${token}${url ? ' has-img' : ''}`} style={style} aria-hidden="true">
+      {url ? <img src={url} alt="" draggable={false} width={size} height={size} onError={() => setFailed((f) => [...f, url])} /> : <span>{surname(name)}</span>}
     </span>
+  )
+}
+
+/** Troop-type mark: a spear-and-shield, a horseshoe or a bow. */
+export function TroopIcon({ type, size = 16 }: { type: TroopType; size?: number }) {
+  return (
+    <svg className={`troop-icon ${type}`} viewBox="0 0 24 24" width={size} height={size} role="img" aria-label={type === 'archers' ? 'Archers' : type === 'cavalry' ? 'Cavalry' : 'Infantry'}>
+      {type === 'infantry' && (
+        <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2 L12 22" />
+          <path d="M8.5 6 L12 2 L15.5 6" />
+          <path d="M5 11 H19 V15 Q19 19 12 22 Q5 19 5 15 Z" fill="currentColor" fillOpacity="0.25" />
+        </g>
+      )}
+      {type === 'cavalry' && (
+        <g fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+          <path d="M6 20 V11 A6 6 0 0 1 18 11 V20" />
+          <path d="M6 16 H4 M18 16 H20" strokeWidth="2" />
+        </g>
+      )}
+      {type === 'archers' && (
+        <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M7 3 Q20 12 7 21" />
+          <path d="M7 3 V21" strokeWidth="1.2" />
+          <path d="M3 12 H19 M15.5 8.5 L19 12 L15.5 15.5" />
+        </g>
+      )}
+    </svg>
   )
 }
 

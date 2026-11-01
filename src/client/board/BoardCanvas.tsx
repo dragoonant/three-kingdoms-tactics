@@ -10,6 +10,7 @@ import { CameraRig, type CamMode } from './CameraRig'
 import { DeployMarkers } from './DeployMarkers'
 import { BeatFx, Flames, Floaters, Incense, Marks, Pennant, Smoke, TerrainChangeFx, useBurnTiles, windVector } from './Effects'
 import { Figure } from './Figure'
+import { isTap } from './gesture'
 import { COLORS, sideColour, tileX, tileZ } from './layout'
 import { computeMarks } from './marks'
 import { Stage } from './Stage'
@@ -80,6 +81,10 @@ export function BoardCanvas() {
 
   const wv = windVector(scene.wind)
   const flameEmit = useMemo(() => burnTiles.map((p): [number, number, number] => [tileX(p.x), tops(p.x, p.y) + 0.35, tileZ(p.y)]), [burnTiles, tops])
+  // a camera drag or pinch ends in a click too: only a tap (moved < 8 px, one finger) selects or acts
+  const pick = useCallback((x: number, y: number) => {
+    if (isTap()) clickTile(x, y)
+  }, [clickTile])
   const onHover = useCallback((x: number, y: number) => hoverTile(x, y), [hoverTile])
   const onLeave = useCallback(() => hoverTile(0, null), [hoverTile])
 
@@ -98,7 +103,7 @@ export function BoardCanvas() {
       style={{ position: 'fixed', inset: 0, background: COLORS.night }}
       onPointerMissed={() => {
         const st = useGame.getState()
-        if (!st.playing && st.screen === 'battle') st.cancel()
+        if (isTap() && !st.playing && st.screen === 'battle') st.cancel()
       }}
     >
       <color attach="background" args={[COLORS.night]} />
@@ -113,7 +118,7 @@ export function BoardCanvas() {
         gateColour={gateColour}
         gateOpen={gateOpen}
         onHover={onHover}
-        onPick={clickTile}
+        onPick={pick}
         onLeave={onLeave}
       />
       <TerrainChangeFx terrain={scene.terrain} width={W} tops={tops} />
@@ -126,7 +131,7 @@ export function BoardCanvas() {
           actable={false}
           selected={false}
           targeted={false}
-          onPick={clickTile}
+          onPick={pick}
           onHover={onHover}
           onLeave={onLeave}
         />
@@ -140,7 +145,7 @@ export function BoardCanvas() {
           actable={actableIds.has(u.id)}
           selected={interactive && ui.selectedId === u.id}
           targeted={targetIds.has(u.id)}
-          onPick={clickTile}
+          onPick={pick}
           onHover={onHover}
           onLeave={onLeave}
         />

@@ -2,9 +2,9 @@
 // Everything static is merged into a few meshes (software renderers pay per draw call).
 import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
-import { BoxGeometry, CylinderGeometry, DoubleSide, PlaneGeometry, type Group, type PointLight } from 'three'
+import { BoxGeometry, CylinderGeometry, DoubleSide, PlaneGeometry, type Group, type Mesh, type MeshLambertMaterial, type PointLight } from 'three'
 import { Builder } from './figureGeometry'
-import { lanternSpots, shadowBox } from './frame'
+import { drapeOpacity, lanternSpots, postOpacity, shadowBox } from './frame'
 import { COLORS } from './layout'
 
 const box = new BoxGeometry(1, 1, 1)
@@ -38,8 +38,15 @@ function Lights({ spots }: { spots: [number, number, number][] }) {
   )
 }
 
+/** The tent cloth: a ring of panels around the table. */
+const DRAPES = 14
+const DRAPE_R = 17
+const DRAPE_ANGLES = Array.from({ length: DRAPES }, (_, i) => (i / DRAPES) * Math.PI * 2)
+
 export function Stage({ width: BOARD_W, height: BOARD_H }: { width: number; height: number }) {
   const sway = useRef<Group>(null)
+  const panels = useRef<(Mesh | null)[]>([])
+  const posts = useRef<(Mesh | null)[]>([])
   const spots = useMemo(() => lanternSpots(BOARD_W, BOARD_H), [BOARD_W, BOARD_H])
   const shadow = useMemo(() => shadowBox(BOARD_W, BOARD_H), [BOARD_W, BOARD_H])
   const geos = useMemo(() => {
@@ -59,7 +66,6 @@ export function Stage({ width: BOARD_W, height: BOARD_H }: { width: number; heig
     solid.add(box, COLORS.bronze, [0, 0.166, BOARD_H / 2 + 0.03], [0, 0, 0], [BOARD_W + 0.1, 0.01, 0.03])
     solid.add(box, COLORS.bronze, [-(BOARD_W / 2 + 0.03), 0.166, 0], [0, 0, 0], [0.03, 0.01, BOARD_H])
     solid.add(box, COLORS.bronze, [BOARD_W / 2 + 0.03, 0.166, 0], [0, 0, 0], [0.03, 0.01, BOARD_H])
-    for (const [x, z] of spots.posts) solid.add(cyl, '#1c120d', [x, 4, z], [0, 0, 0], [0.16, 9, 0.16])
     for (const p of LANTERN_MESH) {
       solid.add(cyl, '#1a1210', [p[0], p[1] + 1.6, p[2]], [0, 0, 0], [0.012, 3.2, 0.012])
       solid.add(cyl, COLORS.bronze, [p[0], p[1] + 0.3, p[2]], [0, 0, 0], [0.24, 0.06, 0.24])
@@ -67,16 +73,31 @@ export function Stage({ width: BOARD_W, height: BOARD_H }: { width: number; heig
     }
     const glow = new Builder()
     for (const p of LANTERN_MESH) glow.add(cyl, '#ffb457', [p[0], p[1], p[2]], [0, 0, 0], [0.28, 0.55, 0.28])
-    const drapes = new Builder()
-    const n = 14
-    for (let i = 0; i < n; i++) {
-      const a = (i / n) * Math.PI * 2
-      drapes.add(plane, i % 2 ? '#3a1a14' : '#2c1511', [Math.sin(a) * 17, 4.5, Math.cos(a) * 17], [0, a + Math.PI, 0], [8, 9, 1])
-    }
-    return { solid: solid.build(), glow: glow.build(), drapes: drapes.build() }
+    return { solid: solid.build(), glow: glow.build() }
   }, [BOARD_W, BOARD_H, spots])
-  useFrame((s) => {
+  useFrame((s, dt) => {
     if (sway.current) sway.current.rotation.y = Math.sin(s.clock.elapsedTime * 0.35) * 0.012
+    // Occlusion fade: whatever stands between the camera and the table (tent cloth on the camera's side, the near lantern posts at a low
+    // pitch) fades out, so a low camera always sees the board. Pure maths in frame.ts.
+    const c = s.camera.position
+    const camAz = Math.atan2(c.x, c.z)
+    const el = Math.atan2(c.y, Math.hypot(c.x, c.z))
+    const k = 1 - Math.exp(-Math.min(dt, 0.1) * 9)
+    DRAPE_ANGLES.forEach((a, i) => {
+      const m = panels.current[i]
+      if (!m) return
+      const want = drapeOpacity(a, camAz)
+      const mat = m.material as MeshLambertMaterial
+      mat.opacity += (want - mat.opacity) * k
+      if (Math.abs(want - mat.opacity) < 0.01) mat.opacity = want
+      mat.depthWrite = mat.opacity > 0.98
+      m.visible = mat.opacity > 0.02
+    })
+    spots.posts.forEach(([x, z], i) => {
+      const m = posts.current[i]
+      if (!m) return
+      m.visible = postOpacity(x, z, camAz, Math.hypot(c.x, c.z), el) > 0.5
+    })
   })
   return (
     <group>
@@ -87,10 +108,34 @@ export function Stage({ width: BOARD_W, height: BOARD_H }: { width: number; heig
         <meshStandardMaterial vertexColors emissive="#e8741c" emissiveIntensity={1.3} roughness={0.9} />
       </mesh>
       <group ref={sway}>
-        <mesh geometry={geos.drapes}>
-          <meshLambertMaterial vertexColors side={DoubleSide} />
-        </mesh>
+        {DRAPE_ANGLES.map((a, i) => (
+          <mesh
+            key={i}
+            ref={(m) => {
+              panels.current[i] = m
+            }}
+            geometry={plane}
+            position={[Math.sin(a) * DRAPE_R, 4.5, Math.cos(a) * DRAPE_R]}
+            rotation={[0, a + Math.PI, 0]}
+            scale={[8, 9, 1]}
+          >
+            <meshLambertMaterial color={i % 2 ? '#3a1a14' : '#2c1511'} side={DoubleSide} transparent />
+          </mesh>
+        ))}
       </group>
+      {spots.posts.map(([x, z], i) => (
+        <mesh
+          key={`post${i}`}
+          ref={(m) => {
+            posts.current[i] = m
+          }}
+          geometry={cyl}
+          position={[x, 4, z]}
+          scale={[0.16, 9, 0.16]}
+        >
+          <meshStandardMaterial color="#1c120d" roughness={0.7} metalness={0.15} />
+        </mesh>
+      ))}
       <Lights spots={spots.lights} />
       <ambientLight color="#5a4868" intensity={0.22} />
       <hemisphereLight args={['#7a6078', '#2a1a10', 0.3]} />
