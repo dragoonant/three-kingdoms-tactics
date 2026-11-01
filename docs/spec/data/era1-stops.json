@@ -122,9 +122,11 @@
       },
       {
         "name": "Youzhou",
-        "kind": "anchor",
-        "anchor": "daxing-hill",
-        "pool": "early"
+        "kind": "fixed",
+        "stops": [
+          "daxing-hill"
+        ],
+        "note": "owner 2026-11-01: Daxing Hill is always a battle (the novel's first fight and the tutorial)"
       },
       {
         "name": "The Qingzhou road",
@@ -317,17 +319,6 @@
     ]
   },
   "flags": {
-    "zou-jing-alone": {
-      "visible": false,
-      "set": "daxing-hill/hold-zhuo",
-      "pays": "qingzhou-relief (battle)",
-      "effect": {
-        "battleGuests": {
-          "qingzhou": -500
-        }
-      },
-      "text": "Zou Jing fought Daxing Hill alone and lost half his archers: he brings 1,250 to Qingzhou instead of 2,500."
-    },
     "qingzhou-holds": {
       "visible": false,
       "set": "qingzhou-relief/smuggle (win)",
@@ -651,19 +642,6 @@
               }
             },
             "renown": -5
-          }
-        },
-        {
-          "id": "hold-zhuo",
-          "label": "Guard Zhuo's walls and let Zou Jing fight",
-          "tension": "Safe and fed by the county, and the town keeps sending men, but the name and an ally pay.",
-          "effects": {
-            "days": 2,
-            "renown": -5,
-            "flags": [
-              "zou-jing-alone"
-            ],
-            "rice": 10
           }
         }
       ]

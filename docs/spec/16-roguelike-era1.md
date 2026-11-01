@@ -39,7 +39,7 @@ A run's road is drawn once, from the run seed, before the first stop. It never c
 | Tier | Name | What it holds |
 |---|---|---|
 | 0 | Zhuo | `zhuo-notice` (fixed, one node) |
-| 1 | Youzhou | `daxing-hill` + one stop from the **early** pool |
+| 1 | Youzhou | `daxing-hill` (fixed, one node: always a battle, owner 2026-11-01) |
 | 2 | The Qingzhou road | `qingzhou-relief` + one from the **early** pool |
 | 3–5 (short road) or 3–6 (long road) | The southern campaign | each tier: one **battle stop** from the mid pool + one other mid stop (which can also be a battle stop) |
 | last | Julu | two stops from the **late** pool |
@@ -51,7 +51,7 @@ A run's road is drawn once, from the run seed, before the first stop. It never c
 - **Lanes and crossings** (RL-ROAD-3): every tier has two nodes, a left lane and a right lane. A node always connects to the same lane in the next tier, and to the other lane with chance 1/2 (drawn per pair). Tier 0 connects to both nodes of tier 1. Both nodes of the last tier lead to Guangzong.
 - **Leg days** (RL-ROAD-4): each connection is 1 day (weight 2), 2 days (weight 5) or 3 days (weight 3). The last leg to Guangzong is always 2 days. The road shows each leg's days on the brush line.
 - **The mountain path** (RL-ROAD-5): from tier 2 or tier 3 (seeded), each node also has a path to the same lane **two** tiers on. It takes 2 days, costs 5% of the healthy soldiers to stragglers (half killed, half wounded), skips a stop and cannot be force-marched. The long road through the skipped tier is safe but slower, and it has one more dilemma (often more rice or men).
-- **Battles on every path** (RL-ROAD-6): tier 1 offers Daxing Hill, tier 2 Qingzhou, and every mid tier has at least one battle stop. So every path offers at least 4 battle choices (3 through the mountain path) before the finale. Battles are always choices, never forced; in the sim the median run takes **2** (benevolent 2, balanced 1–2, ruthless 1, greedy-fighter 4).
+- **Battles on every path** (RL-ROAD-6): tier 1 is Daxing Hill (always fought), tier 2 offers Qingzhou, and every mid tier has at least one battle stop. So every path offers at least 4 battle choices (3 through the mountain path) before the finale. Battles are always choices, never forced; in the sim the median run takes **2** (benevolent 2, balanced 1–2, ruthless 1, greedy-fighter 4).
 - **Visibility** (RL-ROAD-6): the road shows the next **two** tiers ahead of the band: each stop's title, its marks (crossed spears = a choice is a battle; a house = a town or village, so volunteers; a scale = a market; a tent = a camp) and every leg's days. A stop's choices are only read on arrival. Everything further on is a blank, rolled scroll.
 
 **Between stops** (always offered on the road screen, before picking the next leg):
@@ -117,6 +117,7 @@ Two horse dealers from Zhongshan, Zhang Shiping and Su Shuang, are stuck in Zhuo
 | `commandeer` Take the herd for the war and sell it to the Youzhou quartermaster | rice +30, Renown −15 | Rice without days, paid for in name. |
 
 #### `daxing-hill` — Daxing Hill
+*Always a battle* (owner 2026-11-01): the novel's first fight and the tutorial; both choices fight it.
 *Source:* novel ch. 1. *Tags:* town, market.
 
 Cheng Yuanzhi's turbaned host is marching on Zhuo. The Youzhou magistrate Zou Jing has few trained men, and he gladly takes the brothers' band into his column. The rebels have camped in the millet below Daxing Hill. The wind is from the west.
@@ -125,7 +126,6 @@ Cheng Yuanzhi's turbaned host is marching on Zhuo. The Youzhou magistrate Zou Ji
 |---|---|---|
 | `fight` March with Zou Jing to Daxing Hill | **battle `daxing-hill`**; win: rice +30, Renown +8, **Jian Yong joins** | The first real fight costs men and a battle's rice, and it brings Jian Yong and a name. |
 | `raid` Burn the rebel supply carts and the farms they camp in the night before, then fight | 1 day, Renown −5, **gamble 65%**: rice +30, the battle's enemy troops ×0.75 / 35%: lose 250 (half killed, half wounded), **battle `daxing-hill`**; win: rice +20, Renown +8, **Jian Yong joins** | A day, a stated risk and a stain, for more rice and a weaker enemy; you fight either way. |
-| `hold-zhuo` Guard Zhuo's walls and let Zou Jing fight | rice +10, 2 days, Renown −5, *echo* `zou-jing-alone` | Safe and fed by the county, and the town keeps sending men, but the name and an ally pay. |
 
 #### `qingzhou-relief` — Qingzhou Besieged
 *Source:* novel ch. 1. *Tags:* town, market.
@@ -340,7 +340,6 @@ Flags are set by choices and read later by stops (as conditions) or by the final
 
 | Flag | Shown? | Set by | Pays off at | Model effect (sim) | What the player is told when it pays off |
 |---|---|---|---|---|---|
-| `zou-jing-alone` | hidden echo | daxing-hill/hold-zhuo | qingzhou-relief (battle) | qingzhou guests -500 | Zou Jing fought Daxing Hill alone and lost half his archers: he brings 1,250 to Qingzhou instead of 2,500. |
 | `qingzhou-holds` | hidden echo | qingzhou-relief/smuggle (win) | finale | finale guests +500 | Because your rice reached Qingzhou: Governor Gong Jing sends a company of his garrison to Guangzong. |
 | `qingzhou-fell` | hidden echo | qingzhou-relief/march-on | finale | finale enemy +5% | Because Qingzhou fell: its besiegers have joined Zhang Liang (+1 rebel unit). |
 | `village-fell` | hidden echo | village-under-siege/pass | finale | finale enemy +4% | Because you marched past the burning village: its raiders wait at Guangzong (+1 rebel unit). |
@@ -363,6 +362,8 @@ Flags are set by choices and read later by stops (as conditions) or by the final
 
 ## 6. The finale: Guangzong (RL-CAL-1, RL-REN-7)
 The finale is `guangzong` (`03-guangzong.md`) with the roguelike variant `rl-finale`: **deploy slots 5** (the base battle has 4; the fifth start is (1,7)), everything else as built, then the modifiers below applied in this order: day bracket, echoes, Renown, spirit. The briefing (wireframe d) lists every line with its cause before deploy.
+
+**Finale forecast (`RL-HUNGER-2`, owner 2026-11-01):** the road HUD shows "Guangzong will need about N bags" at all times, so arriving hungry is a choice, not a surprise.
 
 ### Day of arrival
 The bracket uses the arrival day, minus 4 if `stockade-burned` is set.

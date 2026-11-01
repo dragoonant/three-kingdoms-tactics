@@ -120,6 +120,7 @@ These rules govern a run of "Roads to War" (`15-roguelike.md`), between battles.
 - `[RL-UPKEEP-2]` "Rice lasts N days" = ⌊rice ÷ today's daily upkeep⌋. The road HUD, every choice slip and the deploy screen show it (after the choice or the battle where relevant).
 - `[RL-SCATTER-1]` If a day's upkeep cannot be paid, or rice reaches 0 by any cost, the army scatters and the run is lost.
 - `[RL-HUNGER-1]` A battle is fought **hungry** if, after its rice cost is paid, the rice lasts fewer than 3 days. Every officer then starts that battle at 0 Qi (the opening +2 of `R-UNIT-4` is not given, and every other start-Qi modifier is ignored).
+- `[RL-HUNGER-2]` The road HUD always shows a **finale forecast**: "Guangzong will need about N bags", where N = the finale battle's rice cost at the current pool (fielding the whole pool up to the slots' caps) + 3 days of upkeep at the current pool (the hungry line), so the player sees in advance whether the final battle will be fought hungry. Owner ruling 2026-11-01: the benevolent road keeps arriving hungry often; the forecast makes it a choice, not a surprise.
 
 **The soldier pool and deploy**
 - `[RL-POOL-1]` The army is one pool of healthy and wounded soldiers. Only healthy soldiers can be fielded.

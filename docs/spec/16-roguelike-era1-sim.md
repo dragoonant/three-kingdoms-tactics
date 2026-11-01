@@ -40,6 +40,40 @@ node tools/roguelike/paper-sim.mjs --narrate 6 --policies benevolent,ruthless,ba
 | greedy-fighter | takes every battle, careless with rice | 0.6 / 3.0 / 0.5; only panics at 3 days | never | never | 12 days |
 
 ## 2. Results (500 seeds per policy)
+
+### v0.5 (owner rulings 2026-11-01): Daxing Hill is always on the road
+Tier 1 is now the single fixed stop `daxing-hill` (no "guard Zhuo's walls" option), so every run fights at least once before the finale; the road HUD gains the finale forecast (`RL-HUNGER-2`). Everything else is unchanged from v0.4.
+
+**Seeds 1–500:**
+
+| Policy | Win | Starved | Lost a road battle | Lost the finale | Reached finale | Rice-days at arrival (median) | Arrived with <=3 days | Fielded at finale (median) | Hungry at finale | Renown at end (median) | Arrival day (median) | Battles before finale (median) | Officers at finale (median) | An officer fell |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| benevolent | 58% | 2% | 15% | 26% | 84% | 3 | 52% | 3000 | 58% | 80 | 20 | 3 | 5 | 0% |
+| ruthless | 49% | 0% | 6% | 45% | 94% | 6 | 5% | 2350 | 6% | 0 | 12 | 1 | 4 | 0% |
+| balanced | 45% | 1% | 8% | 45% | 91% | 5 | 27% | 2550 | 31% | 20 | 18 | 2 | 4 | 0% |
+| greedy-fighter | 21% | 17% | 39% | 23% | 46% | 2 | 58% | 2150 | 56% | 60 | 21 | 4 | 4 | 1% |
+
+**Seeds 5001–5500:**
+
+| Policy | Win | Starved | Lost a road battle | Lost the finale | Reached finale | Rice-days at arrival (median) | Arrived with <=3 days | Fielded at finale (median) | Hungry at finale | Renown at end (median) | Arrival day (median) | Battles before finale (median) | Officers at finale (median) | An officer fell |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| benevolent | 55% | 1% | 16% | 27% | 82% | 3 | 51% | 3100 | 56% | 82 | 20 | 3 | 5 | 0% |
+| ruthless | 50% | 0% | 4% | 46% | 96% | 6 | 6% | 2400 | 6% | 0 | 12 | 1 | 4 | 0% |
+| balanced | 43% | 1% | 10% | 46% | 90% | 5 | 23% | 2700 | 27% | 20 | 18 | 2 | 4 | 0% |
+| greedy-fighter | 19% | 18% | 43% | 19% | 40% | 3 | 57% | 2200 | 57% | 60 | 21 | 4 | 4 | 1% |
+
+**Seeds 9001–9500:**
+
+| Policy | Win | Starved | Lost a road battle | Lost the finale | Reached finale | Rice-days at arrival (median) | Arrived with <=3 days | Fielded at finale (median) | Hungry at finale | Renown at end (median) | Arrival day (median) | Battles before finale (median) | Officers at finale (median) | An officer fell |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| benevolent | 54% | 2% | 13% | 31% | 85% | 4 | 49% | 3000 | 56% | 80 | 20 | 3 | 5 | 0% |
+| ruthless | 43% | 0% | 7% | 51% | 93% | 6 | 6% | 2400 | 5% | 0 | 12 | 1 | 4 | 0% |
+| balanced | 42% | 1% | 7% | 50% | 92% | 5 | 24% | 2600 | 29% | 20 | 18 | 2 | 4 | 0% |
+| greedy-fighter | 19% | 18% | 40% | 22% | 43% | 3 | 60% | 2050 | 62% | 60 | 21 | 4 | 4 | 0% |
+
+Across the three sets: benevolent 54–58%, ruthless 43–49%, balanced 42–45%, greedy-fighter 19–21% (starving 17–18%). No run reaches the finale without a battle; ruthless now fights 1 (84%) or 2 road battles. Dominance check: none. The owner accepted the middle road being weakest ("commit to a road"; recheck in RL4) and the benevolent road arriving hungry (the forecast makes it a choice).
+
+### v0.4 (before the Daxing ruling)
 **Seeds 1–500:**
 
 | Policy | Win | Starved | Lost a road battle | Lost the finale | Reached finale | Rice-days at arrival (median) | Arrived with <=3 days | Fielded at finale (median) | Hungry at finale | Renown at end (median) | Arrival day (median) | Battles before finale (median) | Officers at finale (median) | An officer fell |
@@ -120,6 +154,8 @@ and 8 choices were picked by every sensible policy (Daxing raid, commandeering t
 10. **Policy fixes** (not game changes): careful policies stopped dismissing half the army at the first sign of hunger, stopped picking choices that leave under 4 days of rice, and send the wounded home before the finale when that ends the hunger.
 
 ## 5. Three runs, stop by stop
+*Narrated on the v0.4 road (before tier 1 became Daxing Hill alone); all three runs already went through Daxing Hill. RL1 regenerates them from `--narrate`.*
+
 Raw logs come from `--narrate <seed>`. Each line of the log reads "day | rice (days it lasts) | healthy + wounded | Renown | event".
 
 ### Benevolent, seed 6 (long road): won, 3 road battles
