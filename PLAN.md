@@ -41,7 +41,7 @@ An original 3D grid tactics game set in the Three Kingdoms era, built as a spiri
 | M3 | Playable slice: sand-table skin, stand-in MGSD figures, HUD/slips/seal, director, greedy bot, briefing + how-to-play | cloud | done 2026-10-31 |
 | M4 | Utility AI in a worker; ai-bench (normal beats random ≥ 95%) | cloud | done 2026-10-31 (objective-aware v2 too) |
 | M5 | Art: MGSD officer concepts → Hunyuan GLBs; sand-table terrain props | owner's PC | |
-| M6 | Audio: drums/guqin/erhu score, seal stamp, fire, clash SFX | owner's PC | |
+| M6 | Audio: drums/guqin/erhu score, seal stamp, fire, clash SFX | owner's PC | system + brief + audition page done 2026-11-01 (docs/spec/60-audio.md); files pending, not verified by ear |
 | M7 | Polish, phone layout, settings, end screen | cloud | |
 | M8 | Campaign framework: progression, camp, roster, saves, story scenes, Iron Oath | cloud | done 2026-11-01 |
 | M9 | Campaign battles 2–9 (specs + data + scenes + per-battle AI checks) | cloud | done 2026-11-01 (AI-vs-AI balanced; human playtest pending) |

@@ -1,0 +1,45 @@
+/* Sound controls: lacquer and bamboo from the sand-table skin (docs/spec/50). Tokens only; works on any page that loads theme.css. */
+.snd-wrap { position: relative; display: inline-block; pointer-events: auto; }
+.snd-btn {
+  appearance: none; background: rgba(201, 178, 124, 0.12); border: 1px solid var(--bronze); color: var(--bamboo); padding: 4px 10px; border-radius: 3px;
+  font: inherit; font-size: 14px; line-height: 1.2; cursor: pointer;
+}
+.snd-btn:hover { background: rgba(201, 178, 124, 0.28); }
+.snd-btn.on, .snd-btn[aria-expanded='true'] { background: var(--bamboo); color: var(--ink); }
+.snd-btn:focus-visible, .snd-mute:focus-visible, .snd-row input:focus-visible { outline: 2px solid var(--lantern); outline-offset: 2px; }
+.snd-icon { display: none; }
+.snd-float { position: fixed; right: 14px; bottom: 10px; z-index: 5; }
+.snd-float .snd-btn {
+  font-size: 17px; padding: 7px 16px; color: var(--ink); font-weight: 700; border-color: #7d6633;
+  background: linear-gradient(180deg, var(--bamboo-hi), var(--bamboo) 55%, var(--bamboo-lo)); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.55);
+}
+.snd-pop {
+  position: absolute; right: 0; z-index: 30; width: 270px; max-width: calc(100vw - 16px); padding: 12px 14px 12px; text-align: left; color: var(--silk);
+  background: linear-gradient(180deg, #4a1a14, var(--lacquer)); border: 1px solid var(--bronze); border-radius: 3px; box-shadow: var(--shadow);
+}
+.snd-pop.below { top: calc(100% + 8px); }
+.snd-pop.above { bottom: calc(100% + 8px); }
+.snd-pop h3 { margin: 0 0 6px; font: 400 22px/1 var(--font-display); color: var(--lantern); }
+.snd-panel { display: flex; flex-direction: column; gap: 8px; color: var(--silk); font-family: var(--font-body); }
+.snd-row { display: grid; grid-template-columns: 58px 1fr 30px; align-items: center; gap: 8px; font-size: 15px; }
+.snd-label { color: var(--bamboo); }
+.snd-val { text-align: right; font-variant-numeric: tabular-nums; color: var(--silk); }
+.snd-row input[type='range'] { width: 100%; height: 22px; margin: 0; accent-color: var(--lantern); cursor: pointer; background: transparent; }
+.snd-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 2px; }
+.snd-mute {
+  appearance: none; border: 1px solid var(--bronze); border-radius: 3px; padding: 4px 14px; min-height: 30px; cursor: pointer; font: inherit; font-size: 14px; font-weight: 700; color: var(--ink);
+  background: linear-gradient(180deg, var(--bamboo-hi), var(--bamboo) 55%, var(--bamboo-lo)); box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+}
+.snd-mute[aria-pressed='true'] { background: var(--cinnabar); color: #f4e7d0; }
+.snd-note { font-size: 13px; color: var(--bamboo); text-align: right; }
+@media (max-width: 799px) {
+  .snd-full { display: none; }
+  .snd-icon { display: inline; font-size: 15px; }
+  .snd-btn { padding: 3px 8px; }
+  .snd-float { right: 8px; bottom: 8px; }
+  .snd-float .snd-full { display: inline; }
+  .snd-float .snd-icon { display: none; }
+  .snd-pop { right: -6px; }
+}
+/* While the popover is open the top bar (and the popover with it) rides above the wind slip and the objective card. */
+.topbar:has(.snd-pop) { z-index: 8; }

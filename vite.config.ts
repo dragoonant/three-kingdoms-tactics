@@ -14,11 +14,12 @@ export default defineConfig(({ mode }) => ({
   build: {
     chunkSizeWarningLimit: 1200,
     rollupOptions: {
-      // Pages: the game, the cut-in review page (docs/spec/51) and the figure lab (docs/spec/31).
+      // Pages: the game, the cut-in review page (docs/spec/51), the figure lab (docs/spec/31) and the sound audition page (docs/spec/60).
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         cinema: fileURLToPath(new URL('./cinema.html', import.meta.url)),
         figures: fileURLToPath(new URL('./figure-lab.html', import.meta.url)),
+        sounds: fileURLToPath(new URL('./sounds.html', import.meta.url)),
       },
       output: {
         manualChunks(id: string) {
