@@ -29,8 +29,8 @@ function Turntable({ item, x, z, index }: { item: Item; x: number; z: number; in
     enableShadows(rig.group)
     return () => rig.dispose()
   }, [rig])
-  const disc = useMemo(() => new MeshStandardMaterial({ color: '#3a1410', roughness: 0.5, metalness: 0.15 }), [])
-  const geo = useMemo(() => new CircleGeometry(0.46, 40).rotateX(-Math.PI / 2), [])
+  const disc = useMemo(() => new MeshStandardMaterial({ color: '#cdb88c', roughness: 0.95 }), []) // sand floor, no base (PLAN D23)
+  const geo = useMemo(() => new CircleGeometry(0.75, 48).rotateX(-Math.PI / 2), [])
   useFrame(({ clock }) => {
     if (holder.current) holder.current.rotation.y = clock.elapsedTime * 0.6 + index * 0.9
   })

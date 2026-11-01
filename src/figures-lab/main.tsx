@@ -1,4 +1,4 @@
-// Figure lab (docs/spec/31-hero-figures.md): turntables of every hero, officer-kit sample, troop and horse on sand discs
+// Figure lab (docs/spec/31-hero-figures.md): turntables of every hero, officer-kit sample, troop and horse on a sand floor (no bases: PLAN D23)
 // under lantern light. Views: front / three-quarter / silhouette (all black on light: the silhouette test) and a
 // "board scale" layout that shows the figures about 60 px tall, as they are on the board.
 //   ?test=1  sets window.__lab = { ready: true } after the first render
@@ -153,8 +153,10 @@ function Figure({ p, rotate, yaw, silhouette }: { p: Placed; rotate: boolean; ya
   return (
     <group position={[p.x, p.y, 0]}>
       {!silhouette && (
-        <mesh position={[0, -0.045, 0]} receiveShadow>
-          <cylinderGeometry args={[0.62, 0.66, 0.09, 40]} />
+        // A strip of sand flush with the feet; neighbouring strips join into one continuous ground per row
+        // (no bases anywhere: PLAN D23).
+        <mesh position={[0, -0.01, 0]} receiveShadow>
+          <boxGeometry args={[1.62, 0.02, 1.3]} />
           <meshStandardMaterial color="#cdb88c" roughness={0.95} />
         </mesh>
       )}
