@@ -30,6 +30,7 @@ An original 3D grid tactics game set in the Three Kingdoms era, built as a spiri
 - **D20** (owner, 2026-11-01) Battle cut-ins: **full scene (5–8 s) for stratagems and chains, a 2–3 s short version for every normal attack**; any click skips; Instant skips; setting to change it.
 - **D21** (owner, 2026-11-01) Music: during a cut-in a **high-energy charge layer plays over the battle music and is removed when the cut-in ends**. Style: **full orchestral surge** (strings, brass and war drums), same key and BPM as the battle bed. Files come from the owner's **Audio Studio on evilaegis** (no CC0 placeholders); the system is built now and stays silent until they exist.
 - **D22** (owner, 2026-11-01) Cut-ins need **more troops on screen**; the current 6–9 per side is accepted as interim.
+- **D23** (owner, 2026-11-01) **No bases on troops or heroes** ("I don't want them on bases"), on the board and in cut-ins; **movement on foot and on horse is animated** (walk/run, horse gaits, feet planted). On the board a flat painted ground ring on the sand carries side colour, facing and selection states.
 
 ## Milestones
 | M | What | Where | Status |
