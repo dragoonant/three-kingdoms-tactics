@@ -37,7 +37,7 @@
 ## Not verified / known gaps
 - **No human has played the campaign end to end.** Battles 3–9 were exercised by the AI bench and render checks, not by a person. Balance is AI-vs-AI only.
 - **The AI misses some intended plays:** it never casts Borrow the Wind or baits Lu Bu, and about half of its Hulao Gate games time out.
-- **Figures and audio:** figures are procedural MGSD stand-ins, and there is no audio. Both are milestones M5 and M6 and need a session on the owner's PC with its GPU and studios.
+- **Figures and audio:** figures are procedural stand-ins, and there is no audio. Both are milestones M5 and M6 and need a session on the owner's PC with its GPU and studios. M5 batch 1 is started: Gemini concepts for Liu Bei, Guan Yu and Zhang Fei are approved in `art/hero-concepts/` (2026-10-31); Hunyuan GLBs are next.
 - **Animations not checked frame by frame:** reinforcement arrival, terrain changes and escape were not watched under headless rendering.
 - **Click picking:** clicking a figure between two others can select the neighbour.
 - **Stale branch:** a `wip/engine-v2` backup branch is still on the remote. The git proxy refused the delete, so it can be deleted by hand.
