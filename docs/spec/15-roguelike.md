@@ -1,117 +1,127 @@
-# 15 — Roguelike mode "Roads to War" (plan v0.2, 2026-11-01; decisions 1–4 answered, PLAN D28)
+# 15 — Roguelike mode "Roads to War" (plan v0.3, 2026-11-01; PLAN D28)
 
-**Owner request (2026-11-01):** "I would love to reimagine this as a roguelike, so that you're fighting up to the final battle of that era. It would be cool to go through the minor battles of the era leading up to the major battle of each era - each scenario would be a major battle (yellow turban rebellion, chi bi, etc), and we'd go through 2-3 minor battles leading up to that battle (from history). Let's make a plan for that."
+**Owner request (2026-11-01):** "I would love to reimagine this as a roguelike, so that you're fighting up to the final battle of that era ... each scenario would be a major battle (yellow turban rebellion, chi bi, etc), and we'd go through 2-3 minor battles leading up to that battle."
 
-This is a plan, not a frozen spec. Items marked **[decide]** are the owner's call; each has a recommendation. Nothing here is built yet.
+**Owner direction, same day:**
+- "keep it from the novel. I'd like a romanticized version of history."
+- "Boring ass stages that just give gold are worthless… each node in the grid should be some heavy decision. Like save a village under siege->go into a battle and lose some troops, or push troops forward instead of resting->less rice lost on the next stage, but lose some troops due to attrition."
+- "rice/provisions should be a part of the game - it will drive how many troops each unit can bring into each battle. If you run out of rice - game over."
 
-> **Under revision (2026-11-01):** the owner wants the novel as the source, every node a heavy decision (no plain reward stops), and rice as the core resource that sets troop counts, with running out of rice ending the run. §2–§5 change once the node and economy design is agreed.
+This is the agreed design. All numbers are first-pass values for tuning in RL4 (the run bench). Nothing is built yet.
 
-## 1. The shape in one paragraph
-A **scenario** is one era, named for its major battle (Yellow Turbans → Guangzong; Red Cliffs → Chibi). A **run** starts with a small band and a seed. The **road** is a short branching map of 2–3 historical minor battles plus camps and events. It ends at the **major battle**, a large hand-built set piece with its own signature mechanic. Win the major battle and the era is won and written into the **Annals**. Lose any battle, or lose the lord, and the run ends; what you learned and unlocked stays. Each run differs because the road branches, the battles are seeded variants (enemy rosters, deployment, weather, omens), and you draft your officers, treasures and tactics as you go.
+## 1. The shape
+- A **scenario** is one era of the novel, named for its major battle.
+- A **run** is one era, 45–90 minutes. Liu Bei's band marches down a **road** of 6–8 **stops**. Every stop is a dilemma from the novel, and 2–3 of the choices along the way turn into battles.
+- The road ends at the era's **finale**, a large hand-built battle whose setup is shaped by everything you did on the road.
+- Win the finale and the era is written into the **Annals** (§6). The run ends if you lose a battle, if Liu Bei is routed, or if the rice runs out.
+- This mode sits **beside** the story campaign "Liu Bei's Rise", which stays as a story mode.
 
-## 2. Eras (Liu Bei's path first)
-History comes first, from the *Records of the Three Kingdoms* (Sanguozhi) and the *Book of the Later Han*. Famous set pieces from the novel are allowed, but each is labelled *novel* in its briefing. Dates and attributions marked † get checked in the research pass (RL0) before content is written.
+## 2. The economy: three numbers and a calendar (always shown in the road HUD)
+| | What it is | Rules |
+|---|---|---|
+| **Rice** (bags) | The clock | <ul><li>Daily upkeep is 1 bag per 500 soldiers in the pool, rounded up.</li><li>A battle also eats 1 bag per 250 soldiers fielded.</li><li>**Hungry:** with less than 3 days of upkeep left, officers start battles at 0 Qi.</li><li>**At 0 rice the army scatters: game over.**</li><li>The HUD always shows "Rice lasts N days".</li></ul> |
+| **Soldiers** | One shared army pool | <ul><li>Before each battle you fill each deployed officer's unit from the pool, up to their command cap (from Leadership and level).</li><li>Fewer soldiers on the field means a cheaper battle, but a weaker one.</li><li>Losses: half are killed and half are **wounded**. The wounded only return when you rest.</li><li>A routed officer is wounded first and falls on a second rout in the run. Iron Oath makes the first rout fatal, and a routed Liu Bei ends the run.</li></ul> |
+| **Renown** | Liu Bei's benevolence, 0–100 (starts at 30 in era 1) | See §3 |
+| **Days** | The calendar | <ul><li>Every leg of the road and every rest costs days, and the road shows them.</li><li>The finale gets harder with each day taken: its stockade or defences build up and enemy reinforcements arrive, on a per-finale table.</li><li>The finale briefing names the effect, e.g. "You arrived on day 11: the stockade is half built."</li></ul> |
 
-| # | Era (scenario) | Major battle (finale) | Minor battle pool (2–3 are fought per run) | Reuses |
-|---|---|---|---|---|
-| 1 | Yellow Turban Rebellion, 184 | **Guangzong**: Zhang Jiao's stronghold (Huangfu Song takes it after Zhang Jiao's death) | Daxing Hill (*novel*, Liu Bei's debut) · Relief of Qingzhou (*novel*) · Changshe: the fire attack on Bo Cai's camp (history) · Wancheng: the siege (history; Sun Jian first over the wall) · Xiaquyang: Zhang Bao's last stand (history†) | Daxing, Qingzhou, Guangzong |
-| 2 | The Coalition against Dong Zhuo, 190–191 | **Hulao Gate** (*novel*: the brothers against Lu Bu) | Xingyang / Bian River: Xu Rong routs Cao Cao (history) · Yangren: Sun Jian beats Dong Zhuo's army and Hua Xiong falls (history) · Sishui Gate: Guan Yu and Hua Xiong (*novel*) · Luoyang burning: escort the refugees (history: Dong Zhuo burns the capital) | Hulao |
-| 3 | Xu Province and Lu Bu, 194–198 | **Xiapi**: the flood siege (history) | Tan: relieving Tao Qian against Cao Cao (history) · Xuyi–Huaiyin: holding off Yuan Shu (history) · Xiaopei: Lu Bu's halberd shot stops a battle (history; could be an event rather than a fight) · Defence of Xuzhou | Xuzhou, Xiapi |
-| 4 | The Flight South, 200–208 | **Red Cliffs (Chibi)**: fire on the chained fleet, with the wind | Xuzhou 200: Cao Cao's eastern strike (history) · Runan: with the Yellow Turban remnants (history†) · Bowang Slope (history: 202; the campaign uses the novel's 207) · Changban: the rear guard and Zhao Yun's ride (history) · Xiakou: linking up with Liu Qi (history†) | Bowang, Changban, Red Cliffs |
-| 5 | Into Yi Province, 211–214 | **Luo / Chengdu**: the year-long siege where Pang Tong falls (history) | Jiameng Pass (history) · Fu: the turn against Liu Zhang (history) · Mianzhu (history) · Zhang Fei down the river (history†) | — |
-| 6 | Hanzhong, 217–219 | **Mount Dingjun**: Huang Zhong's charge kills Xiahou Yuan (history) | Yangping Pass (history) · Xiabian: Zhang Fei and Ma Chao (history†) · Han River: Zhao Yun's open camp (history, from Zhao Yun's separate biography) | — |
-| 7 | Yiling, 221–222 | **Xiaoting / Yiling**: Lu Xun's fire on the camps. History records a loss; the scenario asks whether you can win it | Wu Gorges (history) · Zigui (history†) · Yidao: the blocked Sun Huan (history†) | — |
+There is no gold. Battles never pay a flat reward; whatever you gain comes from the situation a battle was part of.
 
-**v1 is eras 1–4.** They reuse all nine existing battles (seven as minors or finales and two as alternates) and need about 8 new minor battles. Eras 5–7 come later. Other lords (Cao Cao at Guandu, the Sun family at Chibi from the south bank) are a later expansion; see the decisions in §9.
+## 3. Renown (owner approved all six effects, 2026-11-01)
+**How it changes.** Usually it costs something now and pays later.
+- **+5 to +15:** saving a village, sharing rice with the starving, sparing enemies who surrender, keeping a promise, escorting refugees.
+- **−5 to −15:** marching past people in danger, taking rice from villages, press-ganging peasants, executing prisoners, abandoning refugees.
 
-## 3. A run
-```
-Choose era (unlocked ones) → choose lord + starting band (v1: Liu Bei's band) → choose Mandate (difficulty)
-→ Road: tier 1 → tier 2 → [tier 3] → Major battle
-   each tier: pick one of 2–3 nodes (the map shows two tiers ahead)
-→ win: Annals entry, unlocks, era summary          → lose: run over, Annals records how far you got
-```
-**Node types on the road**
-| Node | What happens |
+**What it does.** The exact numbers are shown wherever an effect applies.
+1. **Volunteers:** at each town or village stop, Renown × 10 soldiers offer to join.
+2. **Rice:** at 50+, some stops give rice for free and market rice is cheaper. Below 20, villages hide their rice and markets charge double.
+3. **Recruit thresholds:** some officers join only a lord of good name, e.g. Mi Zhu 40+, Zhao Yun 50+, Zhuge Liang 60+ (plus days spent on the three visits). Below the threshold they don't join, and some appear later as enemies.
+4. **Battle spirit:** officers start a battle with +2 Qi at 70+, +1 at 40+, and −1 below 20. Below 20, 5% of the soldiers also desert at each rest.
+5. **Sway:** Liu Bei's sway chance gets a bonus from Renown (an engine modifier with a rule id).
+6. **Finales:** some finales read Renown. At Changban, the refugees slow you but block the enemy cavalry. At Red Cliffs, Sun Quan's alliance terms decide how many allied ships fight.
+
+**Design aim:** the ruthless road (fast and well fed, but short of men, low in spirit and missing some officers) and the benevolent road (slow and hungry, but a growing army and the best officers) must both be winnable. The run bench checks this.
+
+## 4. Stops are dilemmas
+- Each stop is a scene from the novel on the sand table, with **2–3 choices**. Every choice button shows its exact cost and gain in rice, soldiers, days and Renown.
+- A **battle is one of the choices**, not a kind of stop.
+- Some consequences are **hidden echoes**: they stay unseen and come back later, at a later stop or in the finale briefing.
+- Now and then a choice is an **open gamble with stated odds** ("60%: the gates open").
+- The map shows two stops ahead, and roads branch: a short mountain path (fewer days, attrition) or the long road (more days and rice, safe).
+
+**Era 1 examples** (first-pass numbers):
+| Stop | Choices |
 |---|---|
-| **Battle** | A historical minor battle as a seeded variant (§5). Win to get a reward pick. Each one has an optional **bonus objective** (e.g. "rout Bo Cai before round 6") that pays extra. |
-| **Elite** | A harder battle or a duel set piece with a famous officer. It pays a treasure. Optional; the map can route around it. |
-| **Event** | A short historical anecdote with 2–3 choices, told as a scene on the sand table: Liu Bei weeping over his thighs, the third visit to the thatched hut, Cao Cao's plum-grove talk. Choices trade provisions, loyalty, troops, a recruit or an omen. |
-| **Camp** | The existing camp: heal the wounded, drill, muster, swap stratagems. |
-| **Market** | Spend provisions on troops, treasures and tactic manuals. |
+| **The recruiting notice at Zhuo** (novel ch. 1, the opening) | <ul><li>Zhang Fei sells his estate: +500 soldiers, +20 rice.</li><li>Accept the horse merchants' gift: a cavalry unit, the brothers' weapons forged, +8 rice.</li></ul> |
+| **A village under siege** | <ul><li>Fight: a battle, about −300 soldiers, then +10 Renown, +200 volunteers, +15 rice.</li><li>Send Zhang Fei alone with 100 men: a duel set piece, 40% chance he returns wounded, +5 Renown.</li><li>March past: no cost now, −10 Renown. *Echo:* the village falls and one more rebel unit waits at the finale.</li></ul> |
+| **Rest or push on** | <ul><li>Rest 2 days: 2 days of upkeep, the wounded return, +1 Qi next battle.</li><li>Forced march: arrive 2 days earlier, but −8% soldiers to attrition, and they start the next battle tired (−1 move in round 1).</li></ul> |
+| **A captured granary** | <ul><li>Take it: +40 rice, but the wagons cost +2 days.</li><li>Burn it: the finale enemy fields 2 fewer units.</li><li>Give it to the starving: +15 Renown and volunteers on the spot.</li></ul> |
+| **Lu Zhi in chains** (novel ch. 2: your teacher, arrested on a eunuch's word) | <ul><li>Free him: a battle against the imperial escort, after which officials stop supplying rice.</li><li>Let him go. *Echo:* Zhang Fei refuses one order in a later battle.</li></ul> |
+| **Zhang Fei flogs the inspector** (novel ch. 2) | <ul><li>Let him: +10 Renown and Zhang Fei +1 Qi, but you lose the county post and its rice.</li><li>Stop him: keep the rice, and Zhang Fei broods (−1 Qi for one battle).</li></ul> |
 
-The road always has **2–3 battles** before the finale, as the owner asked; the branching only decides *which* ones and what sits between them. A run lasts about 45–90 minutes: 3–4 battles of 10–20 minutes, plus the stops between.
+**Finale briefing:** before deploy, every echo, every day effect and every Renown effect is listed with its cause. Example: "Because you burned the granary: Zhang Bao fields 2 fewer units."
 
-## 4. What you build during a run
-- **Band:** you start with the lord plus 2–3 officers (Liu Bei, Guan Yu, Zhang Fei in era 1; later eras start with that era's historical band). After each win you pick **1 of 3 rewards**: a recruit (an officer from this era's pool), a treasure, a tactic manual (a new stratagem for an officer) or a troop upgrade. The existing camp and deploy rules apply, including deploy slots and required officers.
-- **Officers carry over within a run**, with XP, levels and learned stratagems as in the campaign layer.
-- **Loss:** a routed officer comes back **wounded** (50% troops next battle, as now). A second rout in the same run means they **fall** for the rest of the run. **Iron Oath** stays as the hardcore toggle: a single rout and they fall. If the lord is routed, the run ends.
-- **Treasures** are passive modifiers taken from history and legend, e.g.:
-  - Red Hare: +1 move for a rider;
-  - the *Art of War*: one free stratagem a battle;
-  - the Imperial Seal: +loyalty, but enemies target you;
-  - Double-edged swords: Liu Bei's twin swords counter-attack harder;
-  - a Black Dragon river map: extra movement on water.
+## 5. Eras from the novel (Liu Bei's path; v1 is eras 1–4)
+| # | Era | Finale | Stops and battles drawn from the novel | Reuses |
+|---|---|---|---|---|
+| 1 | Yellow Turbans | Guangzong | Zhuo recruiting, Daxing Hill, relief of Qingzhou, the rescue of Dong Zhuo and his snub, Lu Zhi in chains, Zhang Bao's sorcery (pig and dog blood against the hex), the inspector | Daxing, Qingzhou, Guangzong |
+| 2 | Coalition against Dong Zhuo | Hulao Gate (the three brothers against Lu Bu) | Joining Gongsun Zan, Sishui Gate (Guan Yu's warm wine and Hua Xiong's head), Sun Jian and the Imperial Seal, Luoyang burning, Cao Cao's pursuit at Xingyang | Hulao |
+| 3 | Xu Province and Lu Bu | Xiapi (White Gate Tower) | Tao Qian's three offers of Xu, the halberd shot at the camp gate, Zhang Fei's drunken loss of Xiapi, Yuan Shu's march, the plum-grove talk with Cao Cao | Xuzhou, Xiapi |
+| 4 | The Flight South | Red Cliffs | Guan Yu's five passes (as an event chain), the three visits, Bowang Slope, Xinye burning, Changban and Zhao Yun's ride, borrowing arrows with straw boats, the chained fleet, borrowing the east wind | Bowang, Changban, Red Cliffs |
+| 5–7 | Yi Province, Hanzhong, Yiling | later | | |
 
-  There are about 20 for v1, and each is one line of rule text with a rule id.
-- **Provisions** stay the single currency.
-- **Omens** are run modifiers that events can hand out, good or bad: "Heaven's wind" (fire spreads further), "Hungry ranks" (−10% troops), "Rumour of the Yellow Sky" (enemy sway +).
+Battle maps are hand-built places with **seeded variants**:
+- 2–3 deployments for each side;
+- enemy roster pools;
+- weather and wind;
+- terrain toggles;
+- bonus objectives.
 
-## 5. Battles as seeded variants
-The existing battles are hand-built and deterministic. Replayability comes from **variants of hand-built maps**, not from random terrain, so every map stays a real place with its history.
-- **Per battle data:** a base map plus variant slots:
-  - 2–3 deployment layouts for each side;
-  - enemy roster pools (who leads, troop mix and size by era tier and Mandate);
-  - weather and wind tables;
-  - optional terrain toggles (a bridge out, a burnt field);
-  - a bonus objective pool.
-- **The run seed drives everything** through the existing sfc32 RNG: the run seed fixes the road, and each node's seed fixes its variant. The same seed always gives the same run, so a **daily seed** and shared seeds come free.
-- **Major battles** stay mostly fixed set pieces, with the signature mechanic always present (Chibi's fire and wind, Xiapi's flood, Hulao's gate and Lu Bu). Only the rosters and deployment vary.
-- **Balance:** the AI bench grows into a **run bench**: the AI plays whole runs (road choices by a simple policy) over hundreds of seeds and reports win rate per era and Mandate level, the deadliest nodes and the treasures that are too strong. The win-rate targets are set in RL4.
+The run seed fixes the whole run, so daily and shared seeds come free. Each finale is a fixed set piece whose setup the road changes: the day table, echoes and Renown.
 
-## 6. Between runs: the Annals (meta-progression)
-Each finished run, won or lost, writes an entry in the **Annals**: the era, the road taken, the battles, the losses and the best chain. Unlocks are **horizontal**, giving new options rather than permanent stat power, so the tactics stay the skill.
-- **Next era:** winning an era's major battle unlocks the next era.
-- **Wider pools:** officers you recruited join the era's draft pool for later runs.
-- **Treasures and events:** achievements unlock them, e.g. winning Chibi without losing an officer.
-- **Mandate levels:** 1–10 stacking difficulty steps, each one line. Examples: "enemy rosters +1 tier", "camps cost more", "one fewer reward choice".
-- **A full-history run:** after all v1 eras are won, one long run chains eras 1–4 with the band carried forward.
+## 6. Between runs: the Annals (default: horizontal unlocks, no permanent stat power)
+- Every run, won or lost, is written down: era, road, battles, losses, best chain, final Renown.
+- Winning an era's finale unlocks the next era.
+- Officers recruited once join that era's pool of possible recruits.
+- Achievements unlock new stops and treasures.
+- Mandate levels 1–10 add difficulty.
+- After all four v1 eras are won, a long run chains them with the band carried forward.
 
 ## 7. How it fits the code
 - **Engine** (`src/engine`, still pure):
-  - `createBattle(battleId, seed, options)` gains `variant` (deployment, roster and toggles already resolved), `modifiers` (treasures and omens as data) and `roster` (the run's officers with levels and troops).
-  - Every modifier is a rule with an id in `10-rules.md` (new section `RL-…`), and `query.*` still owns every number the UI shows, including modified ones. Modifiers are data that the existing rule functions read. They are not hooks that run code, so replay stays exact.
-- **Run layer** (`src/run/`, pure TS like `src/campaign/`, with injected storage):
-  - `RunState`, road generation (seeded), node resolution, reward tables, events, the Annals, saves;
-  - it reuses the campaign's officer records, XP and camp code.
-  - Save points are between nodes. A mid-battle save is the battle's action log, replayed on load.
+  - `createBattle(battleId, seed, options)` gains `variant`, `modifiers` (Renown Qi, sway bonus, tired, echoes as roster changes) and `roster` (officers with their troop counts from the pool).
+  - Every modifier is a rule with an `RL-` id in `10-rules.md`, and `query.*` owns every number the UI shows.
+- **Run layer** (`src/run/`, pure TS with injected storage):
+  - `RunState` holds rice, soldiers, wounded, Renown, day, flags (echoes), roster and seed;
+  - it also covers road generation, stop resolution, upkeep and saves.
+  - It reuses the campaign's officer and XP code.
 - **Data:**
-  - `src/data/eras/<era>.json`: the road template, node pools, the draft pool, the finale;
-  - `src/data/battles/*.json`: gain `variants`;
-  - `src/data/treasures.json`, `src/data/events/*.json`.
+  - `src/data/eras/<era>.json`: road template, stop pool, finale day table, echo hooks;
+  - `src/data/stops/*.json`: scene lines, choices with exact effects, echoes;
+  - `variants` added to the battle JSONs.
 - **Client:**
-  - **the road**, drawn as a strategy map laid out on the same sand table: a scroll-map of the province, with nodes as small banner flags and the path drawn in brush ink;
-  - the reward pick drawn as three bamboo slips;
-  - the Annals as a lacquered ledger;
-  - everything follows `50-presentation.md`.
-- **The "Liu Bei's Rise" campaign** stays playable as a story mode from the title (see the decisions in §9). Its battles become the first content for the eras.
+  - the road as a scroll map of the province laid on the sand table, with stops as banner flags and the path in brush ink;
+  - choices as bamboo slips with costs on them, confirmed with the cinnabar seal;
+  - the rice, soldiers, Renown and day counters along the top;
+  - the deploy screen gains a soldier slider per officer, with the battle's rice cost shown live.
 
-## 8. Milestones (estimates in agent tokens; the overnight builds ran about 0.3–0.7M per agent)
+## 8. Milestones
 | M | What | Est. |
 |---|---|---|
-| **RL0** | **Research and design:** era tables checked against sources (†-marked items settled), the run rules in `10-rules.md` with `RL-` ids, the treasure, event and omen lists, the road template, wireframes of the road and reward screens. Owner review gate. | ~0.4M |
-| **RL1** | **Run layer and one era end to end:** `src/run/`, the road map UI, the reward pick, the camp/market/event nodes, saves, defeat and victory. Era 1 with its existing three battles plus Changshe and Wancheng as new minors. Unit tests by rule id, plus an e2e that plays a whole era-1 run at Instant speed with the bot. | ~1.2M |
-| **RL2** | **Variants and modifiers:** variant slots on all v1 battles, treasures and omens in the engine with tests, bonus objectives, Mandate levels 1–5, daily seed. | ~0.9M |
-| **RL3** | **Eras 2–4 content:** about 6 new minor battles (specs, data, scenes), events, draft pools, story lines for each era (our own prose). | ~1.8M |
-| **RL4** | **Annals and balance:** meta-progression, unlocks, Mandate levels 6–10, the run bench over hundreds of seeds, tuning. KB update. | ~0.7M |
-| RL5 | Eras 5–7 (later), then other lords | later |
+| RL0 | Design pass: the full era 1 stop list with numbers, the finale day table, the `RL-` rules, wireframes of the road, a stop and deploy; a paper sim of 3 runs (owner gate) | ~0.4M |
+| RL1 | The run layer and era 1 end to end: road UI, stops, upkeep, pool deploy, Renown, echoes, saves; e2e of a whole run with the bot | ~1.2M |
+| RL2 | Seeded variants, modifiers in the engine, Mandate levels 1–5, daily seed | ~0.9M |
+| RL3 | Eras 2–4: stops, about 6 new battles, scenes in our own prose | ~1.8M |
+| RL4 | Annals, Mandate 6–10, the run bench (ruthless and benevolent policies over hundreds of seeds), tuning | ~0.7M |
 
-v1 (RL0–RL4) is about **5M tokens**, done as two or three overnight sessions. The cut-ins, crowds, portraits and audio already built all carry over unchanged.
-
-## 9. Decisions (owner answered 1–4 on 2026-11-01, all as recommended; 5–6 are defaults unless the owner objects)
-1. **[decided: as recommended] Does the roguelike replace the campaign or sit beside it?** *Recommend: beside it.* "Roads to War" becomes the main mode on the title, and "Liu Bei's Rise" stays as a story mode. It's already built, and it teaches the rules.
-2. **[decided: as recommended] Whose road?** *Recommend: Liu Bei's eras for v1* (the figures, portraits and stories already exist), with Cao Cao and the Sun family as later lords. Each lord would add their own eras, such as Guandu.
-3. **[decided: as recommended] How long is a run?** *Recommend: one era per run* (45–90 min), and after all v1 eras are won, unlock one long run that chains all four.
-4. **[decided: as recommended] Officer loss?** *Recommend: wounded first, fall on the second rout in a run*, with Iron Oath as the one-rout hardcore toggle.
-5. **[default] Meta-progression?** *Recommend: unlocks only* (eras, officers into the draft pools, treasures, events, Mandate levels), with no permanent stat upgrades.
-6. **[decided 2026-11-01: the novel]** Owner: "keep it from the novel. I'd like a romanticized version of history." Superseded text follows. History or the novel? You said "from history". *Recommend: history first, with the novel's best-known set pieces kept and labelled.* That keeps Daxing Hill, Qingzhou, Sishui Gate and Hulao Gate, which are novel events.
+## 9. Decisions (owner, 2026-11-01)
+- **Placement:** beside the campaign.
+- **Scope:** Liu Bei's path first, one era per run.
+- **Officer losses:** wounded first, then fall.
+- **Source:** the novel.
+- **Stops:** every one is a heavy decision.
+- **Rice:** sets troop numbers, and 0 rice ends the run.
+- **Soldiers:** one shared pool.
+- **Calendar:** each day taken strengthens the finale.
+- **Visibility:** exact costs, hidden echoes, occasional stated-odds gambles.
+- **Renown:** all six effects as proposed.
+- **Default, unless the owner objects:** horizontal unlocks only.
