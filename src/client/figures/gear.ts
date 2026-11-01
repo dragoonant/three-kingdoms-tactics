@@ -7,7 +7,7 @@ import { D, sword, type Humanoid } from './parts'
 import type { HorseRig } from './rig'
 
 // ---------- mounting ----------
-export const MOUNT_SHIFT_Z = -0.1
+export const MOUNT_SHIFT_Z = -0.14
 
 /** Builds the horse under a rider and seats the rider on it: rider.root becomes a child of the horse body at the saddle. */
 export function mountRider(fb: FB, h: Humanoid, horse: HorseOpts): HorseRig {
@@ -16,7 +16,7 @@ export function mountRider(fb: FB, h: Humanoid, horse: HorseOpts): HorseRig {
   const body = rig.joints.body
   h.root.removeFromParent()
   body.add(h.root)
-  h.root.position.set(0, rig.saddleY - 0.12 - body.position.y, -0.01)
+  h.root.position.set(0, rig.saddleY - 0.05 - body.position.y, -0.07)
   h.legL.rotation.set(-0.3, 0, -0.62)
   h.legR.rotation.set(-0.3, 0, 0.62)
   return rig
@@ -52,8 +52,32 @@ export function longBeard(fb: FB, head: Object3D, color: string): Group {
       s.bezierCurveTo(w * 0.5, -l * 0.8, w * 0.75, -l * 0.35, w * 0.55, 0.01)
       s.quadraticCurveTo(0, 0.05, -w * 0.55, 0.01)
     })
-  fb.extrude(node, 'beard-a', () => make(0.2, 0.25), 0.07, fb.mat(color, { rough: 0.55 }), { p: [0, 0, 0.045], name: 'beard-a' }, 0.012)
-  fb.extrude(node, 'beard-b', () => make(0.15, 0.2), 0.05, fb.mat(shade(color, 0.07), { rough: 0.5 }), { p: [0, -0.01, 0.1], name: 'beard-b' }, 0.01)
+  // five tapered strands hanging straight from the chin and cheeks over the chest to the belt, curving slightly forward
+  const matte = fb.mat(color, { rough: 0.95, metal: 0 })
+  fb.sph(node, matte, [0, 0.0, 0.03], [0.105, 0.05, 0.06], { name: 'beard-jaw' })
+  // a narrow tapered core so it reads as one flowing mass, split into strands at the tip
+  fb.extrude(
+    node,
+    'beard-core',
+    () => shapeFrom((s) => { s.moveTo(-0.055, 0.0); s.bezierCurveTo(-0.07, -0.08, -0.05, -0.18, -0.02, -0.25); s.lineTo(0, -0.2); s.lineTo(0.02, -0.25); s.bezierCurveTo(0.05, -0.18, 0.07, -0.08, 0.055, 0.0); s.closePath() }),
+    0.05,
+    matte,
+    { p: [0, 0, 0.075], r: [-0.1, 0, 0], name: 'beard-core' },
+    0.012,
+  )
+  const strands: [number, number][] = [[-0.05, 0.2], [-0.025, 0.25], [0.0, 0.27], [0.025, 0.25], [0.05, 0.2]]
+  strands.forEach(([x, l], i) => {
+    fb.tube(
+      node,
+      `beard-strand2|${i}`,
+      [[x, 0.0, 0.03], [x * 1.15, -l * 0.35, 0.085], [x * 0.9, -l * 0.7, 0.115], [x * 0.55, -l, 0.14]],
+      0.034,
+      0.004,
+      matte,
+      { name: 'beard-strand' },
+      { segs: 14, radial: 7 },
+    )
+  })
   // moustache sweeping out from the lip
   for (const sd of [-1, 1]) {
     fb.tube(node, 'moustache-long', [[0, 0, 0], [sd * 0.04, -0.012, 0.0], [sd * 0.09, -0.03, -0.01], [sd * 0.13, -0.085, -0.03]], 0.02, 0.004, color, { p: [0, 0.055, 0.075] })

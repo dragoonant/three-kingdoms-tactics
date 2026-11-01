@@ -43,9 +43,9 @@ export function makeHorse(fb: FB, parent: Group, o: HorseOpts): HorseRig {
     fb.box(body, o.cloth, [sd * 0.148, 0.075, -0.01], [0.02, 0.15, 0.3], [0, 0, sd * -0.18])
     fb.box(body, o.clothTrim, [sd * 0.158, 0.0, -0.01], [0.022, 0.03, 0.3], [0, 0, sd * -0.18], { shadow: false })
   }
-  fb.box(body, o.saddle, [0, 0.172, -0.01], [0.17, 0.03, 0.2])
-  fb.box(body, o.saddle, [0, 0.195, -0.1], [0.17, 0.07, 0.03], [-0.25, 0, 0])
-  fb.box(body, o.saddle, [0, 0.185, 0.08], [0.1, 0.05, 0.03], [0.25, 0, 0])
+  fb.box(body, o.saddle, [0, 0.172, -0.07], [0.17, 0.03, 0.2])
+  fb.box(body, o.saddle, [0, 0.195, -0.16], [0.17, 0.07, 0.03], [-0.25, 0, 0])
+  fb.box(body, o.saddle, [0, 0.185, 0.02], [0.1, 0.05, 0.03], [0.25, 0, 0])
 
   // legs: stubby and chunky; pivot at the shoulder / hip
   const legs: Record<string, Group> = {}
@@ -65,9 +65,9 @@ export function makeHorse(fb: FB, parent: Group, o: HorseOpts): HorseRig {
   }
 
   // neck and head
-  const neck = fb.node('neck', body, [0, 0.07, 0.2], [0.95, 0, 0])
-  fb.capsule(neck, bodyMat, [0, 0.1, 0], 0.085, 0.12, undefined, { s: [0.9, 1, 1.05] })
-  const head = fb.node('head', neck, [0, 0.21, 0.0], [0.42, 0, 0])
+  const neck = fb.node('neck', body, [0, 0.08, 0.2], [0.78, 0, 0])
+  fb.capsule(neck, bodyMat, [0, 0.13, 0], 0.085, 0.17, undefined, { s: [0.9, 1, 1.05] })
+  const head = fb.node('head', neck, [0, 0.27, 0.0], [0.55, 0, 0])
   fb.sph(head, bodyMat, [0, 0.035, 0], [0.083, 0.1, 0.085], { name: 'horse-skull' })
   fb.capsule(head, bodyMat, [0, 0.14, 0.012], 0.056, 0.09, [0.1, 0, 0], { name: 'muzzle' })
   fb.sph(head, o.dark, [0, 0.235, 0.018], [0.052, 0.03, 0.047], { name: 'muzzle-tip' })

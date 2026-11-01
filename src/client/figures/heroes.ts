@@ -238,7 +238,7 @@ function caoCao(fb: FB, mounted: boolean): Rig {
   for (const sd of [-1, 1]) fb.add(h.torso, fb.torusGeo(0.082, 0.009), fb.metal(gold), { p: [sd * (D.shX + 0.012), D.shY + 0.025, 0], r: [Math.PI / 2 - 0.2, 0, sd * 0.2], shadow: false })
   // commander's helmet with a small crest and rear plume
   helmet(fb, h.head, '#22202b', { trim: gold, brim: false, rise: 1.0, cheeks: true })
-  fb.extrude(h.head, 'cc-crest', () => shapeFrom((s) => { s.moveTo(-0.07, 0); s.lineTo(0.07, 0); s.lineTo(0.04, 0.09); s.lineTo(0, 0.13); s.lineTo(-0.04, 0.09); s.closePath() }), 0.014, fb.metal(gold), { p: [0, HY + 0.2, -0.02], r: [0, Math.PI / 2, 0], s: 1.4 }, 0.003)
+  fb.extrude(h.head, 'cc-crest', () => shapeFrom((s) => { s.moveTo(-0.1, 0); s.lineTo(0.1, 0); s.lineTo(0.09, 0.1); s.lineTo(0.05, 0.1); s.lineTo(0.03, 0.2); s.lineTo(0, 0.3); s.lineTo(-0.03, 0.2); s.lineTo(-0.05, 0.1); s.lineTo(-0.09, 0.1); s.closePath() }), 0.016, fb.metal(gold), { p: [0, HY + 0.17, -0.02], r: [-0.1, 0, 0], s: 1.0 }, 0.003)
   fb.tube(h.head, 'cc-plume', [[0, 0, 0], [0, 0.03, -0.07], [0, 0.0, -0.15], [0, -0.1, -0.2]], 0.028, 0.008, '#a31f1f', { p: [0, HY + 0.17, -0.1] }, { flat: 0.5 })
   addFace(fb, h.head, skin, { eyes: 'narrow', brow: { thick: 0.02, angle: 0.18, len: 0.085 }, mouth: 'smirk', lipColor: '#7a3028' })
   // goatee and thin moustache
@@ -247,9 +247,10 @@ function caoCao(fb: FB, mounted: boolean): Rig {
   for (const sd of [-1, 1]) fb.tube(h.head, 'cc-stache', [[0, 0, 0], [sd * 0.03, -0.006, 0], [sd * 0.062, -0.03, -0.004]], 0.01, 0.003, hairC, { p: [sd * 0.006, HY - 0.046, 0.168] })
   const cape = addCape(fb, h.torso, { outer: '#1a1820', lining: '#a31f1f', len: 0.5, trim: gold, spread: 0.17 })
   // straight sword held low
-  sword(fb, h.weapon, { len: 0.6, wide: 0.055, guard: gold, tassel: '#7b3fb0', name: 'sword' })
-  h.weapon.rotation.set(Math.PI - 0.55, 0, 0)
-  h.armR.rotation.set(-0.55, 0, 0.3)
+  // raised in the right hand, angled out and up: a wide diagonal that no spear-bearer shares
+  sword(fb, h.weapon, { len: 0.62, wide: 0.06, guard: gold, tassel: '#7b3fb0', name: 'sword' })
+  h.weapon.rotation.set(0.25, 0, -1.15)
+  h.armR.rotation.set(-0.9, 0, 0.75)
   h.armL.rotation.set(-0.35, 0, -0.35)
   let mount
   if (mounted) mount = mountRider(fb, h, { body: '#1d1b20', dark: '#0f0e12', mane: '#0f0e12', cloth: '#3a2260', clothTrim: gold, saddle: '#2a1a14', bridle: gold })
