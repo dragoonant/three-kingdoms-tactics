@@ -2,7 +2,10 @@
 //
 //   node tools/render-cutins.mjs [--scene A,B] [--fps 30] [--workers 2] [--out e2e-out/cutins] [--port 5791]
 //                                [--url http://localhost:5173/]   (skip the build and use a running server)
-//                                [--sheet-only] [--frames-only]
+//                                [--sheet-only] [--frames-only] [--beats-only]
+//   scenes: A, Ap (Volley), B, C, D, R, W, S-melee, S-cavalry, S-archer
+//   --variant "terrain=forest&arc=side&trail=x&counter=0&routed=1"   sample parameters of the review page (tag the output with --tag)
+//   --beats-only: one frame per beat (the contact sheet) instead of every frame (no MP4)
 //
 // Headless WebGL is software-rendered (2-3 fps), so nothing is played in real time: every frame is made by setting the
 // scene time with window.__cinema.setTime(t) (scenes are pure functions of t), screenshotting the 1280x720 page, and
@@ -19,7 +22,10 @@ const opt = (name, dflt) => {
 }
 const flag = (name) => args.includes(`--${name}`)
 
-const scenes = opt('scene', 'A,B').split(',').map((s) => s.trim().toUpperCase())
+const scenes = opt('scene', 'A,B').split(',').map((s) => s.trim())
+const variant = opt('variant', '')
+const tag = opt('tag', '')
+const label = (scene) => `${scene}${tag ? `-${tag}` : ''}`
 const fps = Number(opt('fps', '30'))
 const workers = Number(opt('workers', '2'))
 const outDir = resolve(opt('out', 'e2e-out/cutins'))
@@ -72,13 +78,13 @@ async function openScene(scene) {
   const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 })
   const errors = []
   page.on('pageerror', (e) => errors.push(e.message))
-  await page.goto(`${base}cinema.html?scene=${scene}&ui=0&test=1&t=0`)
+  await page.goto(`${base}cinema.html?scene=${scene}&ui=0&test=1&t=0${variant ? `&${variant}` : ''}`)
   await page.waitForFunction(() => window.__cinema?.ready === true, undefined, { timeout: 180000 })
   return { page, errors }
 }
 
 async function renderFrames(scene) {
-  const dir = resolve(outDir, `frames-${scene}`)
+  const dir = resolve(outDir, `frames-${label(scene)}`)
   rmSync(dir, { recursive: true, force: true })
   mkdirSync(dir, { recursive: true })
   const probe = await openScene(scene)
@@ -107,7 +113,7 @@ async function renderFrames(scene) {
 }
 
 function encode(scene, dir) {
-  const out = resolve(outDir, `scene-${scene}.mp4`)
+  const out = resolve(outDir, `scene-${label(scene)}.mp4`)
   run(
     'ffmpeg',
     ['-y', '-loglevel', 'error', '-framerate', String(fps), '-i', resolve(dir, 'f%04d.jpg'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '17', '-preset', 'medium', '-movflags', '+faststart', out],
@@ -130,7 +136,8 @@ async function contactSheet(scene, dir) {
     .map((b) => {
       const mid = (b.start + b.end) / 2
       const i = Math.min(Math.round(mid * fps), Math.round(b.end * fps) - 1)
-      return `<figure><img src="file://${resolve(dir, `f${String(i).padStart(4, '0')}.jpg`)}"><figcaption><b>${b.id}</b> ${mid.toFixed(2)} s &middot; ${b.label}</figcaption></figure>`
+      const file = flag('beats-only') ? resolve(dir, `beat-${b.id}.jpg`) : resolve(dir, `f${String(i).padStart(4, '0')}.jpg`)
+      return `<figure><img src="file://${file}"><figcaption><b>${b.id}</b> ${mid.toFixed(2)} s &middot; ${b.label}</figcaption></figure>`
     })
     .join('')
   const html = `<!doctype html><meta charset="utf-8"><style>
@@ -141,22 +148,45 @@ async function contactSheet(scene, dir) {
     figcaption{position:absolute;left:0;right:0;bottom:0;padding:5px 9px;background:rgba(20,16,13,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     b{color:#f2b45a;font-size:18px;margin-right:6px}
   </style><div class="g">${cells}</div>`
-  const htmlPath = resolve(outDir, `sheet-${scene}.html`)
+  const htmlPath = resolve(outDir, `sheet-${label(scene)}.html`)
   writeFileSync(htmlPath, html)
   const page = await browser.newPage({ viewport: { width: cols * cw + (cols + 1) * 8, height: rows * ch + (rows + 1) * 8 } })
   await page.goto(`file://${htmlPath}`)
   await page.waitForLoadState('load')
-  const out = resolve(outDir, `contact-${scene}.png`)
+  const out = resolve(outDir, `contact-${label(scene)}.png`)
   await page.screenshot({ path: out, fullPage: true })
   await page.close()
   rmSync(htmlPath)
   console.log(`wrote ${out}`)
 }
 
+/** One frame at each beat's midpoint: enough for a contact sheet, a fraction of the time of a full render. */
+async function renderBeatFrames(scene) {
+  const dir = resolve(outDir, `frames-${label(scene)}`)
+  rmSync(dir, { recursive: true, force: true })
+  mkdirSync(dir, { recursive: true })
+  const { page, errors } = await openScene(scene)
+  const beats = await page.evaluate(() => window.__cinema.beats())
+  for (const b of beats) {
+    const mid = (b.start + b.end) / 2
+    await page.evaluate((tt) => window.__cinema.setTime(tt), mid)
+    await page.screenshot({ path: resolve(dir, `beat-${b.id}.jpg`), type: 'jpeg', quality: 93 })
+    console.log(`  ${scene} ${b.id} @ ${mid.toFixed(2)}`)
+  }
+  if (errors.length) console.warn(`page errors in scene ${scene}:\n  ${[...new Set(errors)].join('\n  ')}`)
+  await page.close()
+  return dir
+}
+
 try {
   for (const scene of scenes) {
-    if (!['A', 'B'].includes(scene)) throw new Error(`unknown scene ${scene}`)
-    const dir = resolve(outDir, `frames-${scene}`)
+    if (!['A', 'Ap', 'B', 'C', 'D', 'R', 'W', 'S-melee', 'S-cavalry', 'S-archer'].includes(scene)) throw new Error(`unknown scene ${scene}`)
+    const dir = resolve(outDir, `frames-${label(scene)}`)
+    if (flag('beats-only')) {
+      await renderBeatFrames(scene)
+      await contactSheet(scene, dir)
+      continue
+    }
     if (!flag('sheet-only')) await renderFrames(scene)
     if (!flag('frames-only')) {
       await contactSheet(scene, dir)

@@ -1,9 +1,13 @@
 // Scene B world: Guan Yu and three Han cavalry in a wedge, seven rebels in a ragged line, dust and the crescent sweep.
 // Poses and particles are pure functions of story time; the plan (paths, who falls when) lives in thunderingCharge.ts.
 import { useFrame } from '@react-three/fiber'
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
+import { useDisposeWorld } from '../dispose'
 import { CylinderGeometry, ConeGeometry, Group, Mesh, MeshStandardMaterial, Vector3, type Object3D } from 'three'
 import { figures, type Rig } from '../../figures'
+import { buildCasterRig } from '../casters'
+import { Ground } from '../stage/Ground'
+import { spawnFormation } from './formation'
 import { burstPosition, sampleSlot, type SlotConfig } from '../particles'
 import { applyClip, fallBack, idle, locomotion, mix as mixClip, stagger, staggerShift, stepTurn } from '../../figures/clips'
 import { Puppet, figureScale, fitFigure, limbsOnly, mix, pArmsUp, pRear, sstep } from '../poseKit'
@@ -27,6 +31,7 @@ import {
   riderDist,
   riderSpeed,
   sweepAngle,
+  chargeWorldSpec,
   type FlingPlan,
 } from './thunderingCharge'
 
@@ -49,17 +54,24 @@ interface RebelActor {
   i: number
 }
 
-function makeRiders(): Rider[] {
+function makeRiders(scene: CutinScene): Rider[] {
+  const p = scene.params
+  const palette = p?.caster.palette ?? 'han'
+  const troop = spawnFormation('cavalry', palette, 3, 'wedge', B_SEED).map((f) => f.rig)
   return [0, 1, 2, 3].map((m) => {
-    const rig = m === 0 ? figures.buildHero('guan-yu') : figures.buildTroop('cavalry', 'han', m)
+    const rig = m === 0 ? (p ? buildCasterRig(p.caster, true) : figures.buildHero('guan-yu')) : troop[m - 1]!
     fitFigure(rig)
     return { id: m === 0 ? 'guan-yu' : `cav${m}`, rig, p: new Puppet(rig), m }
   })
 }
 
-function makeRebels(): RebelActor[] {
+function makeRebels(scene: CutinScene): RebelActor[] {
+  const spec = chargeWorldSpec(scene)
+  // a mounted defender would need the horse poses: they stand as foot troops of the same side here
+  const kind = spec.def.kind === 'cavalry' ? 'infantry' : spec.def.kind
+  const rigs = spawnFormation(kind, spec.def.palette, B_LAYOUT.rebelCount, 'ragged', B_SEED + 2).map((f) => f.rig)
   return Array.from({ length: B_LAYOUT.rebelCount }, (_, i) => {
-    const rig = figures.buildTroop('rebel', 'yellow', i)
+    const rig = rigs[i]!
     fitFigure(rig)
     const holder = new Group()
     holder.rotation.order = 'YXZ'
@@ -319,8 +331,8 @@ export function ThunderingChargeWorld({ scene }: { scene: CutinScene }) {
 
   const world = useMemo(() => {
     const falls = flingPlan(scene.sample.falls)
-    const riders = makeRiders()
-    const rebels = makeRebels()
+    const riders = makeRiders(scene)
+    const rebels = makeRebels(scene)
     const drop = dropper(falls.map((f) => f.rebel))
     const spear = makeSpearProp()
     spear.group.visible = false
@@ -333,17 +345,23 @@ export function ThunderingChargeWorld({ scene }: { scene: CutinScene }) {
       sparks: new ParticleBuffer(120, 'add', 2.2),
     }
     const steps = riders.map((r, m) => footfalls(m, figureScale() * (r.rig.bodyScale ?? 1)))
-    return { falls, riders, rebels, drop, spear, trail, contacts, fx, steps }
+    // keep set dressing off the figures and off the wedge's whole path (it gallops through the line and wheels to the right)
+    const clear = [
+      ...rebels.map((r) => ({ x: r.x, z: r.z, r: 0.4 })),
+      ...Array.from({ length: 36 }, (_, i) => {
+        const L = leaderAt(i * 0.2)
+        return { x: L.x, z: L.z, r: 1.0 }
+      }),
+      { x: -2.7, z: 5.4, r: 0.6 },
+    ]
+    return { falls, riders, rebels, drop, spear, trail, contacts, fx, steps, clear }
   }, [scene])
 
-  useEffect(
-    () => () => {
-      world.riders.forEach((r) => r.rig.dispose())
-      world.rebels.forEach((r) => r.rig.dispose())
-      Object.values(world.fx).forEach((f) => f.dispose())
-    },
-    [world],
-  )
+  useDisposeWorld(world, () => {
+    world.riders.forEach((r) => r.rig.dispose())
+    world.rebels.forEach((r) => r.rig.dispose())
+    Object.values(world.fx).forEach((f) => f.dispose())
+  })
 
   const tip = useMemo(() => ({ a: new Vector3(), b: new Vector3() }), [])
 
@@ -444,6 +462,7 @@ export function ThunderingChargeWorld({ scene }: { scene: CutinScene }) {
   return (
     <group>
       <Stage seed={B_SEED} focus={[0.6, 0.5]} keyDir={[-3.5, 7, 7.5]} rimDir={[3, 3.5, -9]} motes={170} moteStrength={0.85} />
+      <Ground kind={chargeWorldSpec(scene).ground} seed={B_SEED} center={[0.2, 3.5]} halfW={3.4} halfD={1.3} clear={world.clear} />
       {world.riders.map((r) => (
         <primitive key={r.id} object={r.rig.group as Object3D} />
       ))}

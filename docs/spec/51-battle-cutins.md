@@ -143,7 +143,18 @@ There is no title slip, only a small troop-kind slip. The dive is 0.3 s.
 ## More troops (D22)
 About **20–30 troops per side** on screen. The hero and front rank are full rigs; the ranks behind use instanced, lower-detail troops sharing the same clips (or simplified ones). Formations follow troop kind: the infantry block, the archer line, the cavalry wedge.
 
+## v0.3 as built (2026-11-01)
+Code: `src/client/cutins/plan.ts` (pure event to scene mapping, settings rules, falls formula, chain timing), `scenes/act.ts` + `ActWorld.tsx` (scenes C, D, R, W and the shorts), `scenes/fireArrows.ts` (A and A′) and `scenes/thunderingCharge.ts` (B), all parameterised by the plan; `player.ts` and `CutinLayer.tsx` (the in-game player); `presentation/beats.ts` + `director.ts` (the `cutin` beat); `settings.ts` plus the Sound panel (the two settings).
+- **Which events a scene stands in for:** from the start of the batch to the first end-of-phase or world event (round or phase start, battle end, fire spread, terrain change, reinforcement). The scene shows the numbers; the board beats (floaters, seals) for the same events run as the camera rises out, and their events are committed at `resultAt` (A 5.9 s, B 6.0, C 5.1, D 5.2, R/W 2.5, shorts just before their pull-out).
+- **Dive:** the in-game scene starts from a high view over the sand table and cross-fades in over 0.25 s (it is not a literal camera dive from the board). The layer fades out over the last 0.35 s into the board, which now shows the result.
+- **Beat ids:** A1–A6, A′ is V1–V6, B1–B7, C1–C6, D1–D6, R1–R4, W1–W4, melee SM1–SM5, cavalry SC1–SC5, archers SA1–SA5.
+- **Short scenes** use 5 troops per side and no hero; the slip reads "Infantry · Officer". Counter: defenders shove back and M attackers fall (M from the counter damage by the same formula); S-archer has none. Side and rear hits turn the defenders away, the camera moves behind the attackers and the call-out reads Flank! or Rear!.
+- **Chains:** link 1 plays from 0; links 2+ start at the end of their dive beat at 1/0.6 speed; each non-final link ends at the start of its pull-out, then a 0.4 s interstitial stamps a seal into the chain row (double rim for a bonded link). One `audio.cutinStart` for the whole chain, one `cutinEnd` after the last link, `cutinSkip` on a click.
+- **Falls:** `max(1, round(damage / troops before x front))` with front = 7 for A, A′, B, C, D, 5 for the shorts, 4 for R; everyone when routed; none for zero damage. C stages 13 defenders (7 in the front rank).
+- **Known limits:** fire scenes (A, A′) and the charge (B) stand a mounted defender down as a foot soldier of its side; the shooters in A and A′ are always archers in the caster's palette; R and W hide the caster's weapon while he gestures; the hill is a backdrop mound, not a slope the figures stand on; troop counts are interim (D22).
+
 ## Revision log
 - v0.1 2026-11-01: first direction (scenes A and B).
 - v0.2 2026-11-01: bases removed, locomotion animated (owner: "I don't want them on bases. I want their movement on feet and on horse to be animated"). Archers kneel; B3 riders trot, canter and gallop on a distance-driven footfall cycle with hoof dust on the footfalls; rebels stagger back a step (B4, A5) and the flung rebels land and lie flat (B5); the charge's top speed is lowered so the gallop cadence reads.
 - v0.3 2026-11-01: in-battle integration direction: scenes C (Duel Strike) and D (Thunder Roar), the R and W shorts, short normal-attack scenes, chains, settings, crowd sizes.
+- v0.3 as built 2026-11-01: scenes A′ (V), C, D, R, W and the three short attack scenes, plan mapping, chains, settings and the in-game player; see "v0.3 as built".

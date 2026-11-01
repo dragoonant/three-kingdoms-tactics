@@ -45,6 +45,7 @@ export function BoardCanvas() {
   const state = useGame((s) => s.state)
   const ui = useGame((s) => s.ui)
   const playing = useGame((s) => s.playing)
+  const cutinPaused = useGame((s) => s.cutinPaused)
   const screen = useGame((s) => s.screen)
   const beat = useGame((s) => s.beat)
   const floaters = useGame((s) => s.floaters)
@@ -96,6 +97,8 @@ export function BoardCanvas() {
 
   return (
     <Canvas
+      // a cut-in covers the board: it stops drawing until the result lands, so only one WebGL scene is busy at a time
+      frameloop={cutinPaused ? 'never' : 'always'}
       shadows={SHADOWS ? { type: PCFShadowMap } : false}
       dpr={[1, 1.5]}
       camera={{ fov: 36, near: 0.5, far: 140, position: [0, 14, 14] }}

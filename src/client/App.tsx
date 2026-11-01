@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect, useSyncExternalStore } from 'react'
 import { greedyAction } from '../ai/greedy'
 import { legalActions, query } from '../engine'
 import { bindGameAudio } from './audio/gameAudio'
@@ -8,14 +8,19 @@ import { Hud } from './hud/Hud'
 import { Briefing, End, HowTo, Title } from './screens/Screens'
 import { Camp, CampaignBriefing, Defeat, Deploy, NewCampaign, Results, Scene, Summary } from './screens/CampaignScreens'
 import { installCampaignHook } from './campaign/testHook'
+import { cutinTestApi, player } from './cutins/player'
 import { TEST_MODE, useGame } from './store/game'
 import './theme.css'
 import './hud.css'
 import './campaign.css'
 
+// The cut-in layer (and with it every scene's world) loads when the first cut-in plays.
+const CutinLayer = lazy(() => import('./cutins/CutinLayer'))
+
 declare global {
   interface Window {
     __app?: { ready: boolean }
+    __cutin?: ReturnType<typeof cutinTestApi>
   }
 }
 
@@ -49,10 +54,12 @@ function installTestHook(): void {
     resetView: () => viewApi.reset(),
     ...installCampaignHook(),
   }
+  window.__cutin = cutinTestApi()
 }
 
 export function App() {
   const screen = useGame((s) => s.screen)
+  const cutinActive = useSyncExternalStore(player.subscribe, () => player.getSnapshot().active, () => false)
 
   useEffect(() => {
     if (TEST_MODE) installTestHook()
@@ -111,6 +118,11 @@ export function App() {
       {screen === 'defeat' && <Defeat />}
       {screen === 'summary' && <Summary />}
       {(screen === 'battle' || screen === 'end') && <Hud />}
+      {cutinActive && (
+        <Suspense fallback={null}>
+          <CutinLayer />
+        </Suspense>
+      )}
       {screen === 'end' && <End />}
     </div>
   )

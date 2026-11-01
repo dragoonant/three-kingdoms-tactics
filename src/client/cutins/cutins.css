@@ -168,3 +168,123 @@
   background: rgba(20, 16, 13, 0.7);
   padding: 2px 6px;
 }
+
+/* small slips: the troop kind, "Confused x2", the counter number */
+.co-slips {
+  position: absolute;
+  left: 3.6cqw;
+  bottom: 5.5cqh;
+  right: 40cqw;
+}
+.co-slip {
+  position: absolute;
+  left: 0;
+  padding: 0.7cqh 1.6cqw 0.8cqh;
+  font-size: 3.1cqw;
+  line-height: 1.1;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  color: var(--silk, #efe6d2);
+  background: linear-gradient(100deg, rgba(20, 14, 10, 0.86), rgba(20, 14, 10, 0.7));
+  border-left: 0.7cqw solid var(--bamboo, #c9b27c);
+  text-shadow: 0 0.2cqw 0.5cqw rgba(0, 0, 0, 0.7);
+}
+.co-slip.cinnabar {
+  border-left-color: var(--cinnabar, #c8372d);
+}
+.co-slip.jade {
+  border-left-color: #4f9a86;
+}
+.co-wind {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: 34cqw;
+  transform: translate(-50%, -50%);
+}
+
+.co-wind-label {
+  margin-top: 1.4cqh;
+  text-align: center;
+  font-size: 4cqw;
+  color: var(--silk, #efe6d2);
+  text-shadow: 0 0.3cqw 0.8cqw rgba(0, 0, 0, 0.85);
+  letter-spacing: 0.06em;
+}
+
+.co-callout.left {
+  right: auto;
+  left: 5cqw;
+  top: 24cqh;
+  transform-origin: 30% 60%;
+}
+
+/* the in-game layer over the board */
+.co-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--night, #14100d);
+  animation: co-layer-in 0.25s ease-out both;
+  cursor: pointer;
+  touch-action: none;
+}
+@keyframes co-layer-in {
+  from {
+    opacity: 0;
+  }
+}
+.co-inter {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 16, 13, 0.5);
+  pointer-events: none;
+}
+.co-sealrow {
+  position: absolute;
+  left: 50%;
+  bottom: 5vh;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1.1vw;
+  pointer-events: none;
+}
+.co-sealchip {
+  width: 4.4vw;
+  height: 4.4vw;
+  min-width: 34px;
+  min-height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  background: var(--cinnabar, #c8372d);
+  color: var(--silk, #efe6d2);
+  font: 400 2.5vw/1 var(--font-display, serif);
+  box-shadow: inset 0 0 0 2px rgba(239, 230, 210, 0.85), 0 3px 8px rgba(0, 0, 0, 0.5);
+  transform: rotate(-4deg);
+}
+.co-sealchip.bond {
+  box-shadow: inset 0 0 0 2px rgba(239, 230, 210, 0.85), inset 0 0 0 5px var(--cinnabar, #c8372d), inset 0 0 0 6.5px rgba(239, 230, 210, 0.7), 0 3px 8px rgba(0, 0, 0, 0.5);
+}
+.co-sealchip.stamp {
+  animation: co-stamp 0.3s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+@keyframes co-stamp {
+  from {
+    transform: rotate(-4deg) scale(1.9);
+    opacity: 0;
+  }
+}
+.co-skipnote {
+  position: absolute;
+  right: 1.6vw;
+  bottom: 1.4vw;
+  padding: 0.3em 0.9em;
+  font: 600 12px/1 var(--font-body, sans-serif);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bamboo, #c9b27c);
+  background: rgba(20, 14, 10, 0.55);
+  border: 1px solid rgba(201, 178, 124, 0.35);
+  pointer-events: none;
+}
