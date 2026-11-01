@@ -75,7 +75,16 @@ export interface FieldBox {
 }
 
 /** Rows of millet along x with ridges every `rowGap`. Deterministic from the seed. */
-export function milletLayout(box: FieldBox, seed: number, clear: { x: number; z: number; r: number }[] = []): { rows: number[]; stalks: Stalk[] } {
+/**
+ * The stalks of a field. `clear` discs stay bare (figures stand there); in the `low` discs (an action lane) the stalks are thinned
+ * by half and cut to half height so the troops riding or running through stay in view.
+ */
+export function milletLayout(
+  box: FieldBox,
+  seed: number,
+  clear: { x: number; z: number; r: number }[] = [],
+  low: { x: number; z: number; r: number }[] = [],
+): { rows: number[]; stalks: Stalk[] } {
   const rowGap = 0.22
   const rows: number[] = []
   for (let z = box.z0; z <= box.z1 + 1e-6; z += rowGap) rows.push(z)
@@ -89,7 +98,9 @@ export function milletLayout(box: FieldBox, seed: number, clear: { x: number; z:
       const sz = rz + jz
       if (sz > 3.4 && rand(seed, r, k, 6) < 0.7) continue
       if (clear.some((c) => (c.x - sx) ** 2 + (c.z - sz) ** 2 < c.r * c.r)) continue
-      stalks.push({ x: sx, z: sz, h: 0.1 + rand(seed, r, k, 3) * 0.05, c: Math.floor(rand(seed, r, k, 4) * 4), phase: rand(seed, r, k, 5) * 6.28 })
+      const lowered = low.length > 0 && low.some((c) => (c.x - sx) ** 2 + (c.z - sz) ** 2 < c.r * c.r)
+      if (lowered && rand(seed, r, k, 7) < 0.5) continue
+      stalks.push({ x: sx, z: sz, h: (0.1 + rand(seed, r, k, 3) * 0.05) * (lowered ? 0.5 : 1), c: Math.floor(rand(seed, r, k, 4) * 4), phase: rand(seed, r, k, 5) * 6.28 })
     }
   })
   return { rows, stalks }

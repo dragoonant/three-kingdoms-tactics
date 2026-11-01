@@ -6,6 +6,8 @@
 //   scenes: A, Ap (Volley), B, C, D, R, W, S-melee, S-cavalry, S-archer
 //   --variant "terrain=forest&arc=side&trail=x&counter=0&routed=1"   sample parameters of the review page (tag the output with --tag)
 //   --beats-only: one frame per beat (the contact sheet) instead of every frame (no MP4)
+//   Every run also writes stats-<scene>.json: troops on screen per side (front-rank rigs + instanced ranks) and the renderer's
+//   draw calls and triangles per frame (shadow pass included) at each beat, and prints a one-line summary.
 //
 // Headless WebGL is software-rendered (2-3 fps), so nothing is played in real time: every frame is made by setting the
 // scene time with window.__cinema.setTime(t) (scenes are pure functions of t), screenshotting the 1280x720 page, and
@@ -95,12 +97,16 @@ async function renderFrames(scene) {
   for (let k = 1; k < workers; k++) pages.push(await openScene(scene))
   let done = 0
   const t0 = Date.now()
+  const beats = await probe.page.evaluate(() => window.__cinema.beats())
+  const rows = []
   await Promise.all(
     pages.map(async ({ page }, k) => {
       for (let i = k; i < n; i += workers) {
         const t = i / fps
         await page.evaluate((tt) => window.__cinema.setTime(tt), t)
         await page.screenshot({ path: resolve(dir, `f${String(i).padStart(4, '0')}.jpg`), type: 'jpeg', quality: 93 })
+        const b = beats.find((q) => i === Math.min(Math.round(((q.start + q.end) / 2) * fps), Math.round(q.end * fps) - 1))
+        if (b) rows.push({ beat: b.id, t, ...(await frameStats(page)) })
         done++
         if (done % 30 === 0) console.log(`  ${scene} ${done}/${n} (${((Date.now() - t0) / 1000).toFixed(0)}s)`)
       }
@@ -108,6 +114,7 @@ async function renderFrames(scene) {
   )
   const errs = pages.flatMap((p) => p.errors)
   await Promise.all(pages.map((p) => p.page.close()))
+  writeStats(scene, rows.sort((a, b) => a.t - b.t))
   if (errs.length) console.warn(`page errors in scene ${scene}:\n  ${[...new Set(errs)].join('\n  ')}`)
   return { dir, n, duration }
 }
@@ -160,6 +167,24 @@ async function contactSheet(scene, dir) {
   console.log(`wrote ${out}`)
 }
 
+/** The renderer's numbers for the frame just drawn, and the troops the world published (scenes/ranks.ts publishTroops). */
+async function frameStats(page) {
+  return page.evaluate(() => {
+    const gl = window.__r3f?.gl
+    const troops = window.__cutinTroops ? Object.values(window.__cutinTroops).pop() : null
+    return { calls: gl?.info.render.calls ?? null, triangles: gl?.info.render.triangles ?? null, troops }
+  })
+}
+
+function writeStats(scene, rows) {
+  const troops = rows.find((r) => r.troops)?.troops ?? null
+  const calls = rows.map((r) => r.calls).filter((c) => c !== null)
+  const tris = rows.map((r) => r.triangles).filter((c) => c !== null)
+  const out = { scene: label(scene), troops, drawCalls: { max: Math.max(...calls), mean: Math.round(calls.reduce((a, b) => a + b, 0) / Math.max(1, calls.length)) }, triangles: { max: Math.max(...tris) }, beats: rows }
+  writeFileSync(resolve(outDir, `stats-${label(scene)}.json`), JSON.stringify(out, null, 2))
+  console.log(`stats ${label(scene)}: troops atk ${troops?.atk} / def ${troops?.def} (crowd ${troops?.crowd?.members}), draw calls max ${out.drawCalls.max} mean ${out.drawCalls.mean}, triangles max ${out.triangles.max}`)
+}
+
 /** One frame at each beat's midpoint: enough for a contact sheet, a fraction of the time of a full render. */
 async function renderBeatFrames(scene) {
   const dir = resolve(outDir, `frames-${label(scene)}`)
@@ -167,12 +192,15 @@ async function renderBeatFrames(scene) {
   mkdirSync(dir, { recursive: true })
   const { page, errors } = await openScene(scene)
   const beats = await page.evaluate(() => window.__cinema.beats())
+  const rows = []
   for (const b of beats) {
     const mid = (b.start + b.end) / 2
     await page.evaluate((tt) => window.__cinema.setTime(tt), mid)
     await page.screenshot({ path: resolve(dir, `beat-${b.id}.jpg`), type: 'jpeg', quality: 93 })
+    rows.push({ beat: b.id, t: mid, ...(await frameStats(page)) })
     console.log(`  ${scene} ${b.id} @ ${mid.toFixed(2)}`)
   }
+  writeStats(scene, rows)
   if (errors.length) console.warn(`page errors in scene ${scene}:\n  ${[...new Set(errors)].join('\n  ')}`)
   await page.close()
   return dir

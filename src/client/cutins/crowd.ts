@@ -49,6 +49,8 @@ export interface CrowdOptions {
   formation?: FormationName
   /** A multiplier on the default spacing (number) or the spacing in rig units ({ x, z }). */
   spacing?: number | Partial<Spacing>
+  /** Explicit places instead of a formation: crowd-local world units (+z forward) and an optional heading each (count = slots.length). */
+  slots?: readonly { x: number; z: number; h?: number }[]
   /** Random offset of each slot as a fraction of the spacing. */
   jitter?: number
   /** Members across the front (block, mob) or per rank (line). */
@@ -130,6 +132,8 @@ export interface Crowd {
   fall(members: MemberSel, style: FallStyle, impulse?: number | Vec2, opts?: CommandOpts & { apex?: number; dur?: number }): void
   /** Turn and run away (default straight back, away from the enemy; `dir` in crowd-local space). */
   flee(members?: MemberSel, opts?: CommandOpts & { dir?: Vec2; speed?: number }): void
+  /** Duel on the spot until the next order: a thrust and a lunge, then a block and a step back, every `period` seconds (default 1.2), starting `phase` (0..1) into the cycle. */
+  fight(members?: MemberSel, opts?: CommandOpts & { period?: number; lunge?: number; phase?: number }): void
   /** Resolves a selection to indices. */
   select(sel: MemberSel): number[]
   /** `n` members chosen from `from` by `seed`, the same every time (for "N of them fall"). */
@@ -221,7 +225,7 @@ function calibrate(bake: BakedSet, mounted: boolean): Calib {
 export function createCrowd(o: CrowdOptions): Crowd {
   const kind = o.kind
   const mounted = kind === 'cavalry'
-  const count = Math.max(0, Math.min(64, Math.floor(o.count)))
+  const count = Math.max(0, Math.min(64, Math.floor(o.slots ? o.slots.length : o.count)))
   const seed = (o.seed ?? 1) | 0
   const formation = o.formation ?? DEFAULT_FORMATION[kind]
   const k = o.scale ?? crowdScale()
@@ -230,7 +234,9 @@ export function createCrowd(o: CrowdOptions): Crowd {
   const shadows = o.castShadow ?? true
   const nFull = Math.max(0, Math.min(count, Math.floor(o.frontRankFull ?? (mounted ? 3 : 5))))
   const cadence = o.cadence ?? defaultCadenceSpread(formation)
-  const slots = layout({ kind, formation, count, seed, spacing: o.spacing, jitter: o.jitter ?? defaultJitter(formation), ...(o.files !== undefined ? { files: o.files } : {}) })
+  const slots: Slot[] = o.slots
+    ? o.slots.slice(0, count).map((q, i) => ({ x: q.x / k, z: q.z / k, rank: 0, file: i }))
+    : layout({ kind, formation, count, seed, spacing: o.spacing, jitter: o.jitter ?? defaultJitter(formation), ...(o.files !== undefined ? { files: o.files } : {}) })
 
   const group = new Group()
   group.name = `crowd-${kind}-${o.side}`
@@ -264,7 +270,7 @@ export function createCrowd(o: CrowdOptions): Crowd {
       mounted,
       x: s.x * k,
       z: s.z * k,
-      h: hBias,
+      h: hBias + (o.slots?.[i]?.h ?? 0),
       e: k * (0.97 + 0.06 * r(3)),
       phase: r(4) * 6.28,
       dPhase: cadence * r(5) * 0.55,
@@ -442,6 +448,9 @@ export function createCrowd(o: CrowdOptions): Crowd {
     },
     flee(sel, opts) {
       send({ k: 'flee', dir: opts?.dir ?? [0, -1], speed: opts?.speed ?? 1.5 }, sel ?? 'all', opts)
+    },
+    fight(sel, opts) {
+      send({ k: 'fight', period: opts?.period ?? 1.2, lunge: opts?.lunge ?? 0.05, phase: opts?.phase ?? 0 }, sel ?? 'all', opts)
     },
     select: resolve,
     pick(n, pseed, from) {

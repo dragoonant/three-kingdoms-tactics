@@ -186,6 +186,29 @@ export interface GroupSpec {
   layout: FormationLayout
   seed: number
 }
+/**
+ * An instanced crowd standing behind a group's rigged front rank (docs/spec/51 "More troops", 52-crowds): where its first rank
+ * stands, which way it faces, and its formation. ActWorld scripts what it does from the scene's cues.
+ */
+export interface RankSpec {
+  id: 'atk' | 'def'
+  kind: TroopKindName
+  palette: SidePalette
+  count: number
+  seed: number
+  /** World x, z of the middle of the crowd's first rank; the crowd extends away from it, opposite to `facing`. */
+  at: Vec2
+  facing: number
+  /** Members turn to this heading before the scene starts (a flank or rear hit), keeping the block where it stands. */
+  turnTo?: number
+  formation: 'block' | 'line' | 'wedge' | 'mob'
+  files: number
+  gap: Vec2
+}
+const rank = (r: RankSpec): RankSpec => r
+/** The formation of a crowd of this kind: rebels mill about in a mob, archers stand in lines, riders and foot in blocks. */
+const crowdForm = (k: TroopKindName): RankSpec['formation'] => (k === 'rebel' ? 'mob' : k === 'archer' ? 'line' : 'block')
+
 export interface ActActor {
   id: string
   group: 'hero' | 'atk' | 'def'
@@ -224,6 +247,8 @@ export interface ActPlan {
   focus: [number, number]
   /** Weapon read of the hero for the strike poses. */
   weapon: StrikeTrail
+  /** The instanced ranks behind the rigged front ranks. */
+  ranks: RankSpec[]
 }
 
 export function groundKind(t: TerrainId): GroundKind {
@@ -431,7 +456,7 @@ export function makeDuelStrike(p: LinkPlan): CutinScene {
     const id = `def${i}`
     const falls = fallers.includes(i)
     const track: Track = { start: [x, z], yaw: Math.PI, face: 'fixed', segs: [] }
-    if (!falls) track.segs.push({ t0: C(3.3), t1: C(4.7), to: [x + srand(seed, i, 4) * 0.15, z + 0.55 + (sl.front ? 0 : 0.1)], ease: 'io' })
+    if (!falls) track.segs.push({ t0: C(3.3), t1: C(4.7), to: [x + srand(seed, i, 4) * 0.15, z + (sl.front ? 0.55 : 0.3)], ease: 'io' })
     actors.push({ id, group: 'def', index: i, track, front: sl.front })
     cues.add(id, 'brace', C(1.7), hit)
     const d = Math.abs(sl.r)
@@ -465,6 +490,10 @@ export function makeDuelStrike(p: LinkPlan): CutinScene {
     fx: { trail: { kind: p.trail, t0: hit, at: [0, hitZ], yaw: 0 }, dust: true },
     focus: [0, 0.2],
     weapon: p.trail,
+    ranks: [
+      rank({ id: 'atk', kind: p.caster.kind, palette: p.caster.palette, count: mounted ? 14 : 18, seed: seed + 21, at: [0, z0 - 0.55 - Math.max(...atkSlots.map((q) => q.b)) - 0.62], facing: 0, formation: 'block', files: mounted ? 4 : 6, gap: mounted ? [0.6, 0.8] : [0.46, 0.5] }),
+      rank({ id: 'def', kind: def.kind, palette: def.palette, count: def.kind === 'cavalry' ? 12 : 16, seed: seed + 22, at: [0, fz + Math.max(...defSlots.map((q) => q.b)) + 0.72], facing: Math.PI, formation: crowdForm(def.kind), files: def.kind === 'cavalry' ? 5 : 7, gap: def.kind === 'cavalry' ? [0.55, 0.75] : [0.46, 0.46] }),
+    ],
   }
   const H = (t: number): { x: number; z: number } => {
     const q = trackAt(heroTrack, C(t))
@@ -607,6 +636,10 @@ export function makeThunderRoar(p: LinkPlan): CutinScene {
     fx: { rings, spirals, roar: { from: D(1.85), to: D(2.55) }, dust: true },
     focus: [0, 0.4],
     weapon: 'line',
+    ranks: [
+      rank({ id: 'atk', kind: p.caster.kind, palette: p.caster.palette, count: p.caster.kind === 'cavalry' ? 14 : 18, seed: seed + 21, at: [0, hz - 0.75 - Math.max(...atkSlots.map((q) => q.b)) - 0.6], facing: 0, formation: p.caster.kind === 'archer' ? 'line' : 'block', files: 6, gap: p.caster.kind === 'cavalry' ? [0.6, 0.8] : [0.46, 0.5] }),
+      rank({ id: 'def', kind: def.kind, palette: def.palette, count: mountedDef ? 13 : 18, seed: seed + 22, at: [0, dz + Math.max(...defSlots.map((q) => q.b)) + 0.6], facing: Math.PI, formation: crowdForm(def.kind), files: mountedDef ? 5 : 7, gap: mountedDef ? [0.6, 0.75] : [0.46, 0.46] }),
+    ],
   }
   const hold = v3(0.5, 0.34, hz + 1.6)
   const shots: Shot[] = [
@@ -708,6 +741,10 @@ export function makeRuse(p: LinkPlan): CutinScene {
     fx: { smoke: { t0: R(0.85), from: [0.18, 0.46, cz + 0.34], to: [0, 0.4, tz], dur: 1.2 }, spirals },
     focus: [0, 0.1],
     weapon: 'line',
+    ranks: [
+      rank({ id: 'atk', kind: p.caster.kind, palette: p.caster.palette, count: p.caster.kind === 'cavalry' ? 14 : 18, seed: seed + 21, at: [0, cz - 0.75], facing: 0, formation: p.caster.kind === 'archer' ? 'line' : 'block', files: 6, gap: p.caster.kind === 'cavalry' ? [0.6, 0.8] : [0.46, 0.5] }),
+      rank({ id: 'def', kind: def.kind, palette: def.palette, count: def.kind === 'cavalry' ? 14 : 20, seed: seed + 22, at: [0, tz + Math.max(...slots.map((q) => q.b)) + 0.55], facing: Math.PI, formation: crowdForm(def.kind), files: 7, gap: def.kind === 'cavalry' ? [0.6, 0.75] : [0.46, 0.46] }),
+    ],
   }
   const hold = v3(1.5, 0.42, cz - 0.9)
   const shots: Shot[] = [
@@ -790,6 +827,8 @@ export function makeWindTurn(p: LinkPlan): CutinScene {
     fx: { wind: { t0: W(1.05), dir: heading, altar: [0.7, cz + 0.15], poles: [[-1.5, cz - 0.6], [1.5, cz - 0.6], [-2.5, cz + 0.9], [2.5, cz + 0.9]] } },
     focus: [0, cz],
     weapon: 'line',
+    // the caster's troops stand in ranks behind the altar and kneel while the wind is called
+    ranks: [rank({ id: 'atk', kind: p.caster.kind, palette: p.caster.palette, count: p.caster.kind === 'cavalry' ? 15 : 22, seed: seed + 21, at: [0, cz - 1.05], facing: 0, formation: 'block', files: 5, gap: p.caster.kind === 'cavalry' ? [0.55, 0.8] : [0.46, 0.48] })],
   }
   const hold = v3(0.3, 0.55, cz + 2.6)
   const shots: Shot[] = [
@@ -884,6 +923,7 @@ export function makeShortMelee(p: LinkPlan): CutinScene {
     fx: { dust: true },
     focus: [0, 0],
     weapon: 'line',
+    ranks: shortRanks(p, def, seed, -1.55 - 0.62, dz + 0.58, yaw),
   }
   const cam = shortCam(p, yaw, 0, dz)
   const shots: Shot[] = [
@@ -913,6 +953,16 @@ export function makeShortMelee(p: LinkPlan): CutinScene {
   )
   const shakes: CutinScene['shakes'] = [{ at: 1.3, dur: 0.28, amp: 0.045, mode: 'decay', freq: 27 }, { at: 1.9, dur: 0.2, amp: 0.02, mode: 'decay', freq: 30 }]
   return baseScene('S-melee', p, beats, shots, SM_TS, cues.list, ov, act, seed, shakes)
+}
+
+/** The ranks of a short scene: about eight more troops a side behind the five-figure front ranks (10-15 a side, docs/spec/51). */
+function shortRanks(p: LinkPlan, def: { kind: TroopKindName; palette: SidePalette }, seed: number, atkZ: number, defZ: number, yaw: number, atkKind: TroopKindName = p.caster.kind): RankSpec[] {
+  const cavA = atkKind === 'cavalry'
+  const cavD = def.kind === 'cavalry'
+  return [
+    rank({ id: 'atk', kind: atkKind, palette: p.caster.palette, count: cavA ? 7 : 8, seed: seed + 21, at: [0, atkZ], facing: 0, formation: atkKind === 'archer' ? 'line' : 'block', files: atkKind === 'archer' ? 8 : 4, gap: cavA ? [0.6, 0.8] : atkKind === 'archer' ? [0.5, 0.6] : [0.46, 0.5] }),
+    rank({ id: 'def', kind: def.kind, palette: def.palette, count: cavD ? 7 : 8, seed: seed + 22, at: [0, defZ], facing: Math.PI, ...(Math.abs(yaw - Math.PI) > 1e-6 ? { turnTo: yaw } : {}), formation: crowdForm(def.kind), files: 4, gap: cavD ? [0.6, 0.75] : [0.46, 0.46] }),
+  ]
 }
 
 interface ShortCam {
@@ -993,16 +1043,24 @@ export function makeShortCavalry(p: LinkPlan): CutinScene {
     fx: { dust: true },
     focus: [0, 0],
     weapon: 'line',
+    ranks: shortRanks(p, def, seed, -3.4 - Math.max(...riders.map((q) => q.b)) - 0.75, dz + 0.6, yaw, 'cavalry'),
   }
   const cam = shortCam(p, yaw, -1.9, dz)
   if (p.arc !== 'front') {
-    // from behind the riders, following them in: the camera keeps pace on the flank side
-    cam.a = v3(1.7, 0.75, -4.7)
-    cam.b = v3(1.9, 0.5, -2.4)
-    cam.c = v3(2.1, 0.44, -0.5)
-    cam.c2 = v3(1.9, 0.8, 0.6)
+    // from behind the riders, following them in: the camera keeps pace on the flank side, close to the clash
+    // (on the left: the riders wheel away to the right after the clash)
+    cam.a = v3(-1.6, 0.72, -4.2)
+    cam.b = v3(-1.75, 0.58, -1.4)
+    cam.c = v3(-1.75, 0.52, 0.1)
+    cam.c2 = v3(-2.0, 0.85, 0.5)
     cam.t = v3(0, 0.3, 0.2)
-    cam.t2 = v3(0, 0.32, 0.9)
+    cam.t2 = v3(0.1, 0.3, 0.95)
+  } else {
+    // front hit: the profile camera comes in to just outside the wedge's left wing
+    cam.a = v3(-2.1, 0.55, -1.2)
+    cam.b = v3(-2.0, 0.48, -0.55)
+    cam.c = v3(-1.95, 0.46, -0.2)
+    cam.c2 = v3(-2.3, 0.75, -0.4)
   }
   const shots: Shot[] = [
     diveShot('SC1', 0.3, cam.a, cam.t, cam.fov, v3(0, 0, -1.5)),
@@ -1085,6 +1143,7 @@ export function makeShortArcher(p: LinkPlan): CutinScene {
     fx: { arrows },
     focus: [0, 0],
     weapon: 'line',
+    ranks: shortRanks(p, def, seed, az - 0.62, dz + 0.58, yaw, 'archer'),
   }
   const side = p.arc === 'front'
   const a: Vec3 = side ? v3(-4.5, 1.0, 0.0) : v3(0.8, 0.7, az - 2.0)

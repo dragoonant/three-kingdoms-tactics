@@ -1,7 +1,7 @@
 // Plays real battles in the browser and captures the in-battle cut-ins (docs/spec/51 v0.3).
 //
 //   node tools/shoot-battle-cutins.mjs --out <dir> [--url http://localhost:5173/] [--want stratagem,attack,chain,flank,counter,enemy] [--seed 5]
-//                                      [--battle daxing-hill] [--step 0.25] [--mp4 chain]
+//                                      [--battle daxing-hill] [--step 0.25 | --fps 30] [--mp4 chain]
 //
 // The game runs at Full speed with `?cutins=all`; the cut-in clock is stepped by hand (window.__cutin.manual / step) so every
 // frame is exact whatever the software GL speed. It drives the player's side with the greedy bot (window.__game.suggest) and,
@@ -21,7 +21,10 @@ const outDir = resolve(opt('out', 'e2e-out/battle-cutins'))
 const want = new Set(opt('want', 'stratagem,attack,chain,flank,enemy').split(','))
 const seed = opt('seed', '5')
 const battle = opt('battle', 'daxing-hill')
-const stepSec = Number(opt('step', '0.25'))
+// --fps N steps the cut-in clock by exactly 1/N s per captured frame, so the MP4 plays at real speed at N fps
+const fpsArg = Number(opt('fps', '0'))
+const stepSec = fpsArg > 0 ? 1 / fpsArg : Number(opt('step', '0.25'))
+const videoFps = fpsArg > 0 ? fpsArg : Math.round(1 / stepSec)
 const mp4Kind = opt('mp4', '')
 const port = Number(process.env.PW_PORT ?? 6091)
 const urlArg = opt('url', '')
@@ -92,7 +95,7 @@ async function capture(name, frames) {
     const file = resolve(dir, `f${String(i).padStart(4, '0')}.jpg`)
     await page.screenshot({ path: file, type: 'jpeg', quality: 90 })
     i++
-    if (i > 500) break
+    if (i > 2400) break
     if (frames && i >= frames) break
   }
   return { dir, frames: i, attrs }
@@ -125,7 +128,7 @@ async function handle() {
     entry.layerAttrs = c.attrs
     if (mp4Kind === key) {
       const out = resolve(outDir, `battle-${key}.mp4`)
-      const f = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(Math.round(1 / stepSec)), '-i', resolve(c.dir, 'f%04d.jpg'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '18', '-preset', 'medium', '-movflags', '+faststart', out], { stdio: 'inherit' })
+      const f = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(videoFps), '-i', resolve(c.dir, 'f%04d.jpg'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '18', '-preset', 'medium', '-movflags', '+faststart', out], { stdio: 'inherit' })
       if (f.status === 0) console.log(`wrote ${out}`)
     }
   } else {

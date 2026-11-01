@@ -25,11 +25,17 @@ export const A_LAYOUT = {
   archerCount: 6,
   archerX: (i: number): number => -1.05 + 0.42 * i,
   brazier: { x: 0, z: -2.1, len: 2.7 },
-  jian: { x: 1.62, z: -3.1 },
+  // beside the right end of the kneeling line: the instanced ranks stand behind it (docs/spec/51 "More troops")
+  jian: { x: 1.98, z: -2.62 },
   rebelCount: 7,
   rebelX: (i: number): number => -1.38 + 0.46 * i,
   field: { x0: -3.4, x1: 5.6, z0: 1.3, z1: 3.9 },
   wind: [1, 0] as [number, number],
+  /** The instanced ranks: standing archers behind the kneeling line, the defenders' ranks behind theirs (world z of the first rank). */
+  archerRanksZ: -3.3,
+  archerRanks: 18,
+  defRanksZ: 3.2,
+  defRanks: 18,
 }
 
 export const rebelPos = (i: number): [number, number] => [A_LAYOUT.rebelX(i) + srand(A_SEED, i, 21) * 0.05, 2.55 + srand(A_SEED, i, 22) * 0.16]
@@ -199,7 +205,7 @@ export function makeFireArrows(sampleDamage = 420, sampleFalls = 2, params?: Lin
         keys: [
           { t: 0, pos: [-2.2, 6.4, -9.6], target: [0.2, 0.0, -2.6], fov: 38 },
           { t: 0.36, pos: [-2.4, 2.1, -6.1], target: [-0.9, 0.22, -2.5], fov: 36 },
-          { t: 0.7, pos: [-2.5, 0.36, -3.85], target: [-1.15, 0.27, -2.2], fov: 34 },
+          { t: 0.7, pos: [-2.1, 0.5, -3.08], target: [-1.0, 0.2, -2.15], fov: 42 },
         ],
       },
       {
@@ -207,11 +213,11 @@ export function makeFireArrows(sampleDamage = 420, sampleFalls = 2, params?: Lin
         from: 0.7,
         to: 1.9,
         mode: 'smooth',
-        note: 'slow dolly left to right along the line, behind the archers at shoulder height',
+        note: 'slow dolly left to right along the line, behind the kneeling archers at shoulder height (in the aisle before the standing ranks)',
         keys: [
-          { t: 0.7, pos: [-2.5, 0.36, -3.85], target: [-1.15, 0.27, -2.2], fov: 34 },
-          { t: 1.3, pos: [-0.9, 0.37, -3.9], target: [-0.2, 0.28, -2.15], fov: 34 },
-          { t: 1.9, pos: [0.9, 0.38, -3.85], target: [1.1, 0.3, -2.1], fov: 34 },
+          { t: 0.7, pos: [-2.1, 0.5, -3.08], target: [-1.0, 0.2, -2.15], fov: 42 },
+          { t: 1.3, pos: [-0.65, 0.5, -3.1], target: [-0.15, 0.21, -2.15], fov: 42 },
+          { t: 1.9, pos: [0.85, 0.5, -3.08], target: [1.15, 0.22, -2.1], fov: 42 },
         ],
       },
       {
@@ -221,8 +227,8 @@ export function makeFireArrows(sampleDamage = 420, sampleFalls = 2, params?: Lin
         mode: 'smooth',
         note: 'medium close, side-on to the line: the bows bend in profile',
         keys: [
-          { t: 1.9, pos: [-3.9, 0.34, -3.5], target: [-0.6, 0.3, -2.3], fov: 30 },
-          { t: 2.6, pos: [-3.6, 0.36, -3.4], target: [-0.5, 0.36, -2.25], fov: 28 },
+          { t: 1.9, pos: [-3.9, 0.38, -2.8], target: [-0.6, 0.3, -2.72], fov: 32 },
+          { t: 2.6, pos: [-3.6, 0.4, -2.8], target: [-0.5, 0.36, -2.72], fov: 30 },
         ],
       },
       {
@@ -232,9 +238,9 @@ export function makeFireArrows(sampleDamage = 420, sampleFalls = 2, params?: Lin
         mode: 'smooth',
         note: 'tilt up with the volley; apex under slow motion',
         keys: [
-          { t: 2.6, pos: [0.0, 0.24, -4.3], target: [0.0, 0.7, -0.4], fov: 50 },
-          { t: 3.3, pos: [0.0, 0.26, -4.4], target: [0.0, 1.9, 0.6], fov: 52 },
-          { t: 4.0, pos: [0.0, 0.34, -4.2], target: [0.0, 0.9, 2.6], fov: 48 },
+          { t: 2.6, pos: [0.0, 0.26, -2.98], target: [0.0, 0.75, -0.2], fov: 52 },
+          { t: 3.3, pos: [0.0, 0.28, -3.05], target: [0.0, 1.9, 0.6], fov: 54 },
+          { t: 4.0, pos: [0.0, 0.36, -2.95], target: [0.0, 0.9, 2.6], fov: 50 },
         ],
       },
       {
@@ -242,10 +248,10 @@ export function makeFireArrows(sampleDamage = 420, sampleFalls = 2, params?: Lin
         from: 4.0,
         to: 5.6,
         mode: 'smooth',
-        note: 'reverse shot from the rebel side, low in the millet',
+        note: 'reverse shot from the rebel side, over the heads of their ranks in the millet',
         keys: [
-          { t: 4.0, pos: [0.55, 0.5, 4.55], target: [0.15, 0.6, 0.9], fov: 46 },
-          { t: 5.6, pos: [0.25, 0.5, 4.3], target: [0.55, 0.5, 1.2], fov: 44 },
+          { t: 4.0, pos: [0.5, 0.95, 4.75], target: [0.15, 0.38, 1.9], fov: 46 },
+          { t: 5.6, pos: [0.25, 0.92, 4.6], target: [0.55, 0.34, 2.0], fov: 44 },
         ],
       },
       {
@@ -255,8 +261,8 @@ export function makeFireArrows(sampleDamage = 420, sampleFalls = 2, params?: Lin
         mode: 'smooth',
         note: 'rise to a wide of the burning field, then up and out to the table',
         keys: [
-          { t: 5.6, pos: [0.25, 0.5, 4.3], target: [0.55, 0.5, 1.2], fov: 44 },
-          { t: 6.25, pos: [0.4, 1.55, 7.3], target: [1.0, 0.15, 1.8], fov: 40 },
+          { t: 5.6, pos: [0.25, 0.92, 4.6], target: [0.55, 0.34, 2.0], fov: 44 },
+          { t: 6.25, pos: [0.4, 1.75, 7.6], target: [1.0, 0.15, 2.2], fov: 40 },
           { t: 7.0, pos: [1.0, 6.2, 11.2], target: [1.4, 0.0, 1.2], fov: 38 },
         ],
       },

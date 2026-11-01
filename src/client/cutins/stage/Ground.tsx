@@ -23,6 +23,10 @@ export interface GroundProps {
   wind?: [number, number]
   /** The millet field's exact box (scene A keeps its original); derived from the centre otherwise. */
   box?: FieldBox
+  /** The near part of the camera's view (stage/lens.ts): no trees, houses, rocks or stalks there. Water ignores it. */
+  lens?: { x: number; z: number; r: number }[]
+  /** Millet: thinned, half-height stalks here (the action lane). */
+  low?: { x: number; z: number; r: number }[]
 }
 
 const mats = {
@@ -55,6 +59,8 @@ const geo = {
   ripple: new RingGeometry(0.9, 1, 28).rotateX(-Math.PI / 2),
   plane: new PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
 }
+
+const NO_DISCS: { x: number; z: number; r: number }[] = []
 
 const free = (x: number, z: number, clear: GroundProps['clear'], pad = 0): boolean => clear.every((c) => Math.hypot(c.x - x, c.z - z) > c.r + pad)
 
@@ -156,7 +162,14 @@ function Village({ seed, center, halfW, halfD, clear }: GroundProps) {
 function Shallows({ seed, center, halfW, halfD, clear }: GroundProps) {
   const frame = useFrameRef()
   const group = useRef<Group>(null)
-  const ripples = useMemo(() => clear.map((c, i) => ({ x: c.x, z: c.z, ph: rand(seed, i, 8) })), [clear, seed])
+  // ripples ring the front-rank figures wading in the water (their clearance discs, r 0.25-0.4): not the ranks, not the lens
+  const ripples = useMemo(
+    () =>
+      clear
+        .filter((c) => c.r >= 0.25 && c.r <= 0.4 && Math.abs(c.x - center[0]) < halfW * 1.3 && Math.abs(c.z - center[1]) < halfD * 1.3)
+        .map((c, i) => ({ x: c.x, z: c.z, ph: rand(seed, i, 8) })),
+    [clear, seed, center, halfW, halfD],
+  )
   useFrame(() => {
     const g = group.current
     if (!g) return
@@ -209,7 +222,10 @@ function Plain({ seed, center, halfW, halfD, clear }: GroundProps) {
   )
 }
 
-export function Ground(props: GroundProps): ReactElement {
+export function Ground(given: GroundProps): ReactElement {
+  const { clear, lens } = given
+  const merged = useMemo(() => (lens && lens.length ? [...clear, ...lens] : clear), [clear, lens])
+  const props = given.kind === 'shallows' ? given : { ...given, clear: merged }
   switch (props.kind) {
     case 'millet':
       return (
@@ -218,6 +234,7 @@ export function Ground(props: GroundProps): ReactElement {
           seed={props.seed}
           ignitions={props.ignitions ?? []}
           clear={props.clear}
+          low={props.low ?? NO_DISCS}
           wind={props.wind ?? [1, 0]}
         />
       )

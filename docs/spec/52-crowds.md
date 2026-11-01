@@ -1,7 +1,7 @@
 # 52 · Crowds for the battle cut-ins (PLAN D22)
 
 Module: `src/client/cutins/crowd.ts` (+ `crowd/` helpers). Demo: figure lab `?view=crowds` (see "Lab"). Tests: `tests/unit/crowds.test.ts`.
-This file describes the API and how a scene should use it; it does not change 51 (the cut-in scenes are wired by the scene owner).
+This file describes the API and how a scene should use it. Since cut-ins v0.4 every scene uses it (docs/spec/51 "More troops: as built"); see "Scenes" below.
 
 ## What it is
 One `Crowd` is 1 to about 40 troops of **one kind and one side palette** standing in a formation:
@@ -37,7 +37,8 @@ const crowd = createCrowd({
   origin: [x, 0, z], facing: yaw,     // front-rank middle, and which way it faces
   frontRankFull: 5,                   // rigs in the front (default 5, cavalry 3)
   frontRankMode: 'rig',               // or 'hi' (instanced at full detail)
-  // optional: spacing (multiplier or {x,z} rig units), jitter, files, variants, detail, cadence, scale, castShadow
+  // optional: spacing (multiplier or {x,z} rig units), jitter, files, variants, detail, cadence, scale, castShadow,
+  // slots: [{ x, z, h? }] explicit places (crowd-local world units, heading) instead of a formation
 })
 group.add(crowd.group)                // an Object3D; add it where the troops should stand
 // each frame, with the scene time:
@@ -70,6 +71,7 @@ Every command takes `{ members?: MemberSel, at?: number }` in its options: who (
 | `stagger(members?, { hold?, dur? })` | hit and reeling back one step (`stagger` clip, the body moves back by `staggerShift`), recovers after `hold` (0.5 s, `Infinity` to stay) |
 | `fall(members, 'back' \| 'forward' \| 'fling', impulse?, { apex?, dur? })` | `back` / `forward`: `fallBack` / `fallForward`, sliding by `impulse` (a distance, default 0.2 / 0.12, away from where it faces, or a vector `[x, z]` whose length is the distance) and lying flat. `fling`: a ballistic, tumbling body (apex 0.7, default distance 1.5, a whole somersault, a little seeded scatter) that lands, slides a little and lies flat on its back. Riders: the horse topples onto its side and the rider is thrown from the seat; a flung rider cartwheels |
 | `flee(members?, { dir?, speed? })` | turn and run away (default straight back, speed 1.5 with +-15% per member); routed members keep running until the scene ends |
+| `fight(members?, { period?, lunge?, phase? })` | duel on the spot until the next order (added for the background battle): every `period` (1.2 s) a thrust with a lunge of `lunge` (0.05 tiles), then a block and a step back (the stagger pose, horse rearing a little for riders); `phase` (0..1) offsets the cycle so a pair alternates. State `fight` |
 
 ### Determinism, scrubbing and the scene's "pure function of t"
 The scene calls `crowd.update(t)` every frame; commands are **events on the crowd's own timeline**, so the picture is a pure function of (seed, commands, t):
@@ -87,6 +89,36 @@ The scene calls `crowd.update(t)` every frame; commands are **events on the crow
 5. **Particles** (dust, hoof dust) stay the scene's: footfalls are not exposed per member; use `members[i].state === 'march'` and `speed` from `crowd.frame(i).speed` to emit dust from marching members.
 6. **Budget:** 2 crowds of 30 (one cavalry) with `frontRankFull` 3 as rigs is about 500 draw calls per pass (shadow pass doubles it); with `frontRankMode: 'hi'` about 150 per pass. Each instanced variant costs its own draw calls: `variants: 1` halves them. Shadows from the instanced meshes cost another pass: pass `castShadow: false` for crowds out of the key light's frame.
 7. **Dispose** with the scene: `crowd.dispose()` frees the instance buffers and releases the shared baked geometry (reference counted); `disposeCrowds()` frees every cache (tests, hot reload).
+
+## Scenes (cut-ins v0.4)
+Every cut-in scene builds its ranks with `scenes/ranks.ts`:
+
+- `spawnRanks({ kind, palette, count, seed, at: [x, z], facing, formation, files, gap: [x, z], rigs? })` makes a crowd whose first rank's middle stands at `at` (world tiles) and which extends away from `facing`; `gap` is the world spacing between files and ranks (converted to rig units with `crowdScale()`). By default every member is instanced (`frontRankFull: 0`): the scene's own rigs are the front rank. `rigs: n` makes the first n members full rigs instead (A, A′ and B do this for a mounted defender, whose whole side is one cavalry crowd).
+- `CrowdScript` collects `(at, command)` pairs and applies them in ascending time (the timeline drops later commands when an earlier one arrives); scenes schedule everything up front from their cues and tracks, then call `CrowdSet.update(story)` each frame. Where a command depends on where members stand (an arrow's target, which horse reaches whom), the scene reads `positionOf` / `jointPosition` at build time, after `update(t)` to the moment it needs.
+- `toLocal(crowd, [x, z])` turns a world direction into the crowd's frame for `march`, `flee`, `face` and `fall` impulses. A flank or rear hit keeps the block where it stands and turns its members with `face(...)` at t = -1.
+- A short dash aside is `march(dir, speed, { members: [i] })` then `halt(...)`: a `flee` never stops and would run members into the lens.
+- **The background battle** (`scenes/melee.ts`, owner 2026-11-01, PLAN D27): `backgroundMelee({ seed, center, sides, knots, riders, runners, banners, rMin, rMax, duration, exclude })` places knots of both sides (pairs face to face, threes and fours round a point, sides alternating), rider duels (a rider against one or two foot) and runners on a ring around the featured action, using one crowd per side and kind with explicit `slots`, `variants: 1`, no shadows. Knots `fight` with partners half a cycle apart; about one knot in three loses a man (stagger, then fall back or forward); runners `march` tangentially on a line checked clear of every lane for the whole scene. It adds a low dust haze at each knot, a puff behind runners and one or two banners leaning in the sand. `exclude` is a list of ground discs the scene must keep: `crowdLanes(set, duration)` samples its ranks' paths, the scenes add their tracks, the flung and props, and `lensClear(scene, { reach: 3, maxY: 2.2 })`. Quality: `lite` halves the knots and runners and drops the riders; `off` removes it.
+- **Quality profile** (`crowdQuality()`): `full` (default), `lite` (`?crowd=lite` or `?shadows=0`: 60% of the members, `variants: 1`, `castShadow: false`), `off` (`?crowd=off`: no ranks). Ranks are always `detail: 'lo'`.
+- **Numbers on the review page:** each world publishes `window.__cutinTroops[scene] = { atk, def, crowd: { members, drawCalls, triangles } }`; `tools/render-cutins.mjs` writes `stats-<scene>.json` with these and the renderer's draw calls and triangles at every beat.
+
+Measured with `tools/render-cutins.mjs` (sample plans, 1280x720, headless SwiftShader, shadow pass included; max over the beats):
+
+| Scene | Troops atk / def (front rigs + ranks) | Ranks: members (draw calls, one pass) | Background battle: members per side (draw calls) | Renderer draw calls, v0.3 → v0.4 | Triangles (max) |
+|---|---|---|---|---|---|
+| A | 25 / 25 | 36 (50 calls) | 35 / 32 (79 calls) | 1409 → 1692 | 937,208 |
+| A′ | 25 / 25 | 36 (50 calls) | 35 / 32 (79 calls) | 1667 → 1939 | 917,464 |
+| B | 20 / 25 | 34 (74 calls) | 33 / 32 (54 calls) | 1554 → 1755 | 1,056,220 |
+| C | 25 / 29 | 34 (48 calls) | 31 / 29 (79 calls) | 2079 → 2238 | 1,172,670 |
+| D | 23 / 25 | 36 (48 calls) | 29 / 33 (79 calls) | 1147 → 1319 | 861,356 |
+| R | 19 / 24 | 38 (48 calls) | 34 / 37 (79 calls) | 572 → 739 | 690,320 |
+| W | 23 / 0 | 22 (24 calls) | 34 / 35 (79 calls) | 280 → 400 | 470,164 |
+| S-melee | 13 / 13 | 16 (48 calls) | 14 / 14 (52 calls) | 1045 → 1223 | 581,946 |
+| S-cavalry | 12 / 13 | 15 (74 calls) | 16 / 16 (52 calls) | 1492 → 1700 | 791,738 |
+| S-archer | 13 / 13 | 16 (50 calls) | 14 / 14 (52 calls) | 1086 → 1245 | 506,850 |
+| A (mounted defender) | 25 / 17 | 35 (740 calls) | 35 / 32 (79 calls) | – → 2406 | 1,249,892 |
+| B (mounted defender) | 20 / 17 | 33 (766 calls) | 33 / 32 (54 calls) | – → 2475 | 1,363,906 |
+
+The renderer's count includes the shadow pass; the ranks' and the background's are one pass (the background casts no shadow). The rigged front ranks dominate: a mounted defender's line is seven full rider rigs (about 100 calls each per pass). SwiftShader is bound by triangles, not draw calls: a full scene now draws 0.7-1.4 M triangles a frame and renders at about 1 frame a second headless.
 
 ## Lab
 Figure lab (`figure-lab.html`): `?view=crowds&scene=infantry|archers|cavalry|rebels|all|perf&cam=side|three|front&t=<s>&zoom=<k>&n=<members>&full=<rigs>&mode=rig|hi&detail=lo|hi&shadow=0|1`. Each scene is scripted with timed commands (infantry stand, march, run, halt; archers kneel front, draw, loose, draw, loose; cavalry walk, canter, gallop, some thrown; rebels stagger, fall back / forward / fling, flee). With `t` the frame is frozen (and `window.__lab.setT(s)` moves it); without it the scene plays. `tools/shoot-crowds.mjs` takes contact sheets (`--times 0,1,2`) and perf numbers (`--perf`).

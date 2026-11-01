@@ -7,6 +7,10 @@ import { Group, Matrix4, MeshStandardMaterial, PointLight, Vector3, type Object3
 import { type Rig } from '../../figures'
 import { buildCasterRig } from '../casters'
 import { spawnFormation } from './formation'
+import { CrowdScript, CrowdSet, memberSpots, publishTroops, spawnRanks } from './ranks'
+import { backgroundMelee, boxDiscs, crowdLanes, meleeSides } from './melee'
+import type { Crowd } from '../crowd'
+import { lensClear } from '../stage/lens'
 import { burstPosition, sampleSlot, type SlotConfig } from '../particles'
 import { applyClip, fallBack, idle, kneel, locomotion, mix as mixClip, stagger, staggerShift, stepTurn } from '../../figures/clips'
 import { Puppet, fitFigure, mix, pArmsUp, pIdle, sstep } from '../poseKit'
@@ -17,7 +21,9 @@ import { Ground } from '../stage/Ground'
 import { ParticleBuffer, flameColour } from '../stage/ParticleBuffer'
 import { Stage, pxPerUnit, useFrameRef } from '../stage/Stage'
 import { cueFor, type CutinScene } from '../timeline'
+import type { SidePalette, TroopKindName } from '../plan'
 import {
+  A_DURATION,
   A_LAYOUT,
   A_SEED,
   DRAW_FULL,
@@ -27,14 +33,17 @@ import {
   arrowAt,
   arrowPlan,
   fallers,
+  aStory,
   igniteAt,
   ignitions,
+  rebelHitTime,
   rebelPos,
   fireWorldSpec,
   type ArrowPlan,
 } from './fireArrows'
 
 const Y = new Vector3(0, 1, 0)
+const NONE: number[] = []
 const bell = (s: number, a: number, b: number, c: number, d: number): number => sstep((s - a) / (b - a)) * (1 - sstep((s - c) / (d - c)))
 
 // ---- actors -----------------------------------------------------------------------------------------------------
@@ -302,6 +311,117 @@ function poseRebel(r: Rebel, i: number, s: number, scene: CutinScene, isFaller: 
   return { lying }
 }
 
+// ---- the ranks (instanced crowds, docs/spec/51 "More troops") ---------------------------------------------------------
+
+interface Ranks {
+  crowds: CrowdSet
+  /** Standing archers behind the kneeling line: they draw and loose with it. */
+  archers: Crowd | null
+  /** The defenders' ranks behind their front rank, or (mounted defenders) the whole side with its first rank as rigs. */
+  def: Crowd | null
+  /** One more arrow per standing archer, into the defenders' ranks. */
+  extra: ArrowPlan[]
+}
+
+function buildRanks(scene: CutinScene, plan: readonly ArrowPlan[], falls: readonly number[], mounted: boolean, defKind: TroopKindName, defPal: SidePalette): Ranks {
+  const p = scene.params
+  const crowds = new CrowdSet()
+  const archers = crowds.add(
+    spawnRanks({ kind: 'archer', palette: p?.caster.palette ?? 'han', count: A_LAYOUT.archerRanks, seed: A_SEED + 11, at: [0.1, A_LAYOUT.archerRanksZ], facing: 0, formation: 'line', files: 9, gap: [0.42, 0.55] }),
+  )
+  const n0 = A_LAYOUT.rebelCount
+  const def = crowds.add(
+    mounted
+      ? spawnRanks({ kind: 'cavalry', palette: defPal, count: n0 + 10, rigs: n0, seed: A_SEED + 12, at: [0, 2.62], facing: Math.PI, formation: 'line', files: n0, gap: [0.46, 0.72], jitter: 0.08 })
+      : spawnRanks({ kind: defKind, palette: defPal, count: A_LAYOUT.defRanks, seed: A_SEED + 12, at: [0.05, A_LAYOUT.defRanksZ], facing: Math.PI, formation: defKind === 'rebel' ? 'mob' : 'block', files: 7, gap: [0.46, 0.46] }),
+  )
+  const land0 = plan.reduce((m, a) => Math.min(m, a.land), Infinity)
+  const launch0 = plan.reduce((m, a) => Math.min(m, a.launch), Infinity)
+  const v = new Vector3()
+  // archers: draw with the kneeling line and loose on the same word
+  if (archers) {
+    archers.draw(undefined, { at: DRAW_START, dur: DRAW_FULL - DRAW_START })
+    archers.loose({ at: LOOSE_AT })
+  }
+  // who in the ranks goes down: the same share as the front rank (the plan's falls of 7); half of them when routed
+  const rear = def ? (mounted ? def.select('rear') : def.select('all')) : NONE
+  const share = Math.min(1, scene.sample.falls / n0)
+  const routed = !!p?.routed
+  const nDown = scene.sample.falls <= 0 ? 0 : routed ? Math.round(rear.length * 0.5) : Math.min(rear.length, Math.round(share * rear.length))
+  const down = def ? def.pick(nDown, A_SEED + 13, rear) : NONE
+  // the extra arrows: aimed at the ones who fall first, then spread over the rest
+  const extra: ArrowPlan[] = []
+  if (archers) {
+    archers.update(LOOSE_AT - 0.01)
+    const order = [...down, ...rear.filter((i) => !down.includes(i))]
+    archers.members.forEach((m, k) => {
+      const from = archers.jointPosition(m.index, 'weapon', v, true).clone()
+      let tx = srand(A_SEED, k, 71) * 1.6
+      let tz = 3.4 + rand(A_SEED, k, 72) * 0.8
+      if (def && order.length) {
+        def.positionOf(order[k % order.length]!, v, true)
+        tx = v.x
+        tz = v.z
+      }
+      extra.push({
+        id: plan.length + k,
+        archer: -1,
+        j: 0,
+        launch: launch0 + 0.02 + rand(A_SEED, k, 73) * 0.05,
+        land: land0 + 0.1 + rand(A_SEED, k, 74) * 0.5,
+        from: [from.x, from.y + 0.05, from.z],
+        to: [tx + srand(A_SEED, k, 75) * 0.1, 0.02, tz - 0.06 + rand(A_SEED, k, 76) * 0.12],
+        apex: 2.2 + rand(A_SEED, k, 77) * 0.6,
+        rebel: -1,
+      })
+    })
+    archers.update(0)
+  }
+  if (def) {
+    const sc = new CrowdScript()
+    const hitOf = (i: number): number => {
+      def.positionOf(i, v, true)
+      let best = Infinity
+      for (const a of extra) if ((a.to[0] - v.x) ** 2 + (a.to[2] - v.z) ** 2 < 0.3 * 0.3) best = Math.min(best, a.land)
+      return best === Infinity ? land0 + 0.12 + rand(A_SEED, i, 78) * 0.35 : best
+    }
+    const flee = (i: number, at: number): void => sc.at(at, () => def.flee([i], { at, speed: routed ? 1.3 : 0.8 + rand(A_SEED, i, 79) * 0.3 }))
+    const out = aStory(5.6)
+    if (mounted) {
+      // the front rank of riders is the plan's seven: rebel r is the rider standing nearest rebelPos(r)
+      const xs = new Map(def.frontRank.map((i) => [i, def.positionOf(i, new Vector3(), true).x]))
+      const front = [...def.frontRank]
+      for (let r = 0; r < n0; r++) {
+        const [rx] = rebelPos(r)
+        front.sort((a, b) => Math.abs(xs.get(a)! - rx) - Math.abs(xs.get(b)! - rx))
+        const i = front.shift()
+        if (i === undefined) break
+        const hit = rebelHitTime(plan, r)
+        if (falls.includes(r)) {
+          sc.at(hit, () => def.stagger([i], { at: hit, hold: 0.05, dur: 0.14 }))
+          sc.at(hit + 0.14, () => def.fall([i], 'back', 0.25, { at: hit + 0.14 }))
+        } else {
+          sc.at(hit, () => def.stagger([i], { at: hit, hold: 0.45 }))
+          flee(i, routed ? hit + 0.7 : out + rand(A_SEED, r, 80) * 0.2)
+        }
+      }
+    }
+    for (const i of rear) {
+      const hit = hitOf(i)
+      if (down.includes(i)) {
+        sc.at(hit, () => def.stagger([i], { at: hit, hold: 0.05, dur: 0.14 }))
+        sc.at(hit + 0.14, () => def.fall([i], 'back', 0.2, { at: hit + 0.14 }))
+      } else {
+        sc.at(hit, () => def.stagger([i], { at: hit, hold: 0.45 }))
+        flee(i, routed ? hit + 0.7 : out + rand(A_SEED, i, 81) * 0.3)
+      }
+    }
+    sc.apply()
+    def.update(0)
+  }
+  return { crowds, archers, def, extra }
+}
+
 // ---- the world --------------------------------------------------------------------------------------------------
 
 const TROUGH_Z = A_LAYOUT.brazier.z
@@ -343,13 +463,14 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
     const spec = fireWorldSpec(scene)
     const p = scene.params
     const archerRigs = spawnFormation('archer', p?.caster.palette ?? 'han', A_LAYOUT.archerCount, 'line', A_SEED)
-    // a mounted defender would need the horse poses: the fire scenes stand them down as foot troops of the same side
-    const dk = spec.defKind.kind === 'cavalry' ? 'infantry' : spec.defKind.kind
-    const rebelRigs = spawnFormation(dk, spec.defKind.palette, A_LAYOUT.rebelCount, 'ragged', A_SEED + 3)
+    // a mounted defender stands as riders: the whole defending side is a cavalry crowd whose first rank are full rigs
+    const mountedDef = spec.defKind.kind === 'cavalry'
+    const rebelRigs = mountedDef ? [] : spawnFormation(spec.defKind.kind, spec.defKind.palette, A_LAYOUT.rebelCount, 'ragged', A_SEED + 3)
     const archers = archerRigs.map((f, i) => makeArcher(i, f.rig))
     const jian = makeStanding(p ? buildCasterRig(p.caster, false) : buildCasterRig({ unit: 'jian-yong', officer: 'jian-yong', name: 'Jian Yong', side: 'han', palette: 'han', kind: 'archer', type: 'archers', mounted: false, troopsBefore: 1, maxTroops: 1 }, false))
     const rebels = rebelRigs.map((f, i) => makeRebel(i, f.rig))
     const falls = fallers(scene.sample.falls)
+    const ranks = buildRanks(scene, plan, falls, mountedDef, spec.defKind.kind, spec.defKind.palette)
     const flight = plan.map(() => makeArrowProp(0.36))
     flight.forEach((f) => f.group.scale.setScalar(1.7))
     flight.forEach((f) => {
@@ -366,20 +487,59 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
         launchFrom[i * 3 + j] = nock.addScaledVector(dir, 0.18)
       }
     })
+    // the standing ranks loose too: one more arrow each, landing in the defenders' ranks
+    const extra = ranks.extra.map(() => makeArrowProp(0.36))
+    extra.forEach((f) => {
+      f.group.scale.setScalar(1.7)
+      f.group.visible = false
+    })
+    const nArrows = plan.length + ranks.extra.length
     const fx = {
       brazier: new ParticleBuffer(260, 'add', 1.3),
-      tips: new ParticleBuffer(18 * 9, 'add', 1.2),
-      trails: new ParticleBuffer(18 * 46, 'add', 1.4),
-      sparks: new ParticleBuffer(18 * 8, 'add', 2.2),
+      tips: new ParticleBuffer(nArrows * 9, 'add', 1.2),
+      trails: new ParticleBuffer(18 * 46 + ranks.extra.length * 20, 'add', 1.4),
+      sparks: new ParticleBuffer(nArrows * 8, 'add', 2.2),
       flames: new ParticleBuffer(1100, 'add', 1.25),
       embers: new ParticleBuffer(420, 'add', 2.4),
       smoke: new ParticleBuffer(170, 'alpha', 0.9),
     }
-    return { plan, ign, archers, jian, rebels, falls, flight, outs, launchFrom, fx, spec }
+    const clear = [
+      { x: 0.55, z: 5.05, r: 0.35 },
+      { x: 0.25, z: 4.7, r: 0.3 },
+      ...rebels.map((r) => ({ x: r.x, z: r.z, r: 0.34 })),
+      ...memberSpots(ranks.def).map((q) => ({ ...q, r: mountedDef ? 0.24 : 0.2 })),
+    ]
+    const lens = lensClear(scene, spec.ground === 'millet' ? { reach: 1.0, maxY: 0.6 } : { reach: 2.2, maxY: 1.4 })
+    // the background battle: around both lines, out of the field, the brazier, the ranks' paths and the lens
+    const f = A_LAYOUT.field
+    const lanes = [
+      ...boxDiscs(A_LAYOUT.archerX(0) - 0.6, A_LAYOUT.archerX(A_LAYOUT.archerCount - 1) + 1.4, A_LAYOUT.archerZ - 0.3, TROUGH_Z + 0.3, 0.5),
+      { x: A_LAYOUT.jian.x, z: A_LAYOUT.jian.z, r: 0.7 },
+      ...rebels.map((r) => ({ x: r.x, z: r.z, r: 0.8 })),
+      ...(spec.ground === 'millet' ? boxDiscs(f.x0, f.x1, f.z0, f.z1, 0.6) : []),
+      ...crowdLanes(ranks.crowds, A_DURATION + 0.3, 0.6),
+      ...lensClear(scene, { reach: 3.0, maxY: 2.2 }),
+    ]
+    const melee = backgroundMelee({
+      seed: A_SEED + 77,
+      center: [0.3, 0.2],
+      sides: meleeSides(p?.caster.palette ?? 'han', spec.defKind.palette),
+      knots: 22,
+      riders: 3,
+      runners: 4,
+      banners: 2,
+      rMin: 1.2,
+      rMax: 8.0,
+      duration: A_DURATION + 0.5,
+      exclude: lanes,
+    })
+    publishTroops(scene.id, archers.length + 1 + ranks.crowds.members(ranks.archers), rebels.length + ranks.crowds.members(ranks.def), ranks.crowds, melee)
+    return { plan, ign, archers, jian, rebels, falls, flight, outs, launchFrom, fx, spec, ranks, extra, clear, lens, melee }
   }, [scene])
 
   // the launch points feed the plan used for flight
-  const flightPlan = useMemo(() => world.plan.map((a, i) => ({ ...a, from: [world.launchFrom[i]!.x, world.launchFrom[i]!.y, world.launchFrom[i]!.z] as [number, number, number] })), [world])
+  const flightPlan = useMemo(() => [...world.plan.map((a, i) => ({ ...a, from: [world.launchFrom[i]!.x, world.launchFrom[i]!.y, world.launchFrom[i]!.z] as [number, number, number] })), ...world.ranks.extra], [world])
+  const flightProps = useMemo(() => [...world.flight, ...world.extra], [world])
 
   const lights = useRef<{ brazier: PointLight | null; f1: PointLight | null; f2: PointLight | null }>({ brazier: null, f1: null, f2: null })
   const coalMat = useMemo(() => new MeshStandardMaterial({ color: '#2a0d04', emissive: '#ff5a14', emissiveIntensity: 1.6, roughness: 1 }), [])
@@ -389,6 +549,8 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
     world.archers.forEach((a) => a.rig.dispose())
     world.rebels.forEach((r) => r.rig.dispose())
     world.jian.rig.dispose()
+    world.ranks.crowds.dispose()
+    world.melee?.dispose()
     Object.values(world.fx).forEach((f) => f.dispose())
   })
 
@@ -403,6 +565,8 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
     const kd = Math.min(2.6, Math.max(1, camera.position.distanceTo(new Vector3(1.2, 0.2, 2.8)) / 3.8))
 
     // --- figures
+    world.ranks.crowds.update(s)
+    world.melee?.update(s, ppu)
     archers.forEach((a, i) => poseArcher(a, i, s, outs[i]!, world.spec.fire))
     poseJian(jian, s, scene)
     rebels.forEach((r, i) => poseRebel(r, i, s, scene, falls.includes(i)))
@@ -416,7 +580,7 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
 
     // --- arrows in flight (world space)
     flightPlan.forEach((a, k) => {
-      const f = world.flight[k]!
+      const f = flightProps[k]!
       const st = arrowAt(a, s)
       const launched = s >= a.launch
       f.group.visible = launched
@@ -424,14 +588,15 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
       const center = new Vector3(st.p[0], st.p[1], st.p[2])
       const flightDir = new Vector3(st.d[0], st.d[1], st.d[2])
       let dir = flightDir
-      if (st.q < 0.08) {
+      f.group.scale.setScalar(st.q >= 1 ? 1.15 : 1.7)
+      if (st.q < 0.08 && a.archer >= 0) {
         const held = outs[a.archer]!.dir[a.j]!.clone().transformDirection(archers[a.archer]!.rig.group.matrixWorld)
         dir = held.lerp(flightDir, sstep(st.q / 0.08)).normalize()
       }
       if (st.q >= 1) {
         // planted: leaning in the ridge, tip glowing a little longer
         dir = new Vector3(0.12 + 0.1 * srand(A_SEED, k, 61), 0.9, -0.35 - 0.1 * srand(A_SEED, k, 62)).normalize()
-        center.set(a.to[0], a.to[1] + 0.34, a.to[2])
+        center.set(a.to[0], a.to[1] + 0.2, a.to[2])
       }
       const nock = center.clone().addScaledVector(dir, -0.3)
       placeArrow(f, nock, dir, world.spec.fire ? (st.q >= 1 ? Math.max(0, 1 - (s - a.land) / 1.4) : 1) : 0)
@@ -533,6 +698,16 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
           }
         }
       }
+      // the standing ranks' arrows: a flame on the tip while they fly
+      for (const fp of world.spec.fire ? world.ranks.extra : []) {
+        if (s < fp.launch || s > fp.land) continue
+        const st = arrowAt(fp, s)
+        for (let k = 0; k < 6; k++) {
+          const u = (s * 5.5 + k / 6 + rand(A_SEED, fp.id, k) * 0.7) % 1
+          flameColour(u, fcol)
+          b.push(st.p[0] + st.d[0] * 0.31 - st.d[0] * u * 0.07 + u * 0.04, st.p[1] + st.d[1] * 0.31 + u * 0.05, st.p[2] + st.d[2] * 0.31 - st.d[2] * u * 0.07, 0.05 * (1 - 0.65 * u), fcol[0], fcol[1], fcol[2], 0.85 * (1 - u))
+        }
+      }
       b.end()
     }
     // ember trails behind the flying arrows
@@ -541,7 +716,7 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
       b.begin(ppu)
       for (const a of world.spec.fire ? flightPlan : []) {
         if (s < a.launch) continue
-        const cfg: SlotConfig = { seed: A_SEED + 10 + a.id, count: 46, period: 0.8, start: a.launch, end: a.land, lifeMin: 0.3 }
+        const cfg: SlotConfig = { seed: A_SEED + 10 + a.id, count: a.archer >= 0 ? 46 : 20, period: 0.8, start: a.launch, end: a.land, lifeMin: 0.3 }
         for (let i = 0; i < cfg.count; i++) {
           const sl = sampleSlot(cfg, i, s)
           if (!sl.alive) continue
@@ -638,11 +813,8 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
         halfD={1.3}
         box={A_LAYOUT.field}
         ignitions={world.ign}
-        clear={[
-          { x: 0.55, z: 5.05, r: 0.35 },
-          { x: 0.25, z: 4.7, r: 0.3 },
-          ...world.rebels.map((r) => ({ x: r.x, z: r.z, r: 0.34 })),
-        ]}
+        clear={world.clear}
+        lens={world.lens}
         wind={A_LAYOUT.wind}
       />
       {/* iron brazier: a long firebox on short legs in front of the line */}
@@ -671,7 +843,9 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
       {world.rebels.map((r, i) => (
         <primitive key={`r${i}`} object={r.rig.group as Object3D} />
       ))}
-      {world.flight.map((f, i) => (
+      <primitive object={world.ranks.crowds.group as Object3D} />
+      {world.melee && <primitive object={world.melee.group as Object3D} />}
+      {flightProps.map((f, i) => (
         <primitive key={`f${i}`} object={f.group as Object3D} />
       ))}
       {Object.entries(world.fx).map(([k, f]) => (

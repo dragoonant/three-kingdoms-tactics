@@ -18,6 +18,7 @@ import {
   stagger,
   staggerShift,
   stepTurn,
+  thrust,
   type Clip,
   type JointDelta,
 } from '../../figures/clips'
@@ -27,7 +28,7 @@ import type { TroopKind } from '../../figures/rig'
 
 export type Vec2 = [number, number]
 export type FallStyle = 'back' | 'forward' | 'fling'
-export type MemberState = 'idle' | 'turn' | 'march' | 'kneel' | 'stagger' | 'down' | 'flung' | 'fled'
+export type MemberState = 'idle' | 'turn' | 'march' | 'kneel' | 'stagger' | 'down' | 'flung' | 'fled' | 'fight'
 
 export const TAU = Math.PI * 2
 const clamp01 = (x: number): number => (x < 0 ? 0 : x > 1 ? 1 : x)
@@ -199,7 +200,7 @@ export function flungRest(): Clip {
 }
 
 // ---------------------------------------------------------------- compiled segments
-type SegKind = 'idle' | 'turn' | 'march' | 'kneel' | 'stagger' | 'fall' | 'fling' | 'flee'
+type SegKind = 'idle' | 'turn' | 'march' | 'kneel' | 'stagger' | 'fall' | 'fling' | 'flee' | 'fight'
 
 interface Path {
   pts: Vec2[]
@@ -277,6 +278,10 @@ interface Seg {
   slideZ?: number
   apex?: number
   spin?: number
+  // fight
+  period?: number
+  lunge?: number
+  phase?: number
 }
 
 interface BowSeg {
@@ -296,6 +301,7 @@ export type Cmd =
   | { k: 'stagger'; dur: number; hold: number }
   | { k: 'fall'; style: FallStyle; dir: Vec2 | null; dist: number; dur: number; apex: number }
   | { k: 'flee'; dir: Vec2; speed: number }
+  | { k: 'fight'; period: number; lunge: number; phase: number }
   | { k: 'bow'; from: number | null; to: number; dur: number; release: boolean }
 
 interface Ev {
@@ -307,6 +313,16 @@ interface Ev {
 const sameArr = (a: readonly number[], b: readonly number[]): boolean => a.length === b.length && a.every((v, i) => v === b[i])
 const sameCmd = (a: Cmd, b: Cmd): boolean => JSON.stringify(a) === JSON.stringify(b)
 const trackOf = (c: Cmd): 'bow' | 'base' => (c.k === 'bow' ? 'bow' : 'base')
+
+/** Where a duel is in its cycle (0..1): the thrust takes the first part, the block the second. */
+function fightPhase(seg: Seg, tau: number): number {
+  const x = tau / Math.max(0.2, seg.period ?? 1.2) + (seg.phase ?? 0)
+  return x - Math.floor(x)
+}
+/** The lunge of the thrust (0..1, peaks a third of the way into the cycle). */
+const fightLunge = (u: number): number => (u < 0.44 ? Math.sin(Math.PI * clamp01(u / 0.44)) : 0)
+/** The block (0..1): weight back, weapon up, in the second part of the cycle. */
+const fightBlock = (u: number): number => (u > 0.55 && u < 0.92 ? Math.sin(Math.PI * clamp01((u - 0.55) / 0.37)) : 0)
 
 /** Gravity of a flung body in world units per second squared. */
 export const FLING_G = 9
@@ -432,6 +448,16 @@ export class Timeline {
         k.state = seg.kind === 'flee' ? 'fled' : 'march'
         break
       }
+      case 'fight': {
+        // a duel on the spot: lunge in with the thrust, give a step back while blocking; the feet stay where they were
+        const u = fightPhase(seg, tau)
+        const off = ((seg.lunge ?? 0.05) * fightLunge(u) - 0.5 * (seg.lunge ?? 0.05) * fightBlock(u)) * (m.mounted ? 0.5 : 1)
+        k.x = seg.x0 + Math.sin(seg.h0) * off
+        k.z = seg.z0 + Math.cos(seg.h0) * off
+        k.p = u
+        k.state = 'fight'
+        break
+      }
       case 'kneel': {
         k.p = lerp(seg.from ?? 0, seg.to ?? 1, clamp01(tau / (seg.dur ?? 0.5)))
         k.state = k.p > 0.001 ? 'kneel' : 'idle'
@@ -511,6 +537,22 @@ export class Timeline {
         const vRig = kin.speed / m.e
         if (seg.gait) return mix(idle(ti), gaitClip(seg.gait, dRig, mounted), sstep(vRig / 0.3))
         return locomotion({ mount: mounted ? ({} as never) : undefined }, dRig, vRig, ti)
+      }
+      case 'fight': {
+        const u = kin.p
+        const strike = clamp01((u - 0.02) / 0.42)
+        const blk = fightBlock(u)
+        let c = addClips(idle(ti), thrust(u < 0.44 ? strike : 0))
+        if (blk > 1e-3) c = mix(c, addClips(idle(ti), mounted ? horseStagger(0.35 * blk) : stagger(0.3 * blk)), blk)
+        if (mounted) {
+          // the rider fights from the saddle: no lunge of the legs
+          const pose = { ...c.pose }
+          delete pose.legL
+          delete pose.legR
+          delete pose.hips
+          c = { ...c, pose }
+        }
+        return c
       }
       case 'kneel':
         return mounted ? idle(ti) : addClips(idle(ti), kneel(kin.p, m.side))
@@ -654,6 +696,9 @@ export class Timeline {
           break
         case 'stagger':
           for (const i of targets) push(i, { ...from(at, st.get(i)!), kind: 'stagger', blend: 0.08, dur: c.dur, hold: c.hold, v0: 0 })
+          break
+        case 'fight':
+          for (const i of targets) push(i, { ...from(at, st.get(i)!), kind: 'fight', blend: 0.25, period: c.period, lunge: c.lunge, phase: c.phase, v0: 0 })
           break
         case 'fall':
           for (const i of targets) {
