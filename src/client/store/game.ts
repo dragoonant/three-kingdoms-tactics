@@ -345,7 +345,9 @@ export const useGame = create<GameStore>((set, get) => {
       const st = get()
       if (st.screen !== 'battle') return
       if (director.playing) {
-        // a chain of cut-ins runs for tens of seconds on a slow machine: the cut-in has its own, longer allowance
+        // a chain of cut-ins runs for tens of seconds on a slow machine: the cut-in has its own, longer allowance; a cut-in a
+        // test or capture tool steps by hand (player.manual) has none, since that caller owns its clock
+        if (director.inCutin && player.manual) return
         if (director.age > (director.inCutin ? 120_000 : 25_000)) director.skip()
         return
       }

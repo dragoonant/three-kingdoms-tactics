@@ -26,6 +26,8 @@ interface Variant {
   routed?: boolean
   /** Chain link index (0 = opener): later links skip the dive and bring their title in at once. */
   link?: number
+  /** The defender's troop kind (`?def=cavalry` puts the target on horseback). */
+  def?: 'infantry' | 'archer' | 'cavalry' | 'rebel'
 }
 const TERRAINS: Terrain[] = ['farm', 'forest', 'hill', 'village', 'shallows', 'deck', 'plain']
 const SCENE_LABEL: Record<SceneId, string> = {
@@ -46,7 +48,7 @@ const hasCounter = (id: SceneId): boolean => id === 'S-melee' || id === 'S-caval
 
 function sceneFor(id: SceneId, v: Variant = {}): CutinScene {
   // the original two review samples stay exactly as the owner saw them unless a variant is chosen
-  if (!v.terrain && !v.arc && !v.trail && v.counter === undefined && !v.routed && !v.link) {
+  if (!v.terrain && !v.arc && !v.trail && v.counter === undefined && !v.routed && !v.link && !v.def) {
     if (id === 'A') return makeFireArrows(420, 2)
     if (id === 'B') return makeThunderingCharge(1060, 4)
   }
@@ -68,10 +70,14 @@ function sceneFor(id: SceneId, v: Variant = {}): CutinScene {
     over.routed = true
     over.falls = SCENE_INFO[id].front
   }
+  if (v.def && base.defender) {
+    const cav = v.def === 'cavalry'
+    over.defender = { ...base.defender, kind: v.def, type: cav ? 'cavalry' : v.def === 'archer' ? 'archers' : 'infantry', mounted: cav, ...(v.def === 'rebel' ? {} : { palette: 'cao' as const, side: base.defender.side }) }
+  }
   void base
   return buildScene(samplePlan(id, over))
 }
-const sceneKeyOf = (id: SceneId, v: Variant): string => `${id}|${v.terrain ?? ''}|${v.arc ?? ''}|${v.trail ?? ''}|${v.counter ?? ''}|${v.routed ? 'r' : ''}|${v.link ?? ''}`
+const sceneKeyOf = (id: SceneId, v: Variant): string => `${id}|${v.terrain ?? ''}|${v.arc ?? ''}|${v.trail ?? ''}|${v.counter ?? ''}|${v.routed ? 'r' : ''}|${v.link ?? ''}|${v.def ?? ''}`
 
 interface CinemaApi {
   ready: boolean
@@ -96,6 +102,7 @@ const initialVariant: Variant = {
   ...(params.get('counter') ? { counter: params.get('counter') === '1' } : {}),
   ...(params.get('routed') === '1' ? { routed: true } : {}),
   ...(params.get('link') ? { link: Number(params.get('link')) } : {}),
+  ...(['infantry', 'archer', 'cavalry', 'rebel'].includes(params.get('def') ?? '') ? { def: params.get('def') as Variant['def'] } : {}),
 }
 const initialT = params.has('t') ? Number(params.get('t')) : null
 const uiOff = params.get('ui') === '0'

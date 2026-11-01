@@ -38,14 +38,18 @@ export interface MilletProps {
   seed: number
   ignitions: readonly Ignition[]
   clear?: { x: number; z: number; r: number }[]
+  /** Thinned, half-height stalks here (an action lane). */
+  low?: { x: number; z: number; r: number }[]
   /** Unit vector the stalks lean toward (the wind), in x/z. */
   wind?: [number, number]
 }
 
-export function Millet({ box, seed, ignitions, clear = [], wind = [1, 0] }: MilletProps) {
+const NO_DISCS: { x: number; z: number; r: number }[] = []
+
+export function Millet({ box, seed, ignitions, clear = NO_DISCS, low = NO_DISCS, wind = [1, 0] }: MilletProps) {
   const frame = useFrameRef()
   const model = useMemo(() => {
-    const { rows, stalks } = milletLayout(box, seed, clear)
+    const { rows, stalks } = milletLayout(box, seed, clear, low)
     const tig = stalks.map((s) => igniteTime(ignitions, s.x, s.z, seed))
     const geo = stalkGeometry()
     const burn = new InstancedBufferAttribute(new Float32Array(stalks.length), 1)
@@ -89,7 +93,7 @@ export function Millet({ box, seed, ignitions, clear = [], wind = [1, 0] }: Mill
     }
     const furrowMat = new MeshStandardMaterial({ color: '#ffffff', map: ashTex, emissive: '#ffffff', emissiveMap: glowTex, emissiveIntensity: 1.0, roughness: 1 })
     return { rows, stalks, tig, mesh, burn, mat, ridgeMat, ridgeGeo, furrowGeo, furrowMat, ashTex, glowTex, ground, TW, TH }
-  }, [box, seed, ignitions, clear])
+  }, [box, seed, ignitions, clear, low])
 
   const tmp = useMemo(() => ({ m: new Matrix4(), q: new Quaternion(), e: new Euler(), p: new Vector3(), s: new Vector3(), c: new Color() }), [])
   const lean = Math.atan2(wind[1], wind[0])

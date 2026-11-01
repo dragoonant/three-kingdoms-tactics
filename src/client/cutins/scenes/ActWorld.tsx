@@ -36,8 +36,13 @@ import { Ground } from '../stage/Ground'
 import { ParticleBuffer } from '../stage/ParticleBuffer'
 import { Stage, pxPerUnit, useFrameRef } from '../stage/Stage'
 import { cueFor, type CutinScene } from '../timeline'
-import { trackAt, type ActActor, type ActPlan } from './act'
+import { defenderOf, trackAt, type ActActor, type ActPlan } from './act'
 import { spawnFormation } from './formation'
+import { buildActRanks, frontHeroActor } from './actRanks'
+import { memberSpots, publishTroops } from './ranks'
+import { backgroundMelee, crowdLanes, meleeSides } from './melee'
+import { SCENE_INFO } from '../sceneInfo'
+import { lensClear } from '../stage/lens'
 
 const clampU = (x: number): number => (x < 0 ? 0 : x > 1 ? 1 : x)
 const bell = (s: number, a: number, b: number, c: number, d: number): number => sstep((s - a) / (b - a)) * (1 - sstep((s - c) / (d - c)))
@@ -55,6 +60,7 @@ interface Live {
 
 function buildLive(scene: CutinScene, act: ActPlan): { live: Live[]; mouth: Mesh | null } {
   const live: Live[] = []
+  const heroFront = frontHeroActor(scene, act, figures.heroIds())
   const byGroup = new Map<string, Rig[]>()
   for (const g of act.groups) {
     byGroup.set(
@@ -67,6 +73,9 @@ function buildLive(scene: CutinScene, act: ActPlan): { live: Live[]; mouth: Mesh
     let rig: Rig
     if (actor.group === 'hero') {
       rig = buildCasterRig(act.hero!, act.heroMounted)
+    } else if (actor.id === heroFront && scene.params) {
+      const c = scene.params.caster
+      rig = buildCasterRig(c, act.groups.find((g) => g.id === 'atk')?.kind === 'cavalry')
     } else {
       const r = byGroup.get(actor.group)?.[actor.index]
       rig = r ?? figures.buildTroop('infantry', 'han', 0)
@@ -554,21 +563,75 @@ export function ActWorld({ scene }: { scene: CutinScene }) {
       altar.add(top, ...legs, burner, lid)
       altar.position.set(fx.wind!.altar[0], 0, fx.wind!.altar[1])
     }
+    const ranks = buildActRanks(scene, plan)
+    for (const a of ranks.arrows) {
+      const prop = makeArrowProp(0.3)
+      prop.group.scale.setScalar(2.2)
+      prop.group.visible = false
+      arrows.push({ prop, a })
+    }
     const buf = {
-      dust: new ParticleBuffer(900, 'alpha', 0.9),
+      dust: new ParticleBuffer(1200, 'alpha', 0.9),
       smoke: new ParticleBuffer(520, 'alpha', 0.8),
       sparks: new ParticleBuffer(160, 'add', 2.2),
     }
-    // set dressing stays off the defenders and out of the camera's way
+    // set dressing stays off the figures and out of the near part of every low shot (stage/lens.ts)
+    const millet = plan.ground.kind === 'millet'
     const clear = [
       ...plan.actors.filter((a) => a.group === 'def').map((a) => ({ x: a.track.start[0], z: a.track.start[1], r: 0.3 })),
+      ...memberSpots(ranks.def).map((q) => ({ ...q, r: 0.22 })),
+      ...memberSpots(ranks.atk).map((q) => ({ ...q, r: 0.22 })),
       ...scene.shots.flatMap((sh) => sh.keys.filter((k) => k.pos[1] < 2).map((k) => ({ x: k.pos[0], z: k.pos[2], r: 0.8 }))),
     ]
-    return { live, mouth, spirals, rings, trails, arrows, banners, altar, buf, clear, ringGeo, ringGeoCream }
+    const lens = lensClear(scene, millet ? { reach: 1.1, maxY: 0.7 } : { reach: 2.2, maxY: 1.4 })
+    // the action lane through a field: thinner, half-height stalks wherever a figure runs or rides
+    const low = millet
+      ? plan.actors.flatMap((a) => Array.from({ length: Math.ceil(scene.duration / 0.1) + 1 }, (_, k) => trackAt(a.track, k * 0.1)).map((q) => ({ x: q.x, z: q.z, r: 0.45 })))
+      : []
+    // the background battle around it all: clear of every track, every rank's path, the flung, the props and the lens
+    const steps = Math.ceil(scene.duration / 0.1) + 1
+    const lanes = [
+      ...plan.actors.flatMap((a) => Array.from({ length: steps }, (_, k) => trackAt(a.track, k * 0.1)).map((q) => ({ x: q.x, z: q.z, r: 0.85 }))),
+      ...scene.cues
+        .filter((c) => c.action === 'fling' && c.params)
+        .flatMap((c) => {
+          const a = plan.actors.find((x) => x.id === c.actor)
+          if (!a) return []
+          const vx = Number(c.params!.vx ?? 0)
+          const vz = Number(c.params!.vz ?? 1.5) * (a.track.yaw === 0 ? 1 : Math.cos(a.track.yaw) < 0 ? 1 : -1)
+          return [0.5, 1, 1.5].map((k) => ({ x: a.track.start[0] + vx * 0.5 * k, z: a.track.start[1] + vz * 0.5 * k, r: 0.9 }))
+        }),
+      ...crowdLanes(ranks.crowds, scene.duration + 0.3, 0.6),
+      ...(fx.wind ? [...fx.wind.poles.map(([x, z]) => ({ x, z, r: 0.5 })), { x: fx.wind.altar[0], z: fx.wind.altar[1], r: 0.7 }] : []),
+      ...lensClear(scene, { reach: 3.0, maxY: 2.2 }),
+    ]
+    const full = SCENE_INFO[scene.id].full
+    const starts = plan.actors.map((a) => a.track.start)
+    const cx = starts.reduce((a, q) => a + q[0], 0) / Math.max(1, starts.length)
+    const cz = starts.reduce((a, q) => a + q[1], 0) / Math.max(1, starts.length)
+    const p = scene.params
+    const melee = backgroundMelee({
+      seed: scene.seed + 77,
+      center: [cx, cz],
+      sides: meleeSides(p?.caster.palette ?? 'han', p ? defenderOf(p).palette : 'yellow'),
+      knots: full ? 22 : 10,
+      riders: full ? 3 : 1,
+      runners: full ? 4 : 2,
+      banners: full ? 2 : 1,
+      rMin: 1.4,
+      rMax: full ? 8.0 : 6.2,
+      duration: scene.duration + 0.5,
+      exclude: lanes,
+    })
+    const heroes = live.filter((l) => l.hero).length
+    publishTroops(scene.id, live.filter((l) => l.actor.group === 'atk').length + heroes + ranks.crowds.members(ranks.atk), live.filter((l) => l.actor.group === 'def').length + ranks.crowds.members(ranks.def), ranks.crowds, melee)
+    return { live, mouth, spirals, rings, trails, arrows, banners, altar, buf, clear, ringGeo, ringGeoCream, ranks, lens, low, melee }
   }, [scene, plan])
 
   useDisposeWorld(world, () => {
     world.live.forEach((l) => l.rig.dispose())
+    world.ranks.crowds.dispose()
+    world.melee?.dispose()
     Object.values(world.buf).forEach((b) => b.dispose())
     world.ringGeo.dispose()
     world.ringGeoCream.dispose()
@@ -584,6 +647,8 @@ export function ActWorld({ scene }: { scene: CutinScene }) {
     const o = tmp.out
 
     // --- figures
+    world.ranks.crowds.update(s)
+    world.melee?.update(s, ppu)
     for (const l of live) {
       poseLive(l, s, scene, plan, o)
       l.holder.position.set(o.x, o.y + o.pivot, o.z)
@@ -764,6 +829,22 @@ export function ActWorld({ scene }: { scene: CutinScene }) {
           buf.dust.push(back.x + srand(scene.seed, l.index * 7 + k, 2) * 0.06, 0.03 + u * 0.12, back.z + srand(scene.seed, l.index * 7 + k, 3) * 0.06, (0.07 + 0.2 * u) * (mounted ? 1.3 : 1), 0.8, 0.67, 0.47, a)
         }
       }
+      // the ranks: a trailing puff under everyone running
+      for (const c of world.ranks.crowds.list) {
+        const mounted = c.kind === 'cavalry'
+        for (const m of c.members) {
+          const f = c.frame(m.index)
+          if (f.speed < 0.9 || (f.state !== 'march' && f.state !== 'fled')) continue
+          c.positionOf(m.index, tmp.a, true)
+          const hx = Math.sin(m.heading + c.group.rotation.y)
+          const hz = Math.cos(m.heading + c.group.rotation.y)
+          for (let k = 0; k < 2; k++) {
+            const u = (s * 3.4 + k / 2 + rand(scene.seed, m.index + 400, k) * 0.3) % 1
+            const back = u * 0.32 * Math.min(1, f.speed / 2.5)
+            buf.dust.push(tmp.a.x - hx * back + srand(scene.seed, m.index * 5 + k, 61) * 0.05, 0.03 + u * 0.1, tmp.a.z - hz * back, (0.07 + 0.18 * u) * (mounted ? 1.3 : 1), 0.8, 0.67, 0.47, Math.min(1, f.speed / 3) * 0.36 * (1 - u) ** 1.3)
+          }
+        }
+      }
       // a puff where each knocked figure leaves its feet
       for (const l of live) {
         const c = cueFor(scene, l.actor.id, s)
@@ -846,7 +927,9 @@ export function ActWorld({ scene }: { scene: CutinScene }) {
   return (
     <group>
       <Stage seed={scene.seed} focus={plan.focus} keyDir={[-4.5, 8, -6.5]} rimDir={[5, 3.5, 7]} motes={110} moteStrength={0.5} />
-      <Ground kind={g.kind} seed={g.seed} center={g.center} halfW={g.halfW} halfD={g.halfD} clear={world.clear} wind={[1, 0]} />
+      <Ground kind={g.kind} seed={g.seed} center={g.center} halfW={g.halfW} halfD={g.halfD} clear={world.clear} lens={world.lens} low={world.low} wind={[1, 0]} />
+      <primitive object={world.ranks.crowds.group as Object3D} />
+      {world.melee && <primitive object={world.melee.group as Object3D} />}
       {world.altar && <primitive object={world.altar as Object3D} />}
       {world.banners.map((b, i) => (
         <primitive key={`b${i}`} object={b.pole as Object3D} />

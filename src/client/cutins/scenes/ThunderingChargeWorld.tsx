@@ -8,6 +8,11 @@ import { figures, type Rig } from '../../figures'
 import { buildCasterRig } from '../casters'
 import { Ground } from '../stage/Ground'
 import { spawnFormation } from './formation'
+import { CrowdScript, CrowdSet, memberSpots, publishTroops, spawnRanks, toLocal } from './ranks'
+import { backgroundMelee, crowdLanes, meleeSides } from './melee'
+import type { Crowd } from '../crowd'
+import { lensClear } from '../stage/lens'
+import type { SidePalette, TroopKindName } from '../plan'
 import { burstPosition, sampleSlot, type SlotConfig } from '../particles'
 import { applyClip, fallBack, idle, locomotion, mix as mixClip, stagger, staggerShift, stepTurn } from '../../figures/clips'
 import { Puppet, figureScale, fitFigure, limbsOnly, mix, pArmsUp, pRear, sstep } from '../poseKit'
@@ -36,6 +41,10 @@ import {
 } from './thunderingCharge'
 
 const clampU = (x: number): number => (x < 0 ? 0 : x > 1 ? 1 : x)
+/** How far the survivors of the line back away (the ranks stand behind them). */
+const REGROUP = 0.5
+/** World z of the first of the defenders' instanced ranks, behind the line. */
+const RANKS_Z = 3.95
 const bell = (s: number, a: number, b: number, c: number, d: number): number => sstep((s - a) / (b - a)) * (1 - sstep((s - c) / (d - c)))
 
 interface Rider {
@@ -67,9 +76,9 @@ function makeRiders(scene: CutinScene): Rider[] {
 
 function makeRebels(scene: CutinScene): RebelActor[] {
   const spec = chargeWorldSpec(scene)
-  // a mounted defender would need the horse poses: they stand as foot troops of the same side here
-  const kind = spec.def.kind === 'cavalry' ? 'infantry' : spec.def.kind
-  const rigs = spawnFormation(kind, spec.def.palette, B_LAYOUT.rebelCount, 'ragged', B_SEED + 2).map((f) => f.rig)
+  // a mounted defender is a line of riders: the cavalry crowd below carries it (its first rank are full rigs)
+  if (spec.def.kind === 'cavalry') return []
+  const rigs = spawnFormation(spec.def.kind, spec.def.palette, B_LAYOUT.rebelCount, 'ragged', B_SEED + 2).map((f) => f.rig)
   return Array.from({ length: B_LAYOUT.rebelCount }, (_, i) => {
     const rig = rigs[i]!
     fitFigure(rig)
@@ -301,9 +310,9 @@ function poseRebel(a: RebelActor, s: number, scene: CutinScene, falls: FlingPlan
     const x0 = a.x + jit * 0.02
     const z0 = a.z + staggerShift(1) * fs
     px = mix(x0, gx + 0.2, e)
-    pz = mix(z0, a.z + 1.0, e)
+    pz = mix(z0, a.z + REGROUP, e)
     const e2 = sstep((k + 0.02 / 1.2) * 1.2)
-    const v = (Math.hypot(gx + 0.2 - x0, a.z + 1.0 - z0) * (e2 - e)) / 0.02 / fs / 1.2
+    const v = (Math.hypot(gx + 0.2 - x0, a.z + REGROUP - z0) * (e2 - e)) / 0.02 / fs / 1.2
     // moving away from the riders while facing them: backwards along the figure's own forward axis
     const back = -1
     applyClip(rig, locomotion(rig, back * (Math.hypot(px - x0, pz - z0) / fs) + i * 0.2, v, s))
@@ -326,6 +335,121 @@ function poseRebel(a: RebelActor, s: number, scene: CutinScene, falls: FlingPlan
   rig.group.position.set(0, -pivot, 0)
 }
 
+// ---- the ranks (instanced crowds, docs/spec/51 "More troops") ---------------------------------------------------------
+
+interface Ranks {
+  crowds: CrowdSet
+  /** The squadron behind the wedge: it charges with it and reins in before the line. */
+  riders: Crowd | null
+  /** The defenders' ranks behind the line; for mounted defenders the whole side, its first rank as rigs. */
+  def: Crowd | null
+}
+
+/** The nose of wedge rider m at story s. */
+function noseAt(m: number, s: number): [number, number] {
+  const p = riderAt(m, s)
+  return [p.x + Math.sin(p.heading) * 0.3, p.z + Math.cos(p.heading) * 0.3]
+}
+
+function buildRanks(scene: CutinScene, falls: FlingPlan[], mounted: boolean, defKind: TroopKindName, defPal: SidePalette): Ranks {
+  const p = scene.params
+  const crowds = new CrowdSet()
+  const z0 = leaderAt(0).z
+  const riders = crowds.add(
+    spawnRanks({ kind: 'cavalry', palette: p?.caster.palette ?? 'han', count: 16, seed: B_SEED + 11, at: [0, z0 - 2.05], facing: 0, formation: 'block', files: 4, gap: [0.62, 0.78], jitter: 0.1 }),
+  )
+  if (riders) {
+    // the same speed as the leader (the legs run on the distance), then a hard rein-in short of the line
+    for (let t = 1.62; t < 3.6 - 1e-9; t += 0.15) riders.march([0, 1], leaderAt(Math.min(3.6, t + 0.075)).speed, { at: t, ramp: 0.15 })
+    riders.halt({ at: 3.6, decel: 0.9 })
+    riders.update(0)
+  }
+  const n0 = B_LAYOUT.rebelCount
+  const def = crowds.add(
+    mounted
+      ? spawnRanks({ kind: 'cavalry', palette: defPal, count: n0 + 10, rigs: n0, seed: B_SEED + 12, at: [0, 3.12], facing: Math.PI, formation: 'line', files: n0, gap: [0.5, 0.75], jitter: 0.08 })
+      : spawnRanks({ kind: defKind, palette: defPal, count: 18, seed: B_SEED + 12, at: [0, RANKS_Z], facing: Math.PI, formation: defKind === 'rebel' ? 'mob' : 'block', files: 7, gap: [0.46, 0.46] }),
+  )
+  if (def) {
+    const v = new Vector3()
+    const sc = new CrowdScript()
+    const routed = !!p?.routed
+    const pos = new Map(def.members.map((m) => [m.index, (def.positionOf(m.index, v, true), [v.x, v.z] as [number, number])]))
+    /** When a wedge horse first reaches member i (Infinity if none does), and which way it is knocked. */
+    const contact = (i: number): { t: number; dir: [number, number] } => {
+      const [x, z] = pos.get(i)!
+      for (let s = 3.3; s < 5.2; s += 1 / 120) {
+        for (let m = 0; m < B_LAYOUT.wedge.length; m++) {
+          const [nx, nz] = noseAt(m, s)
+          if (Math.hypot(nx - x, nz - z) < 0.36) {
+            const h = riderAt(m, s).heading
+            const side = x - riderAt(m, s).x >= 0 ? 1 : -1
+            const d: [number, number] = [Math.sin(h) + side * 0.7 * Math.cos(h), Math.cos(h) - side * 0.7 * Math.sin(h)]
+            return { t: s, dir: d }
+          }
+        }
+      }
+      return { t: Infinity, dir: [0, 1] }
+    }
+    const fling = (i: number, t: number, dir: [number, number], dist: number): void => {
+      const l = Math.hypot(dir[0], dir[1]) || 1
+      const local = toLocal(def, [(dir[0] / l) * dist, (dir[1] / l) * dist])
+      sc.at(t, () => def.fall([i], 'fling', local, { at: t, apex: 0.55 }))
+    }
+    /** Out of the horses' way: a dash sideways, away from the lane, then they stand (they do not run at the camera). */
+    const scatter = (i: number, t: number): void => {
+      const [x] = pos.get(i)!
+      const dir = toLocal(def, [x >= 0.05 ? 1 : -1, 0.15])
+      const sp = 1.5 + rand(B_SEED, i, 91) * 0.3
+      sc.at(t, () => def.march(dir, sp, { at: t, members: [i], ramp: 0.2 }))
+      sc.at(t + 1.15, () => def.halt({ at: t + 1.15, members: [i], decel: 0.35 }))
+    }
+    const share = Math.min(1, scene.sample.falls / n0)
+    let rear: number[] = def.select('all')
+    if (mounted) {
+      // the line of riders is the plan's seven: rebel r is the rider nearest rebelLine(r)
+      const front = [...def.frontRank]
+      const fallIds = falls.map((f) => f.rebel)
+      const drop = dropper(fallIds)
+      for (let r = 0; r < n0; r++) {
+        const [rx] = rebelLine(r)
+        front.sort((a, b) => Math.abs(pos.get(a)![0] - rx) - Math.abs(pos.get(b)![0] - rx))
+        const i = front.shift()
+        if (i === undefined) break
+        const f = falls.find((q) => q.rebel === r)
+        sc.at(3.0 + (r % 3) * 0.04, () => def.stagger([i], { at: 3.0 + (r % 3) * 0.04, hold: f ? 0.05 : 0.9 }))
+        if (f) fling(i, f.t, [f.v[0], f.v[2]], f.by === 'sweep' ? 1.0 : 1.5)
+        else if (r === drop) sc.at(3.3, () => def.flee([i], { at: 3.3, speed: 1.6 }))
+        else if (routed) sc.at(4.6, () => def.flee([i], { at: 4.6, speed: 1.4 }))
+      }
+      rear = def.select('rear')
+    }
+    // the ranks behind: whoever a wedge horse reaches is flung; the share of the plan's falls goes down; the rest of the lane scatters
+    const hits = rear.map((i) => ({ i, c: contact(i) })).sort((a, b) => a.c.t - b.c.t)
+    const nDown = scene.sample.falls <= 0 ? 0 : Math.min(rear.length, Math.max(1, Math.round(share * rear.length)))
+    let downLeft = nDown
+    for (const { i, c } of hits) {
+      const shock = 3.62 + rand(B_SEED, i, 92) * 0.2
+      if (c.t < Infinity) {
+        if (downLeft > 0) {
+          downLeft--
+          fling(i, c.t, c.dir, 1.2 + rand(B_SEED, i, 93) * 0.5)
+        } else scatter(i, 2.85 + rand(B_SEED, i, 94) * 0.25)
+      } else if (downLeft > 0) {
+        downLeft--
+        sc.at(shock, () => def.stagger([i], { at: shock, hold: 0.05, dur: 0.16 }))
+        sc.at(shock + 0.16, () => def.fall([i], 'back', 0.22, { at: shock + 0.16 }))
+      } else {
+        sc.at(shock, () => def.stagger([i], { at: shock, hold: routed ? 0.3 : 0.9 }))
+        if (routed) sc.at(shock + 0.9, () => def.flee([i], { at: shock + 0.9, speed: 1.4 }))
+      }
+    }
+    sc.apply()
+    def.update(0)
+  }
+  return { crowds, riders, def }
+}
+
 export function ThunderingChargeWorld({ scene }: { scene: CutinScene }) {
   const frame = useFrameRef()
 
@@ -345,21 +469,57 @@ export function ThunderingChargeWorld({ scene }: { scene: CutinScene }) {
       sparks: new ParticleBuffer(120, 'add', 2.2),
     }
     const steps = riders.map((r, m) => footfalls(m, figureScale() * (r.rig.bodyScale ?? 1)))
+    const spec = chargeWorldSpec(scene)
+    const ranks = buildRanks(scene, falls, spec.def.kind === 'cavalry', spec.def.kind, spec.def.palette)
+    // the background battle: clear of the wedge's whole ride and wheel, the flung, the ranks' paths and the lens
+    const lanes = [
+      ...Array.from({ length: 4 }, (_, m) => Array.from({ length: 76 }, (_, k) => riderAt(m, k * 0.1))).flat().map((q) => ({ x: q.x, z: q.z, r: 1.0 })),
+      ...rebels.map((r) => ({ x: r.x, z: r.z, r: 0.8 })),
+      ...falls.flatMap((f) => {
+        const [x, z] = rebelLine(f.rebel)
+        return [0.3, 0.6].map((k) => ({ x: x + f.v[0] * k, z: z + f.v[2] * k, r: 0.9 }))
+      }),
+      ...crowdLanes(ranks.crowds, 7.3, 0.6),
+      ...lensClear(scene, { reach: 3.0, maxY: 2.2 }),
+    ]
+    const p = scene.params
+    const melee = backgroundMelee({
+      seed: B_SEED + 77,
+      center: [0.3, 2.6],
+      sides: meleeSides(p?.caster.palette ?? 'han', spec.def.palette),
+      knots: 22,
+      riders: 3,
+      runners: 4,
+      banners: 2,
+      rMin: 1.4,
+      rMax: 8.0,
+      duration: 7.5,
+      exclude: lanes,
+    })
+    publishTroops(scene.id, riders.length + ranks.crowds.members(ranks.riders), rebels.length + ranks.crowds.members(ranks.def), ranks.crowds, melee)
     // keep set dressing off the figures and off the wedge's whole path (it gallops through the line and wheels to the right)
     const clear = [
       ...rebels.map((r) => ({ x: r.x, z: r.z, r: 0.4 })),
+      ...memberSpots(ranks.def).map((q) => ({ ...q, r: 0.24 })),
+      ...memberSpots(ranks.riders).map((q) => ({ ...q, r: 0.24 })),
+      { x: 0, z: 1.2, r: 1.1 },
       ...Array.from({ length: 36 }, (_, i) => {
         const L = leaderAt(i * 0.2)
         return { x: L.x, z: L.z, r: 1.0 }
       }),
       { x: -2.7, z: 5.4, r: 0.6 },
     ]
-    return { falls, riders, rebels, drop, spear, trail, contacts, fx, steps, clear }
+    const lens = lensClear(scene, spec.ground === 'millet' ? { reach: 1.0, maxY: 0.6 } : { reach: 2.2, maxY: 1.4 })
+    const dust = new ParticleBuffer(16 * 4, 'alpha', 0.9)
+    return { falls, riders, rebels, drop, spear, trail, contacts, fx, steps, clear, ranks, lens, dust, melee }
   }, [scene])
 
   useDisposeWorld(world, () => {
     world.riders.forEach((r) => r.rig.dispose())
     world.rebels.forEach((r) => r.rig.dispose())
+    world.ranks.crowds.dispose()
+    world.melee?.dispose()
+    world.dust.dispose()
     Object.values(world.fx).forEach((f) => f.dispose())
   })
 
@@ -370,7 +530,27 @@ export function ThunderingChargeWorld({ scene }: { scene: CutinScene }) {
     const ppu = pxPerUnit(gl.domElement.height, (camera as { fov?: number }).fov ?? 40)
     const { riders, rebels, falls, drop, spear, trail, fx } = world
 
+    world.ranks.crowds.update(s)
+    world.melee?.update(s, ppu)
     riders.forEach((r) => poseRider(r, s, scene))
+    // dust behind the squadron's galloping horses (the crowd keeps its own footfalls; a trailing puff reads the same)
+    {
+      const b = world.dust
+      b.begin(ppu)
+      const c = world.ranks.riders
+      if (c) {
+        for (const m of c.members) {
+          const f = c.frame(m.index)
+          if (f.speed < 0.8) continue
+          const at = c.positionOf(m.index, tip.a, true)
+          for (let k = 0; k < 4; k++) {
+            const u = (s * 3.1 + k / 4 + rand(B_SEED, m.index, k) * 0.3) % 1
+            b.push(at.x + srand(B_SEED, m.index * 9 + k, 1) * 0.06, 0.03 + u * 0.12, at.z - 0.2 - u * 0.35 * Math.min(1, f.speed / 3), (0.08 + 0.2 * u) * 1.2, 0.8, 0.66, 0.46, 0.35 * Math.min(1, f.speed / 3) * (1 - u) ** 1.3)
+          }
+        }
+      }
+      b.end()
+    }
     rebels.forEach((a) => poseRebel(a, s, scene, falls, drop, spear))
 
     // crescent sweep trail: the glaive's tip over the last few hundredths of a second
@@ -462,7 +642,10 @@ export function ThunderingChargeWorld({ scene }: { scene: CutinScene }) {
   return (
     <group>
       <Stage seed={B_SEED} focus={[0.6, 0.5]} keyDir={[-3.5, 7, 7.5]} rimDir={[3, 3.5, -9]} motes={170} moteStrength={0.85} />
-      <Ground kind={chargeWorldSpec(scene).ground} seed={B_SEED} center={[0.2, 3.5]} halfW={3.4} halfD={1.3} clear={world.clear} />
+      <Ground kind={chargeWorldSpec(scene).ground} seed={B_SEED} center={[0.2, 3.5]} halfW={3.4} halfD={1.3} clear={world.clear} lens={world.lens} />
+      <primitive object={world.ranks.crowds.group as Object3D} />
+      {world.melee && <primitive object={world.melee.group as Object3D} />}
+      <primitive object={world.dust.points as Object3D} />
       {world.riders.map((r) => (
         <primitive key={r.id} object={r.rig.group as Object3D} />
       ))}

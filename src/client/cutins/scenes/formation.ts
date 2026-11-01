@@ -1,6 +1,6 @@
 // Troop formations for the cut-ins. `formationSlots` is pure (where each figure stands in its formation's own frame) and
-// `spawnFormation` is the ONE place a scene turns "N troops of this kind and side" into figures. Today it builds N full
-// per-rig troops; the instanced crowd pass replaces this function alone (docs/spec/51 "More troops").
+// `spawnFormation` turns "N troops of this kind and side" into the rigged FRONT RANK a scene poses by hand (the hero-level
+// actors). The instanced ranks behind them come from ranks.ts `spawnRanks` (crowd.ts; docs/spec/51 "More troops: as built").
 import { figures, type Rig } from '../../figures'
 import type { SidePalette, TroopKindName } from '../plan'
 import { rand, srand } from '../rng'
@@ -68,10 +68,7 @@ export function spawnTroop(kind: TroopKindName, palette: SidePalette, variant: n
   return figures.buildTroop(kind, palette, variant)
 }
 
-/**
- * Figures for one formation of `count` troops. This is the single swap point for the crowd pass: callers use only the
- * rigs and slots returned here.
- */
+/** Rigged figures for one front rank of `count` troops; the ranks behind it are a crowd (ranks.ts). */
 export function spawnFormation(kind: TroopKindName, palette: SidePalette, count: number, layout: FormationLayout, seed = 1): FormationFigure[] {
   const slots = formationSlots(layout, count, 0.46, seed)
   return slots.map((slot, index) => ({ rig: spawnTroop(kind, palette, Math.floor(rand(seed, index, 5) * 3)), slot, index }))

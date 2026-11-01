@@ -152,26 +152,26 @@ interface LanternSpec {
 }
 
 function lanternLayout(seed: number, focus: [number, number]): LanternSpec[] {
+  // Review note (2026-11-01): big red and white orbs in the sky read as balloons. The lanterns are now small, dim, warm points
+  // hung far off around the tent walls: a hint of light in the dark, never a shape.
   const out: LanternSpec[] = []
-  for (let i = 0; i < 44; i++) {
+  for (let i = 0; i < 30; i++) {
     const a = rand(seed, i, 1) * Math.PI * 2
-    const near = i < 12
-    const rad = near ? 6.5 + rand(seed, i, 2) * 4 : 12 + rand(seed, i, 2) * 20
-    const hgt = near ? 2.4 + rand(seed, i, 3) * 3 : 3 + rand(seed, i, 3) * 11
-    const size = near ? 0.9 + rand(seed, i, 4) * 1.1 : 0.9 + rand(seed, i, 4) * 2.4
+    const rad = 13 + rand(seed, i, 2) * 18
+    const hgt = 2.5 + rand(seed, i, 3) * 7
     const r5 = rand(seed, i, 5)
     out.push({
       base: [focus[0] + Math.cos(a) * rad, hgt, focus[1] + Math.sin(a) * rad],
-      size,
-      hue: r5 < 0.62 ? 'amber' : r5 < 0.86 ? 'red' : 'pale',
-      alpha: near ? 0.28 + rand(seed, i, 6) * 0.3 : 0.45 + rand(seed, i, 6) * 0.45,
+      size: 0.22 + rand(seed, i, 4) * 0.3,
+      hue: r5 < 0.8 ? 'amber' : 'pale',
+      alpha: 0.12 + rand(seed, i, 6) * 0.16,
       phase: rand(seed, i, 7) * 6.28,
     })
   }
   return out
 }
 
-const HUE: Record<LanternSpec['hue'], string> = { amber: '#f2b45a', red: '#d6502d', pale: '#ffe2b0' }
+const HUE: Record<LanternSpec['hue'], string> = { amber: '#e9a85a', red: '#c8603a', pale: '#f3d9ac' }
 
 function Lanterns({ seed, focus }: { seed: number; focus: [number, number] }) {
   const frame = useFrameRef()
@@ -200,12 +200,12 @@ function Lanterns({ seed, focus }: { seed: number; focus: [number, number] }) {
   useFrame(() => {
     const t = frame.current.t
     for (const { bokeh, core, spec } of sprites) {
-      const sway = Math.sin(t * 0.9 + spec.phase) * 0.18
+      const sway = Math.sin(t * 0.9 + spec.phase) * 0.06
       const flick = 0.92 + 0.08 * Math.sin(t * 7.3 + spec.phase * 3.1)
       bokeh.position.set(spec.base[0] + sway, spec.base[1] + Math.sin(t * 0.7 + spec.phase) * 0.08, spec.base[2])
       bokeh.scale.setScalar(spec.size * flick)
       core.position.copy(bokeh.position)
-      core.scale.setScalar(spec.size * 0.45 * flick)
+      core.scale.setScalar(spec.size * 0.35 * flick)
     }
   })
   return <group ref={group} />

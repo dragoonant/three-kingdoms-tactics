@@ -45,7 +45,7 @@ function soldierBody(fb: FB, kind: TroopKind, side: SidePalette, v: number, moun
     buckle: rebel ? '#8a6a3a' : shade(c.trim, -0.1),
     skirt: 'tassets',
     skirtColor: rebel ? shade(c.cloth, -0.18) : c.dark,
-    ...(rebel ? {} : { skirtTrim: c.trim }),
+    // no light hem band on troops: seen from above, a pale ring at the feet reads as a base (D23)
     legs: rebel ? shade(c.dark, 0.1) : c.dark,
     pauldron: rebel ? { color: c.cloth, style: 'none' } : { color: c.metal, style: 'round' },
     mirrors: !rebel && kind !== 'archer',
