@@ -13,7 +13,8 @@
     "e2e": "playwright test",
     "validate:data": "tsx tools/validate-data.ts",
     "sim": "tsx tools/sim.ts",
-    "bench:ai": "tsx tools/ai-bench.ts"
+    "bench:ai": "tsx tools/ai-bench.ts",
+    "audio:gen": "node tools/audio/gen-music.mjs && node tools/audio/master-audio.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.8",

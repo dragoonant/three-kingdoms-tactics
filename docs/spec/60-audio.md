@@ -128,7 +128,7 @@ Gate before a file enters the repo: generate two takes (`batch: 2`), keep the be
 
 ## 5. Mastering, loop points and format
 
-**Loudness:** beds and jingles **−16 LUFS integrated**, true peak ≤ −1 dBTP. The charge layer as in section 3. `impact` and `seal`: peak about −3 dBFS (they ride the sfx bus; trim levels with `gainDb`). Fades in the file: none at the loop seam (a loop must not fade); jingles end in their own natural tail.
+**Loudness:** beds **−16 LUFS integrated**, jingles **−14 LUFS** (one-shots, so a little hotter; change `lufs` in `tools/audio/music-cues.json`), true peak ≤ −1 dBTP. The charge layer as in section 3. `impact` and `seal`: peak about −3 dBFS (they ride the sfx bus; trim levels with `gainDb`). Fades in the file: no audible fade at the loop seam (a loop must not fade), only a **10 ms declick** at the start and end of a loop so a cut that is not on a zero crossing cannot click (`--seam-fade-ms 0` turns it off); jingles end in their own natural tail with a 250 ms fade-out.
 
 **Loops in whole bars.** A loop is a whole number of bars of the stated BPM (section 2). Procedure:
 1. Generate longer than needed, pick the take, and **trim to exactly N bars** at a zero crossing on a downbeat. Check the length: `bars × beatsPerBar × 60 / BPM` seconds (e.g. 32 bars at 120 BPM = 64.000 s).
@@ -137,9 +137,9 @@ Gate before a file enters the repo: generate two takes (`batch: 2`), keep the be
 4. **Check the seam**: loop the trimmed file in an editor for a minute; no click, no flam, no tail from a decay that is cut off.
 5. Set `loopEnd` to the end of the last bar in seconds (to 3 decimals). `loopEnd <= loopStart` means "play to the end of the file".
 
-**Format:** deliver **OGG Vorbis (q5, about 160 kbps) as `file`** and **M4A (AAC, 192 kbps) as `alt`** for Safari. 44.1 kHz, stereo. Both encodings must be trimmed identically (AAC adds encoder delay of about 1,024 samples: use an encoder that writes the gapless/delay tags, or encode from the already-trimmed WAV and check the loop seam in Safari). The loader tries `file`, then `alt` if the first will not fetch or decode.
+**Format:** deliver **OGG Vorbis (q5, about 160 kbps) as `file`** and **M4A (AAC, 160 kbps) as `alt`** for Safari. 44.1 kHz, stereo. Both encodings must be trimmed identically (AAC adds encoder delay of about 1,024 samples: use an encoder that writes the gapless/delay tags, or encode from the already-trimmed WAV and check the loop seam in Safari). The loader tries `file`, then `alt` if the first will not fetch or decode.
 
-**Naming:** `public/audio/<id>.ogg` and `public/audio/<id>.m4a`, with the ids in section 2 (lower-case, hyphens). The manifest `id` equals the file stem.
+**Naming:** the ids in section 2 (lower-case, hyphens). The runner (section 7) writes the two candidates as `public/audio/<id>-a.ogg|.m4a` and `<id>-b.ogg|.m4a`; the manifest `id` is the cue id and `file` names the picked candidate. By hand, `<id>.ogg` with the manifest `id` equal to the file stem also works. The M4A decodes up to one AAC frame (23 ms) longer than the OGG; it is never shorter, and `loopEnd` (not the file length) bounds the loop.
 
 **Size budget:** about 5 MB for the whole score (OGG), since it ships to GitHub Pages. Beds are fetched lazily, when the mood is first needed.
 
@@ -193,10 +193,48 @@ Calls made before the first user gesture (when no `AudioContext` may exist) are 
 
 ---
 
-## 7. Where it is checked
+## 7. Running it on the PC (the generation runner)
+
+`tools/audio/` turns section 2 and 4 into files with two commands. It was tested end to end against a fake studio (`fake-audio-studio.mjs`, click tracks) and has **never been run against the real Audio Studio**: the first PC run is the real test, and the response shapes of `/api/jobs/<id>` are read leniently for that reason. Everything it produces is **not verified by ear**.
+
+**Files:** `music-cues.json` (the cue table: ids, BPM, key, bars, generate duration, prompts, seeds, loudness targets; edit prompts and seeds here only), `gen-music.mjs` (talks to the studio), `master-audio.mjs` (ffmpeg only), `fake-audio-studio.mjs` (testing), `lib.mjs`/`dsp.mjs` (shared). Tests: `tests/unit/audio-runner.test.ts`.
+
+**Prerequisites** on the PC ("evilaegis"):
+1. The repo checked out with Node 22 (no `npm install` is needed to run the two scripts; they use only Node built-ins).
+2. The Audio Studio running and listening on `http://localhost:7890` (check `http://localhost:7890/api/status` in a browser). Nothing else may be using the GPU: **announce the GPU work to the owner first** and never run two GPU jobs at once (KB rule 10). The runner waits if the studio reports other queued or running jobs.
+3. ffmpeg with libvorbis and aac (`ffmpeg -version`). If it is not on PATH: `winget install Gyan.FFmpeg` and open a new shell, or pass `--ffmpeg <full path to ffmpeg.exe>` (or set the `FFMPEG` environment variable). The mastering step stops with that message when ffmpeg is missing.
+
+**Commands** (PowerShell or cmd, from the repo root; no bash needed):
+```
+node tools/audio/gen-music.mjs --dry-run          # the plan and the exact requests; touches nothing
+node tools/audio/gen-music.mjs                    # 10 cues, 2 candidates each; writes tools/out/audio/raw/<id>-a|b.flac
+node tools/audio/master-audio.mjs --audition      # trims, cuts to bars, normalises, encodes, writes public/audio and the manifest
+npm run audio:gen                                 # gen + master in one go (without --audition)
+```
+`gen-music.mjs` flags: `--only bed-battle,charge`, `--candidates 1|2`, `--limit n`, `--base <url>`, `--force` (regenerates and archives the old takes to `tools/out/audio/raw/archive/<time>/`), `--timeout <sec>`. Re-running it makes **zero requests** when every raw file already exists, so an interrupted run resumes where it stopped. `master-audio.mjs` flags: `--only`, `--ffmpeg <path>`, `--audition`, `--pick id=a|b,...`, `--prune`, `--seam-fade-ms`, `--jobs`, `--dry-run`. Ctrl-C during generation cancels the running studio job.
+
+**Expected time (estimate, not measured on the real studio):** the KB measured about 11 s for a cold 30 s ACE-Step take and about 8 s for a warm 40 s one, and 5 s for two 6 s effects. With `batch: 2` and 16 to 68 s takes, plan for **roughly 5 to 10 minutes of GPU time** for all ten cues, plus a model switch between the music and effects jobs, and 1 to 2 minutes of ffmpeg for mastering (CPU only; it can run after the studio is stopped).
+
+**What it does to each file** (section 5): trims the head silence so the first sound is at 0.000 s; cuts a loop to exactly `bars x beatsPerBar x 60 / bpm` seconds (rounded to the nearest sample) with a 10 ms declick; keeps a jingle's natural tail; loudnorm two-pass to the targets (−16 LUFS beds and the charge layer, −14 jingles; effects peak −3 dBFS); encodes OGG q5 and M4A 160k from the same normalised file; re-measures the **decoded OGG and M4A** and trims the gain and re-encodes if the lossy file overshoots the peak limit. It trusts the requested BPM and runs only a rough onset/autocorrelation check, which **warns** when it disagrees by more than 2.5 percent. `tools/out/audio/report.json` has, per file: LUFS, loudness range, true peak, sample peak, RMS, **crest factor**, length (samples and seconds), the first-sound offset, the tempo check, the seed and prompt, and every warning.
+
+**Then, by ear:**
+1. `master-audio.mjs --audition` lists the candidate that is not picked as an extra manifest track (`<id>-b`), so `npm run dev` then `http://localhost:5173/sounds.html` shows **both takes of every cue** as separate rows with Play/Stop, and the charge demo uses the picked one. (The `sounds.html` page reads only `manifest.json`; `public/audio/candidates.json` records the choice and the measurements per candidate and is not read by the game, because `normalizeManifest` keeps only the fields in `TrackEntry`.)
+2. Listen: loop seams (does the battle bed repeat cleanly?), the charge layer over the battle bed (does it lock on the beat and leave the low end to the drums?), the two stingers, the jingles' endings. Compare each pair and choose.
+3. Make the choice permanent and drop the losers: `node tools/audio/master-audio.mjs --pick bed-battle=b,impact=b --prune` (cues not named keep candidate `a`; `--prune` deletes every unpicked candidate file and rewrites the manifest without the audition rows). Do not commit audition mode: the unpicked files would ship to GitHub Pages (the budget in section 5 is about 5 MB).
+4. Commit `public/audio/*.ogg`, `*.m4a`, `manifest.json` and `candidates.json`, plus the verification lines from `report.json` in the commit message or the delivery report, and the line "not verified by ear" until the owner has signed off. Raw FLACs and `tools/out/` stay out of the repo (they are git-ignored).
+5. **Stop the Audio Studio and any ComfyUI it started** when finished (KB rule 17). Do not use `taskkill /F /IM node.exe`; it kills every studio.
+
+If a cue sounds wrong, change its prompt or `seed` in `music-cues.json`, run `gen-music.mjs --only <id> --force` (the old takes are archived), then `master-audio.mjs --only <id>`. To compare against what the studio actually received, `tools/out/audio/raw/generation-log.json` stores the full request (prompt with exclusions, seed, bpm, key), the job id and the file names per cue.
+
+**Trying it without the PC:** `node tools/audio/fake-audio-studio.mjs --port 7891`, then `node tools/audio/gen-music.mjs --base http://localhost:7891 --out tools/out/audio-fake` and `node tools/audio/master-audio.mjs --out tools/out/audio-fake --public tools/out/audio-fake/public`. The fake output is a click track, not music: **never copy it into `public/audio`**.
+
+---
+
+## 8. Where it is checked
 
 - **By ear (owner), on `sounds.html`:** every manifest entry with Play/Stop; "no file yet" rows for empty slots; the **Charge overlay demo** (battle bed, cut-in start at 4 s, cut-in end 7 s later) with live gain meters for the bed and the charge layer and the phase-lock beat. The cinema page (`cinema.html`) plays the battle bed and lays the charge layer over each scene. **Nothing in this document has been verified by ear.**
-- **By machine:** `tests/unit/audio-director.test.ts` (ramps, phase-lock maths, chains, failsafe, silence), `tests/unit/audio-support.test.ts` (manifest, settings, moods), `tests/e2e/audio.spec.ts` (pages load with 0 errors, the settings panel opens, and a real `AudioContext` run with a generated click track proves the duck, the lock and the release on the audio clock).
+- **By machine:** `tests/unit/audio-runner.test.ts` (the section 7 runner against the fake studio: bar-aligned lengths, loudness, manifest validity, idempotency, dry run), `tests/unit/audio-director.test.ts` (ramps, phase-lock maths, chains, failsafe, silence), `tests/unit/audio-support.test.ts` (manifest, settings, moods), `tests/e2e/audio.spec.ts` (pages load with 0 errors, the settings panel opens, and a real `AudioContext` run with a generated click track proves the duck, the lock and the release on the audio clock).
 
 ## Revision log
 - v0.1 2026-11-01: first brief and system.
+- v0.2 2026-11-01: section 7 (the generation runner); section 5 aligned with it (jingles −14 LUFS, 10 ms loop declick, M4A 160 kbps, `<id>-a|b` candidate names); the old section 7 is now section 8.

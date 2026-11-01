@@ -1,0 +1,65 @@
+{
+  "_about": "Cue table for the Audio Studio runner (docs/spec/60-audio.md sections 2, 4, 5). Read by gen-music.mjs and master-audio.mjs. Prompts, seeds and loudness targets live here and nowhere else. beatsPerBar x bars x 60 / bpm is the loop length; duration/seconds is how long the studio is asked to generate (2-4 s longer so the master can be trimmed to whole bars).",
+  "version": 1,
+  "musicExclusions": "instrumental, no vocals, no choir, no lyrics, no electronic synth, no modern drum kit, no pop beat",
+  "candidates": 2,
+  "musicSteps": 8,
+  "sfxSteps": 50,
+  "cues": [
+    {
+      "id": "bed-title", "kind": "music", "role": "bed", "mood": "title",
+      "bpm": 72, "key": "D minor", "timesig": "4", "beatsPerBar": 4, "bars": 16, "duration": 58, "loop": true, "lufs": -16, "seed": 31101,
+      "prompt": "slow solemn ancient Chinese instrumental, guzheng arpeggios over a low frame drum pulse, erhu carrying a broad lyrical pentatonic theme, soft bronze bell on the downbeat, distant xiao flute, wide reverb like a great hall at night, noble and a little sad, D minor pentatonic"
+    },
+    {
+      "id": "bed-calm", "kind": "music", "role": "bed", "mood": "calm",
+      "bpm": 90, "key": "F major", "timesig": "4", "beatsPerBar": 4, "bars": 16, "duration": 46, "loop": true, "lufs": -16, "seed": 31102,
+      "prompt": "gentle spacious ancient Chinese instrumental for a quiet story scene, dizi flute and plucked pipa playing a simple pentatonic phrase, soft guzheng, light hand percussion, warm and reflective, slow harmonic movement, F major pentatonic"
+    },
+    {
+      "id": "bed-camp", "kind": "music", "role": "bed", "mood": "camp",
+      "bpm": 76, "key": "F major", "timesig": "4", "beatsPerBar": 4, "bars": 16, "duration": 54, "loop": true, "lufs": -16, "seed": 31103,
+      "prompt": "warm quiet ancient Chinese camp-at-night instrumental, soft bowed erhu, plucked guzheng, a slow wooden percussion pulse like a crackling fire, relaxed and homely, steady and unhurried, F major pentatonic"
+    },
+    {
+      "id": "bed-battle", "kind": "music", "role": "bed", "mood": "battle",
+      "bpm": 120, "key": "D minor", "timesig": "4", "beatsPerBar": 4, "bars": 32, "duration": 68, "loop": true, "lufs": -16, "seed": 31104,
+      "prompt": "driving ancient Chinese war music for a tactical battle, deep taiko-style war drums playing a steady rolling pattern, plucked pipa and guzheng ostinato, low sustained horn-like drone, short suona calls every four bars, determined and rhythmic but with open space for a layer on top, steady energy not a climax, D minor pentatonic"
+    },
+    {
+      "id": "bed-tense", "kind": "music", "role": "bed", "mood": "tense",
+      "bpm": 120, "key": "D minor", "timesig": "4", "beatsPerBar": 4, "bars": 16, "duration": 36, "loop": true, "lufs": -16, "seed": 31105,
+      "prompt": "tense ancient Chinese battle music, the melody stripped back, steady low war drums, tremolo strings holding a bare D minor drone, a single bronze bell on beat one of every other bar, rising unease, urgent but restrained, D minor pentatonic"
+    },
+    {
+      "id": "charge", "kind": "music", "role": "charge",
+      "bpm": 120, "key": "D minor", "timesig": "4", "beatsPerBar": 4, "bars": 8, "duration": 20, "loop": true, "lufs": -16, "seed": 31106,
+      "note": "layer only; bar 1 is the 1-bar swell-in (60-audio section 3); the low register belongs to the drums",
+      "prompt": "full orchestral surge for a cavalry charge, layer only: fast driving spiccato string ostinato in the mid-high register, rising brass fanfare swells with horns and trumpets, a suona doubling the top line, deep taiko-style war drums carrying all the low end with steady eighth notes and accents on one and three, a snare roll swelling in the first bar, relentless and heroic, rising lines with no hummable melody, no bass, no cellos, no tuba, no sub-bass, no choir, D minor"
+    },
+    {
+      "id": "jingle-victory", "kind": "music", "role": "stinger", "mood": "victory",
+      "bpm": 100, "key": "D major", "timesig": "4", "beatsPerBar": 4, "bars": 6, "duration": 18, "loop": false, "lufs": -14, "seed": 31107,
+      "note": "6 bars = 14.4 s, then the natural ring-out is kept",
+      "prompt": "short triumphant ancient Chinese victory fanfare, suona and bright brass-like horns over rolling war drums and bronze bells, rising pentatonic line resolving to a held D major chord with a natural ring-out, proud and warm"
+    },
+    {
+      "id": "jingle-defeat", "kind": "music", "role": "stinger", "mood": "defeat",
+      "bpm": 66, "key": "D minor", "timesig": "4", "beatsPerBar": 4, "bars": 4, "duration": 18, "loop": false, "lufs": -14, "seed": 31108,
+      "note": "4 bars = 14.5 s, then the natural fade-out is kept",
+      "prompt": "short sorrowful ancient Chinese defeat lament, a slow solo erhu phrase over a low drum heartbeat and a single bronze bell, falling pentatonic line settling on a held D minor note that fades into silence"
+    },
+    {
+      "id": "impact", "kind": "sfx", "role": "stinger", "cue": "impact",
+      "bpm": 0, "beatsPerBar": 4, "seconds": 4, "keepSeconds": 1.0, "loop": false, "peakDb": -3, "seed": 31109,
+      "prompt": "a single deep war-drum strike with a short bronze gong shimmer, dry, punchy, one hit, tail under one second",
+      "negative": "music, melody, voices, speech, crowd, long reverb, long tail, hiss, noise"
+    },
+    {
+      "id": "seal", "kind": "sfx", "role": "stinger", "cue": "seal",
+      "bpm": 0, "beatsPerBar": 4, "seconds": 3, "keepSeconds": 0.6, "loop": false, "peakDb": -3, "seed": 31110,
+      "prompt": "a heavy wooden seal stamped onto a bamboo slip, one dull thud with a very short bright bell, dry, tail under half a second",
+      "negative": "music, melody, voices, speech, crowd, long reverb, long tail, hiss, noise"
+    }
+  ]
+}
