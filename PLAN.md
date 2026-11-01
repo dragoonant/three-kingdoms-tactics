@@ -26,6 +26,9 @@ An original 3D grid tactics game set in the Three Kingdoms era, built as a spiri
 - **D17** Story: **short scenes on the table** (3–8 lines of our own prose per scene, speech slips, click skips) plus the briefing.
 - **D18** Overnight budget **~6M tokens**; Sonnet agents implement; **multi-agent workflows approved**; **KB pushes approved**.
 
+- **D19** (owner, 2026-11-01) Figures: the procedural hero/troop rigs (docs/spec/31) are the interim look ("impressed"); **we will switch to the owner's modelling pipeline** (Gemini concept → Hunyuan GLB on the PC, M5). GLBs must keep the rig joint contract (`src/client/figures/rig.ts`) so the board and cut-ins keep working; the procedural rigs stay as the fallback.
+
+
 ## Milestones
 | M | What | Where | Status |
 |---|---|---|---|
