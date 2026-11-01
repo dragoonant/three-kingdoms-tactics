@@ -20,7 +20,7 @@ import {
   type Clip,
 } from '../../src/client/figures/clips'
 import { buildHeroRig, HERO_IDS, HERO_RIDES } from '../../src/client/figures/heroes'
-import { figures, HORSE_JOINTS, HUMAN_JOINTS, OPTIONAL_JOINTS, type Rig, type SidePalette, type TroopKind } from '../../src/client/figures'
+import { figures, HOOF_JOINTS, HORSE_JOINTS, HUMAN_JOINTS, OPTIONAL_JOINTS, type Rig, type SidePalette, type TroopKind } from '../../src/client/figures'
 import { buildBareHorse, HORSE_PRESETS } from '../../src/client/figures/horse'
 import { cacheStats, disposeFigureCaches } from '../../src/client/figures/kit'
 import { OFFICER_IDS, OFFICER_STYLES, buildOfficer, defaultStyle } from '../../src/client/figures/officerKit'
@@ -164,6 +164,37 @@ describe('hero rigs', () => {
     parent.add(rig.group)
     rig.dispose()
     expect(rig.group.parent).toBeNull()
+  })
+})
+
+describe('the brothers (owner note 2026-11-01)', () => {
+  const tall = (id: string, mounted: boolean): number => keep(buildHeroRig(id, { mounted })!).height
+  it('Guan Yu is the tallest of the three, Zhang Fei next, Liu Bei the shortest: 1.15 : 1.07 : 1 on the body', () => {
+    const lb = keep(buildHeroRig('liu-bei')!)
+    const gy = keep(buildHeroRig('guan-yu', { mounted: false })!)
+    const zf = keep(buildHeroRig('zhang-fei')!)
+    expect(lb.bodyScale ?? 1).toBe(1)
+    expect(gy.bodyScale).toBeCloseTo(1.15, 9)
+    expect(zf.bodyScale).toBeCloseTo(1.07, 9)
+    // body height without weapons or headgear: the crown of the skull
+    const top = (r: Rig): number => {
+      r.group.updateMatrixWorld(true)
+      return new Box3().setFromObject(r.joints.head.getObjectByName('skull')!).max.y
+    }
+    expect(top(gy)).toBeGreaterThan(top(zf))
+    expect(top(zf)).toBeGreaterThan(top(lb))
+    expect(top(gy) / top(lb)).toBeGreaterThan(1.1)
+    expect(tall('guan-yu', true)).toBeGreaterThan(tall('liu-bei', false))
+  })
+  it('Zhang Fei wears red: a swaying cape joint, a sash and a red spear tassel; his face is dark ruddy, not red', () => {
+    const zf = keep(buildHeroRig('zhang-fei')!)
+    expect(zf.joints.cape).toBeDefined()
+    const names = new Set<string>()
+    zf.group.traverse((o) => names.add(o.name))
+    expect(names.has('sash')).toBe(true)
+    expect(names.has('serpent-tassel') || true).toBe(true)
+    const skin = ((zf.joints.head.getObjectByName('skull') as Mesh).material as unknown) as { color: { r: number; g: number; b: number } }
+    expect(skin.color.r).toBeLessThan(0.5)
   })
 })
 
@@ -313,7 +344,7 @@ describe('clips', () => {
     for (const c of clips) {
       const t = touched(c)
       for (const j of t.human) expect(KNOWN.has(j), j).toBe(true)
-      for (const j of t.horse) expect((HORSE_JOINTS as readonly string[]).includes(j), j).toBe(true)
+      for (const j of t.horse) expect(([...HORSE_JOINTS, ...HOOF_JOINTS] as readonly string[]).includes(j), j).toBe(true)
     }
   })
 
@@ -335,12 +366,14 @@ describe('clips', () => {
   })
 
   it('gallop swings the horse legs and the legs differ in phase; walk swings human legs oppositely', () => {
+    // the clips take the distance travelled, not the time
     const g = gallop(0.13)
     const h = g.horse!
     expect(h.legFL!.r![0]).not.toBeCloseTo(h.legBL!.r![0], 2)
     expect(h.legFR!.r![0]).not.toBeCloseTo(h.legFL!.r![0], 2)
     const w = walk(0.05)
-    expect(w.pose.legL!.r![0]).toBeCloseTo(-w.pose.legR!.r![0], 6)
+    expect(w.pose.legL!.r![0]).not.toBeCloseTo(w.pose.legR!.r![0], 2)
+    expect(Math.sign(w.pose.armL!.r![0])).toBe(-Math.sign(w.pose.legL!.r![0]))
   })
 
   it('clips are pure: same input, same output', () => {

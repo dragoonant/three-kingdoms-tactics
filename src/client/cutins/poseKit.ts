@@ -1,10 +1,10 @@
 // Pose helpers for the cut-ins. Everything works through the frozen joint names in figures/rig.ts, never through mesh
 // names, so it behaves the same on the capsule placeholders and on the real hero/troop rigs.
 //
-// Conventions assumed of a rig (docs/spec/31 "Animation joints"): origin at the centre of the base, +Z forward, +Y up;
+// Conventions assumed of a rig (docs/spec/31 "Animation joints"): origin on the ground under the figure (no base), +Z forward, +Y up;
 // an arm or leg hangs along its local -Y at rest; the weapon shaft runs along the `weapon` joint's local +Y.
 import { Euler, Mesh, Object3D, Quaternion, Vector3 } from 'three'
-import { figures, type HumanJoint, type HorseJoint, type Rig } from '../figures'
+import { figures, type Clip, type HoofJoint, type HumanJoint, type HorseJoint, type Rig } from '../figures'
 
 const tmpQ = new Quaternion()
 const tmpQ2 = new Quaternion()
@@ -59,7 +59,7 @@ export class Puppet {
     return this.human.get(name)
   }
 
-  h(name: HorseJoint): Object3D | undefined {
+  h(name: HorseJoint | HoofJoint): Object3D | undefined {
     return this.horse.get(name)
   }
 
@@ -69,7 +69,7 @@ export class Puppet {
     if (o) this.applyRot(o, x, y, z)
   }
 
-  rotH(name: HorseJoint, x: number, y = 0, z = 0): void {
+  rotH(name: HorseJoint | HoofJoint, x: number, y = 0, z = 0): void {
     const o = this.horse.get(name)
     if (o) this.applyRot(o, x, y, z)
   }
@@ -88,7 +88,7 @@ export class Puppet {
     if (o && r) o.position.set(r.p.x + dx, r.p.y + dy, r.p.z + dz)
   }
 
-  moveH(name: HorseJoint, dx: number, dy: number, dz = 0): void {
+  moveH(name: HorseJoint | HoofJoint, dx: number, dy: number, dz = 0): void {
     const o = this.horse.get(name)
     const r = o && this.rest.get(o)
     if (o && r) o.position.set(r.p.x + dx, r.p.y + dy, r.p.z + dz)
@@ -126,7 +126,7 @@ export class Puppet {
     return this.rig.group.worldToLocal(out)
   }
 
-  atH(name: HorseJoint, out = new Vector3()): Vector3 {
+  atH(name: HorseJoint | HoofJoint, out = new Vector3()): Vector3 {
     const o = this.horse.get(name)
     if (!o) return out.set(0, 0, 0)
     this.rig.group.updateWorldMatrix(true, true)
@@ -171,7 +171,7 @@ export function pIdle(p: Puppet, s: number, phase: number, amp = 1): void {
 
 let refScale: number | null = null
 /**
- * The cut-ins are laid out for miniatures about 0.45 tiles tall. Real rigs are about twice that, so every figure is
+ * The cut-ins are laid out for figures about 0.45 tiles tall. Real rigs are about twice that, so every figure is
  * scaled by 0.45 / (the infantry rig's height), taken from rig.height rather than a hard-coded size. All figures share it,
  * so their relative sizes (a hero on a horse against a footman) are the rig's own.
  */
@@ -190,13 +190,6 @@ export function fitFigure(rig: Rig): number {
   rig.group.scale.setScalar(k)
   enableShadows(rig.group)
   return k
-}
-
-/** Kneel on the right knee: lowers the whole body onto the sand, front leg bent. `unit` is 1 / the figure's scale. */
-export function pKneel(p: Puppet, depth = 1, unit = 1): void {
-  p.move('root', 0, -0.075 * depth * unit, 0)
-  p.rot('legR', -1.25 * depth, 0, 0)
-  p.rot('legL', 1.0 * depth, 0, 0)
 }
 
 /** Lean the torso forward/back (+ is forward, toward +Z). */
@@ -218,32 +211,14 @@ export function pArmsUp(p: Puppet, amount: number, spread = 0.6): void {
   p.aim('armR', [sR * mix(0.2, spread, amount), mix(-1, 1, amount), mix(0.05, 0.25, amount)])
 }
 
-/** Running/galloping leg cycle for a rider-less body. phase in cycles. */
-export function pRunLegs(p: Puppet, phase: number, amp = 0.9): void {
-  const a = Math.sin(phase * Math.PI * 2)
-  p.rot('legL', a * amp, 0, 0)
-  p.rot('legR', -a * amp, 0, 0)
-}
-
-/** Horse gallop: a rotary gallop with fore pair and hind pair slightly out of step. phase in cycles. */
-export function pGallop(p: Puppet, phase: number, amp = 0.75, bob = 0.03): void {
-  // (bob is in the rig's own units)
-  const w = phase * Math.PI * 2
-  p.rotH('legFL', Math.sin(w + 0.0) * amp, 0, 0)
-  p.rotH('legFR', Math.sin(w + 0.55) * amp, 0, 0)
-  p.rotH('legBL', Math.sin(w + 2.6) * amp, 0, 0)
-  p.rotH('legBR', Math.sin(w + 3.2) * amp, 0, 0)
-  p.rotH('body', Math.sin(w + 1.1) * 0.07, 0, 0)
-  p.rotH('neck', -Math.sin(w + 0.4) * 0.12, 0, 0)
-  p.moveH('body', 0, Math.abs(Math.sin(w + 0.6)) * bob, 0)
-  p.rotH('tail', -0.5 + Math.sin(w * 2) * 0.12, 0, 0)
-}
-
 /** Horse rears on its hind legs. amount 0..1 */
 export function pRear(p: Puppet, amount: number): void {
   p.rotH('body', -0.62 * amount, 0, 0)
   p.rotH('legFL', -1.1 * amount, 0, 0)
   p.rotH('legFR', -0.9 * amount, 0, 0)
+  // the hooves dangle from the raised forelegs
+  p.rotH('hoofFL', 0.9 * amount, 0, 0)
+  p.rotH('hoofFR', 0.8 * amount, 0, 0)
   p.rotH('neck', 0.25 * amount, 0, 0)
   p.rotH('tail', 0.3 * amount, 0, 0)
 }
@@ -255,4 +230,11 @@ export function lerpAngle(a: number, b: number, u: number): number {
 /** Squared-distance helper. */
 export function dist2(ax: number, az: number, bx: number, bz: number): number {
   return (ax - bx) * (ax - bx) + (az - bz) * (az - bz)
+}
+
+/** A clip with the whole-body 'root' joint dropped: the limb poses of a fall, for a body the scene is already tumbling. */
+export function limbsOnly(c: Clip): Clip {
+  const { root: _root, ...pose } = c.pose
+  void _root
+  return { ...c, pose }
 }

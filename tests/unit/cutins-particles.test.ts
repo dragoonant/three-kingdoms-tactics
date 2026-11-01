@@ -159,7 +159,7 @@ describe('charge path (scene B)', () => {
     expect(leaderAt(1.0).speed).toBe(0)
     expect(leaderAt(1.0).z).toBeCloseTo(startZ(), 9)
     expect(leaderAt(2.4).speed).toBeGreaterThan(leaderAt(1.8).speed)
-    expect(leaderAt(3.4).speed).toBeGreaterThan(4.5)
+    expect(leaderAt(3.4).speed).toBeGreaterThan(3.5)
     const first = Math.min(...fallOrder(4).map((i) => rebelLine(i)[1]))
     const nose = riderAt(0, 3.6).z + 0.4
     expect(nose).toBeCloseTo(first, 1)

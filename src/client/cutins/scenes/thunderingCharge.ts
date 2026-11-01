@@ -4,6 +4,7 @@
 //
 // World frame: +y up. The Han wedge gallops toward +z; the rebel line stands across x at z ~ 3.0 facing -z. After the
 // impact the wedge wheels to the right (+x) in a half circle and ends facing the broken line again.
+import { HORSE_GAITS, gaitBlend, type HorseGaitName, type LegName } from '../../figures/gait'
 import { rand, srand, seededOrder } from '../rng'
 import { storyClock, type CamKey, type Cue, type CutinScene, type TimeScaleSeg, type Vec3 } from '../timeline'
 
@@ -43,17 +44,21 @@ const smooth = (u: number): number => {
   return x * x * (3 - 2 * x)
 }
 
-/** Leader speed (tiles per second) at story time s. */
+/**
+ * Leader speed (tiles per second) at story time s. The legs run on the distance covered, so the speeds are chosen for
+ * the gaits (figures/gait.ts, in the 0.52-scale figures): trot below about 0.55, canter to about 2.2, gallop above.
+ */
+export const TOP_SPEED = 3.9
 function speedAt(s: number): number {
   if (s < 1.62) return 0
   if (s < 3.1) {
     const u = (s - 1.62) / 1.48
-    return 0.9 + (5.3 - 0.9) * Math.pow(u, 1.5)
+    return 0.45 + (TOP_SPEED - 0.45) * u * u
   }
-  if (s < 3.6) return 5.3
-  if (s < 4.4) return 5.3 - (5.3 - 2.5) * smooth((s - 3.6) / 0.8)
-  if (s < 5.8) return 2.5 - 0.7 * smooth((s - 4.4) / 1.4)
-  return Math.max(0, 1.8 * (1 - smooth((s - 5.8) / 0.55)))
+  if (s < 3.6) return TOP_SPEED
+  if (s < 4.4) return TOP_SPEED - (TOP_SPEED - 2.0) * smooth((s - 3.6) / 0.8)
+  if (s < 5.8) return 2.0 - 0.7 * smooth((s - 4.4) / 1.4)
+  return Math.max(0, 1.3 * (1 - smooth((s - 5.8) / 0.7)))
 }
 
 /** Heading in radians at story time s: the wheel to the right between 4.4 and 5.75. */
@@ -118,6 +123,87 @@ export function riderAt(m: number, s: number): Pose2 {
   const rx = Math.cos(L.heading)
   const rz = -Math.sin(L.heading)
   return { ...L, x: L.x + rx * ox + fx * oz, z: L.z + rz * ox + fz * oz }
+}
+
+const distCache: Float64Array[] = []
+/** Distance rider `m` has actually travelled by story time s (the followers swing wider in the wheel): drives the leg cycle. */
+export function riderDist(m: number, s: number): number {
+  if (!distCache[m]) {
+    const n = Math.ceil((B_DURATION + 2) / PSTEP)
+    const t = new Float64Array(n + 1)
+    let prev = riderAt(m, 0)
+    for (let i = 1; i <= n; i++) {
+      const q = riderAt(m, i * PSTEP)
+      t[i] = t[i - 1]! + Math.hypot(q.x - prev.x, q.z - prev.z)
+      prev = q
+    }
+    distCache[m] = t
+  }
+  const t = distCache[m]!
+  const x = Math.min(t.length - 2, Math.max(0, s) / PSTEP)
+  const i = Math.floor(x)
+  return t[i]! + (t[i + 1]! - t[i]!) * (x - i)
+}
+/** Speed of rider `m` at story time s (tiles per second, from the distance table). */
+export const riderSpeed = (m: number, s: number): number => (riderDist(m, s + 0.02) - riderDist(m, Math.max(0, s - 0.02))) / (s < 0.02 ? 0.02 + s : 0.04)
+
+export interface Footfall {
+  t: number
+  x: number
+  z: number
+  leg: LegName
+  /** 0..1, from the speed. */
+  power: number
+}
+
+const LEG_POS: Record<LegName, [number, number]> = { legFL: [-0.088, 0.2], legFR: [0.088, 0.2], legBL: [-0.088, -0.2], legBR: [0.088, -0.2] }
+const HORSE_Z = -0.14
+const footfallCache = new Map<string, Footfall[]>()
+/**
+ * When and where each hoof of rider `m` strikes the sand (for the dust puffs): the cycle phase accumulates distance /
+ * stride of the gait the speed calls for, and a hoof lands when its phase (less its footfall offset) crosses a whole cycle.
+ * `fs` is the figure scale (rig units to world).
+ */
+export function footfalls(m: number, fs: number): Footfall[] {
+  const key = `${m}|${fs.toFixed(4)}`
+  const hit = footfallCache.get(key)
+  if (hit) return hit
+  const out: Footfall[] = []
+  const legs = Object.keys(LEG_POS) as LegName[]
+  let ph = 0
+  let prev = legs.map(() => 0)
+  let first = true
+  for (let s = 1.6; s < B_DURATION; s += PSTEP) {
+    const v = riderSpeed(m, s) / fs
+    if (v < 0.3) continue
+    const g = gaitBlend(true, v)
+    const name = (g.w > 0.5 ? g.b : g.a) as HorseGaitName
+    const spec = HORSE_GAITS[name]
+    ph += (v * PSTEP) / spec.stride
+    const cur = legs.map((l) => Math.floor(ph - spec.off[l]))
+    if (!first) {
+      legs.forEach((l, i) => {
+        if (cur[i]! > prev[i]!) {
+          const R = riderAt(m, s)
+          const A = (spec.beta * spec.stride) / 2
+          const [lx, lz] = LEG_POS[l]
+          const fwd = (lz + HORSE_Z + A) * fs
+          const side = lx * fs
+          out.push({
+            t: s,
+            x: R.x + Math.sin(R.heading) * fwd + Math.cos(R.heading) * side,
+            z: R.z + Math.cos(R.heading) * fwd - Math.sin(R.heading) * side,
+            leg: l,
+            power: Math.min(1, v / 5),
+          })
+        }
+      })
+    }
+    prev = cur
+    first = false
+  }
+  footfallCache.set(key, out)
+  return out
 }
 
 /** Story time when rider `m` (only the lane that is within 0.45 across) reaches the rebel, by the horse's nose. */

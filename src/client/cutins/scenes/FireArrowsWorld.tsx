@@ -5,8 +5,8 @@ import { useEffect, useMemo, useRef } from 'react'
 import { Group, Matrix4, MeshStandardMaterial, PointLight, Vector3, type Object3D } from 'three'
 import { figures, type Rig } from '../../figures'
 import { burstPosition, sampleSlot, type SlotConfig } from '../particles'
-import { applyClip, idle, mix as mixClip, rest as restClip, walk } from '../../figures/clips'
-import { Puppet, fitFigure, mix, pArmsUp, pIdle, pKneel, sstep } from '../poseKit'
+import { applyClip, fallBack, idle, kneel, locomotion, mix as mixClip, stagger, staggerShift, stepTurn } from '../../figures/clips'
+import { Puppet, fitFigure, mix, pArmsUp, pIdle, sstep } from '../poseKit'
 import { TubeBuffer, arrowTip, bowBasis, makeArrowProp, placeArrow, type ArrowProp } from '../props'
 import { rand, srand } from '../rng'
 import { FIRE, igniteTime } from '../fireModel'
@@ -107,7 +107,8 @@ function poseArcher(a: Archer, i: number, s: number, out: ArcherOut): void {
   rig.group.position.y += Math.sin(Math.PI * wake) * 0.05 * (wake > 0 && wake < 1 ? 1 : 0)
 
   p.reset()
-  pKneel(p, 0.3, u1)
+  // the archers kneel on one knee in their line (docs/spec/51 A2/A3); the weapon arms are posed below
+  applyClip(rig, kneel(1))
   const dip = bell(s, ig - 0.42, ig - 0.12, ig + 0.1, ig + 0.32)
   const raise = sstep((s - (ig + 0.12)) / 0.5)
   // draw: ramps up together, then the string is let go and the hand flies back before settling
@@ -246,45 +247,52 @@ function poseRebel(r: Rebel, i: number, s: number, scene: CutinScene, isFaller: 
   const cue = cueFor(scene, id, s)
   const act = cue?.cue.action
   const sd = (n: number): number => srand(A_SEED, i, n)
+  const fs = g.scale.x
   if (act === 'flinch') {
     const k = cue!.p
     pArmsUp(p, sstep(k * 2.5), 0.8)
     p.rot('torso', -0.38 * sstep(k * 3), sd(51) * 0.25, 0)
     p.rot('head', -0.3 * sstep(k * 3), 0, 0)
-    py += Math.sin(Math.PI * Math.min(1, k * 1.4)) * 0.045
-    pz += 0.06 * sstep(k * 2)
+    // a start: the weight shifts up and back onto the heels, feet where they were
+    py += Math.sin(Math.PI * Math.min(1, k * 1.4)) * 0.03
   } else if (act === 'stagger') {
+    // reels back one step on a planted foot (distance-driven, docs/spec/31 stagger clip), arms flung up
     const k = cue!.p
+    const q = clampU(k * 2.2)
+    applyClip(rig, stagger(q))
     pArmsUp(p, 0.75 + 0.25 * Math.sin(s * 12 + i), 0.9)
-    p.rot('torso', -0.22 + Math.sin(s * 8 + i * 2) * 0.12, Math.sin(s * 6 + i) * 0.25, Math.sin(s * 7 + i) * 0.14)
-    ry += Math.sin(s * 5 + i) * 0.3
-    pz += 0.12 + 0.06 * k
-    px += Math.sin(s * 5 + i) * 0.02
+    p.rot('torso', -0.3 + Math.sin(s * 8 + i * 2) * 0.1, Math.sin(s * 6 + i) * 0.2, Math.sin(s * 7 + i) * 0.12)
+    pz += staggerShift(q) * fs
   } else if (act === 'retreat') {
+    // the survivors turn on the spot (small steps), then walk away from the fire: legs driven by the distance covered
     const k = cue!.p
-    applyClip(rig, mixClip(restClip(), walk(s * 0.8 + i), 0.75))
+    const turn = sstep(k * 4)
+    ry = mix(ry, srand(A_SEED, i, 41) * 0.2, turn)
+    const run = sstep((k - 0.18) / 0.82)
+    const dWorld = 0.62 * run
+    pz += staggerShift(1) * fs + dWorld
+    const v = ((0.62 * (sstep((k - 0.18 + 0.02) / 0.82) - run)) / 0.02) * (1 / (1.4 * 1)) * (1 / Math.max(fs, 1e-3))
+    const walkClip = locomotion(rig, dWorld / fs + i * 0.3, Math.max(0, v), s)
+    const turning = stepTurn(-(Math.PI * turn) * (i % 2 ? 1 : -1))
+    applyClip(rig, mixClip(mixClip(stagger(1), turning, sstep(k * 6)), walkClip, sstep((k - 0.2) / 0.12)))
     pArmsUp(p, 0.55, 0.95)
-    p.rot('torso', -0.15, Math.sin(s * 7 + i) * 0.2, 0)
-    pz += 0.18 + 0.55 * sstep(k * 1.2) * (1 - 0.0)
-    ry += Math.sin(s * 4 + i) * 0.3
-    py += Math.abs(Math.sin(s * 8 + i)) * 0.012
+    p.rot('torso', 0.12, Math.sin(s * 7 + i) * 0.1, 0)
   } else if (act === 'fall') {
     const k = cue!.p
-    // topple backwards (away from the archers): a late acceleration, a small bounce on landing
-    const e = k < 0.62 ? (k / 0.62) ** 2 * 0.86 : 0.86 + 0.14 * sstep((k - 0.62) / 0.12)
-    const bounce = k > 0.62 ? Math.sin(Math.min(1, (k - 0.62) / 0.38) * Math.PI * 2) * 0.06 * (1 - (k - 0.62) / 0.38) : 0
-    rx = -(Math.PI / 2) * Math.min(1, e + bounce * 0.5)
-    py += 0.16 * Math.sin(Math.min(1, e) * Math.PI / 2) * 1.0
-    pz += 0.1 + 0.36 * sstep(k * 1.1)
-    pArmsUp(p, 1 - sstep(k), 1.0)
+    // topples backwards (away from the archers) about the heels and lies flat on the sand
+    const e = k < 0.62 ? (k / 0.62) * 0.86 : 0.86 + 0.14 * sstep((k - 0.62) / 0.12)
+    applyClip(rig, fallBack(e))
+    const bounce = k > 0.62 ? Math.sin(Math.min(1, (k - 0.62) / 0.38) * Math.PI * 2) * 0.012 * (1 - (k - 0.62) / 0.38) : 0
+    py += bounce
+    pz += 0.06 * sstep(k * 1.1)
     lying = k
   } else if (!cue || act === 'wake') {
     // standing ready
   }
   if (isFaller && cue && cue.cue.action === 'fall' && cue.p >= 1) {
-    rx = -(Math.PI / 2)
-    py = 0.16
-    pz = r.z + 0.46
+    applyClip(rig, fallBack(1))
+    py = 0
+    pz = r.z + 0.06
     lying = 1
   }
   g.position.set(px, py, pz)

@@ -50,14 +50,15 @@ function soldierBody(fb: FB, kind: TroopKind, side: SidePalette, v: number, moun
     pauldron: rebel ? { color: c.cloth, style: 'none' } : { color: c.metal, style: 'round' },
     mirrors: !rebel && kind !== 'archer',
     collar: !rebel,
-    baseR: mounted ? 0.44 : D.baseR,
+    ring: mounted ? 0.44 : D.ring,
   })
   addFace(fb, h.head, skin, FACES[v % 3]!)
   return h
 }
 
-export function buildTroopRig(kind: TroopKind, side: SidePalette, variant = 0): Rig {
-  const fb = new FB()
+/** `own`: the rig gets its own materials (the board tints them per unit: done, hit, glowing). */
+export function buildTroopRig(kind: TroopKind, side: SidePalette, variant = 0, own = false): Rig {
+  const fb = new FB(own)
   const v = ((variant % 3) + 3) % 3
   const c = SIDE_COLOURS[side]
   switch (kind) {

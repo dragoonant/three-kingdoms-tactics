@@ -290,7 +290,8 @@ function addExtras(fb: FB, h: Humanoid, s: OfficerStyle): void {
 export function buildOfficer(id: string, opts: OfficerOpts = {}): Rig {
   const style = OFFICER_STYLES[id] ?? defaultStyle(id, opts.type, opts.side)
   const fb = new FB(opts.own ?? false)
-  const mountName = opts.mounted === false ? undefined : style.mount
+  // `mounted: true` puts an officer who has no horse in the table on a bay (a cavalry unit on the board)
+  const mountName = opts.mounted === false ? undefined : (style.mount ?? (opts.mounted === true ? 'bay' : undefined))
   const mounted = !!mountName
   const skin = style.skin ?? ['#e8c5a2', '#dcb28c', '#f0d0b0'][hashOf(id) % 3]!
   const robe = style.robe ?? false
@@ -311,7 +312,7 @@ export function buildOfficer(id: string, opts: OfficerOpts = {}): Rig {
     collar: true,
     sleeveStyle: robe ? 'wide' : 'tight',
     stout: style.stout ?? 1,
-    baseR: mounted ? 0.44 : D.baseR,
+    ring: mounted ? 0.44 : D.ring,
   })
   addFace(fb, h.head, skin, style.face ?? F.calm)
   addBeard(fb, h.head, style.beard ?? 'none', style.beardColor ?? INK)

@@ -5,8 +5,8 @@ import { useEffect, useMemo } from 'react'
 import { CylinderGeometry, ConeGeometry, Group, Mesh, MeshStandardMaterial, Vector3, type Object3D } from 'three'
 import { figures, type Rig } from '../../figures'
 import { burstPosition, sampleSlot, type SlotConfig } from '../particles'
-import { applyClip, gallop, idle, mix as mixClip, rest as restClip, walk } from '../../figures/clips'
-import { Puppet, figureScale, fitFigure, mix, pArmsUp, pRear, sstep } from '../poseKit'
+import { applyClip, fallBack, idle, locomotion, mix as mixClip, stagger, staggerShift, stepTurn } from '../../figures/clips'
+import { Puppet, figureScale, fitFigure, limbsOnly, mix, pArmsUp, pRear, sstep } from '../poseKit'
 import { Ribbon } from '../props'
 import { rand, srand } from '../rng'
 import { ParticleBuffer } from '../stage/ParticleBuffer'
@@ -20,9 +20,12 @@ import {
   contactTime,
   dropper,
   flingPlan,
+  footfalls,
   leaderAt,
   rebelLine,
   riderAt,
+  riderDist,
+  riderSpeed,
   sweepAngle,
   type FlingPlan,
 } from './thunderingCharge'
@@ -71,7 +74,7 @@ function poseRider(r: Rider, s: number, scene: CutinScene): void {
   const L = riderAt(m, s)
   const g = rig.group
   const speed = L.speed
-  const gal = sstep(speed / 3.2)
+  const gal = sstep(speed / 2.4)
   const wake = clampU((s - 0.1) / 0.45)
   const hop = Math.sin(Math.PI * wake) * 0.05 * (wake > 0 && wake < 1 ? 1 : 0)
   // the wheel banks the horse into the turn
@@ -80,11 +83,12 @@ function poseRider(r: Rider, s: number, scene: CutinScene): void {
   g.position.set(L.x, hop, L.z)
   g.rotation.set(0, L.heading, bank)
   p.reset()
-  const cycle = L.dist / 1.55 + m * 0.11
   const idleBreath = (1 - gal) * 0.02
-  void figureScale
-  // the shared clips: the horse idles, then gallops with the leg cycle driven by distance travelled
-  applyClip(rig, mixClip(idle(s + m * 1.3), p.mounted ? gallop((cycle * Math.PI * 2) / 10) : walk((cycle * Math.PI * 2) / 9), gal))
+  const fs = rig.group.scale.x * (rig.bodyScale ?? 1)
+  // the legs run on the distance this rider has covered (rig units): idle, then trot, canter and gallop by speed, hoofbeats planted
+  const dRig = riderDist(m, s) / fs + m * 0.21
+  const vRig = riderSpeed(m, s) / fs
+  applyClip(rig, locomotion(rig, dRig, vRig, s + m * 1.3))
   const lean = 0.08 + 0.26 * gal
   p.rot('torso', lean + idleBreath, 0, 0)
   const sideR = p.side('armR')
@@ -189,14 +193,16 @@ function flingState(f: FlingPlan, rx0: number, rz0: number, s: number): FlingSta
     rx = mix(spinTotalX, restX, e)
     rz = mix(spinZ, restZ, e)
   }
-  const ground = air ? y : mix(0.2, 0.17, sstep(slideT / 0.3))
-  return { pos: [x + ex, Math.max(0.17, ground), z + ez], rx, rz, air, landed: slideT, slide: sl }
+  // the body lies on its back on the sand: its axis rides the thickness of the chest above it
+  const ground = air ? y : mix(0.2, 0.1, sstep(slideT / 0.3))
+  return { pos: [x + ex, Math.max(0.1, ground), z + ez], rx, rz, air, landed: slideT, slide: sl }
 }
 
 function poseRebel(a: RebelActor, s: number, scene: CutinScene, falls: FlingPlan[], drop: number, dropSpear: Spear): void {
   const { p, holder, rig, i } = a
   const id = `rebel${i}`
   p.reset()
+  const fs = rig.group.scale.x
   const wake = clampU((s - 0.1) / 0.45)
   let px = a.x
   let pz = a.z
@@ -215,7 +221,8 @@ function poseRebel(a: RebelActor, s: number, scene: CutinScene, falls: FlingPlan
   const wob = (amp: number, f: number): number => Math.sin(s * f + i * 1.9) * amp
   // spear tips waver while the line watches the charge come on
   const fear = sstep((s - 3.0) / 0.6)
-  if (!fl || s < fl.t) {
+  const standing = !fl || s < fl.t
+  if (standing) {
     const aim = new Vector3(wob(0.22 * fear, 17), 1, 0.2 + wob(0.22 * fear, 13))
     p.aim('weapon', aim, [0, 1, 0])
     p.aim('armR', new Vector3(0.0, 0.2 + 0.5 * fear, 0.8))
@@ -225,51 +232,72 @@ function poseRebel(a: RebelActor, s: number, scene: CutinScene, falls: FlingPlan
     py += wob(0.01 * fear, 23)
   }
   if (fl && s >= fl.t) {
-    const st = flingState(fl, a.x, a.z, s)
+    // flung by the horse: a body in the air (the whole figure tumbles), limbs loose, then it lands, slides and lies flat on the sand
+    const st = flingState(fl, a.x, a.z + staggerShift(clampU((fl.t - 3.2) / 0.5)) * fs, s)
     pivot = 0.2
     px = st.pos[0]
     py = st.pos[1] - pivot
     pz = st.pos[2]
     rx = st.rx
     rz = st.rz
-    pArmsUp(p, st.air ? 1 : 1 - sstep(st.landed / 0.5), 1.0)
+    const flail = st.air ? 1 : 1 - sstep(st.landed / 0.5)
+    const tau = s - fl.t
+    const spread = st.air ? 0.35 : 0.35 + 0.65 * sstep(st.landed / 0.5)
+    const lie = limbsOnly(fallBack(spread)).pose
+    const loose = (f: number, ph: number): number => Math.sin(tau * f + ph + i) * flail
+    applyClip(rig, {
+      pose: {
+        ...lie,
+        legL: { r: [0.9 * loose(13, 0) + (lie.legL?.r?.[0] ?? 0), 0, (lie.legL?.r?.[2] ?? 0) - 0.2 * flail] },
+        legR: { r: [-0.9 * loose(11, 1.3) + (lie.legR?.r?.[0] ?? 0), 0, (lie.legR?.r?.[2] ?? 0) + 0.2 * flail] },
+        torso: { r: [-0.3 * flail + 0.25 * loose(7, 2), 0, 0.2 * loose(9, 0.5)] },
+      },
+    })
+    if (flail > 0.01) pArmsUp(p, flail, 1.0)
     p.rot('head', st.air ? -0.3 : 0, 0, 0)
   } else if (act === 'drop-turn' || (i === drop && act === 'flee')) {
-    const k = act === 'drop-turn' ? cue!.p : 1
+    // drops the spear, turns on the spot with small steps and runs: the legs follow the distance covered
     const turn = sstep((s - 3.2) / 0.32)
     ry = mix(ry, 0.0 + srand(B_SEED, i, 43) * 0.2, turn)
-    applyClip(rig, mixClip(restClip(), walk(s * 1.3 + i), 0.9 * turn))
+    const run = sstep((s - 3.4) / 1.8)
+    const dx = run * (0.4 * srand(B_SEED, i, 44))
+    const dz = run * 2.3
+    pz += dz
+    px += dx
+    const run2 = sstep((s + 0.02 - 3.4) / 1.8)
+    const v = (Math.hypot(0.4 * srand(B_SEED, i, 44), 2.3) * (run2 - run)) / 0.02 / fs
+    const go = locomotion(rig, Math.hypot(dx, dz) / fs + i * 0.2, v, s)
+    const turning = stepTurn((Math.PI - 0.2) * (i % 2 ? 1 : -1) * turn)
+    applyClip(rig, mixClip(turning, go, sstep((s - 3.4) / 0.2)))
     pArmsUp(p, 0.8, 0.9)
     if (w && s > 3.2) w.visible = false
     p.rot('torso', 0.2 * turn, 0, 0)
-    const run = sstep((s - 3.4) / 1.8)
-    pz += run * 2.3
-    px += run * (0.4 * srand(B_SEED, i, 44))
-    py += Math.abs(Math.sin(s * 9 + i)) * 0.02 * turn
-    void k
-  } else if (act === 'brace') {
-    pArmsUp(p, 0.7, 0.8)
-    p.rot('torso', -0.3, wob(0.1, 11), 0)
-    py += wob(0.012, 19)
-  } else if (act === 'recoil') {
-    const k = cue!.p
-    pArmsUp(p, 0.9 - 0.4 * k, 1.0)
-    p.rot('torso', -0.28 + 0.1 * k + wob(0.1, 9), wob(0.2, 7), wob(0.1, 8))
-    pz += 0.12 + 0.16 * sstep(k * 1.5)
-    px += jit * 0.12 * sstep(k * 1.5)
-    ry += wob(0.25, 6)
-  } else if (act === 'regroup') {
-    const k = cue!.p
-    // survivors back away and bunch up, looking at the riders
-    const gx = (a.x - 0.0) * (1 - 0.45 * sstep(k * 1.3))
-    const baseX = a.x + jit * 0.12
-    px = mix(baseX, gx + 0.2, sstep(k * 1.2))
-    pz = mix(a.z + 0.28, a.z + 1.0, sstep(k * 1.2))
-    applyClip(rig, mixClip(restClip(), walk(s * 0.9 + i), 0.7 * (1 - sstep((k - 0.6) / 0.3)) * sstep(k * 4)))
+  } else if (s >= 3.2 && s < 5.8 && act !== 'drop-turn') {
+    // the line staggers back a step as the horses hit it (B4): one planted foot, the other steps back, the arms fling up
+    const q = clampU((s - 3.2) / 0.5)
+    applyClip(rig, stagger(q))
+    pArmsUp(p, 0.55 + 0.35 * q, 1.0)
+    p.rot('torso', -0.3 + 0.1 * q + wob(0.08, 9), wob(0.2, 7) * q, wob(0.1, 8) * q)
+    pz += staggerShift(q) * fs
+    px += jit * 0.02 * q
+    ry += wob(0.12, 6) * q
+  } else if (act === 'regroup' || s >= 5.8) {
+    const k = cue && act === 'regroup' ? cue.p : 1
+    // survivors back away and bunch up, still looking at the riders: the legs walk backwards (the cycle runs in reverse)
+    const e = sstep(k * 1.2)
+    const gx = a.x * (1 - 0.45 * sstep(k * 1.3))
+    const x0 = a.x + jit * 0.02
+    const z0 = a.z + staggerShift(1) * fs
+    px = mix(x0, gx + 0.2, e)
+    pz = mix(z0, a.z + 1.0, e)
+    const e2 = sstep((k + 0.02 / 1.2) * 1.2)
+    const v = (Math.hypot(gx + 0.2 - x0, a.z + 1.0 - z0) * (e2 - e)) / 0.02 / fs / 1.2
+    // moving away from the riders while facing them: backwards along the figure's own forward axis
+    const back = -1
+    applyClip(rig, locomotion(rig, back * (Math.hypot(px - x0, pz - z0) / fs) + i * 0.2, v, s))
     pArmsUp(p, 0.5, 0.9)
     p.rot('torso', -0.15, wob(0.12, 6), 0)
-  } else if (!fl && act === 'flinch') {
-    pArmsUp(p, 0.5, 0.8)
+    ry += wob(0.1, 6)
   }
   // dropped spear on the ground for the dropper
   if (i === drop) {
@@ -299,12 +327,13 @@ export function ThunderingChargeWorld({ scene }: { scene: CutinScene }) {
     const trail = new Ribbon(44, '#f4e7d0')
     const contacts = Array.from({ length: B_LAYOUT.rebelCount }, (_, i) => contactTime(i))
     const fx = {
-      hoof: new ParticleBuffer(4 * 90, 'alpha', 0.9),
+      hoof: new ParticleBuffer(4 * 160, 'alpha', 0.9),
       burst: new ParticleBuffer(B_LAYOUT.rebelCount * 22, 'alpha', 0.9),
       slide: new ParticleBuffer(B_LAYOUT.rebelCount * 24, 'alpha', 0.9),
       sparks: new ParticleBuffer(120, 'add', 2.2),
     }
-    return { falls, riders, rebels, drop, spear, trail, contacts, fx }
+    const steps = riders.map((r, m) => footfalls(m, figureScale() * (r.rig.bodyScale ?? 1)))
+    return { falls, riders, rebels, drop, spear, trail, contacts, fx, steps }
   }, [scene])
 
   useEffect(
@@ -347,29 +376,28 @@ export function ThunderingChargeWorld({ scene }: { scene: CutinScene }) {
       trail.commit(vis > 0.01)
     }
 
-    // hoof dust: puffs thrown up behind each galloping rider
+    // hoof dust: a puff kicked up at every footfall (the strikes come from the same distance-driven gait the legs use)
     {
       const b = fx.hoof
       b.begin(ppu)
-      for (let m = 0; m < 4; m++) {
-        const cfg: SlotConfig = { seed: B_SEED + m, count: 90, period: 1.0, start: 1.62, end: 6.0, lifeMin: 0.5 }
-        for (let k = 0; k < cfg.count; k++) {
-          const sl = sampleSlot(cfg, k, s)
-          if (!sl.alive) continue
-          const R = riderAt(m, sl.tb)
-          if (R.speed < 0.9) continue
-          const side = sl.r(1) < 0.5 ? -1 : 1
-          const fx2 = Math.sin(R.heading)
-          const fz2 = Math.cos(R.heading)
-          const rx = Math.cos(R.heading)
-          const rz = -Math.sin(R.heading)
-          const px = R.x + rx * side * 0.1 - fx2 * (0.12 + 0.3 * sl.r(2)) + srand(B_SEED, k, m) * 0.05 - fx2 * R.speed * 0.12 * sl.age
-          const pz = R.z + rz * side * 0.1 - fz2 * (0.12 + 0.3 * sl.r(2)) - fz2 * R.speed * 0.12 * sl.age + srand(B_SEED, k, m + 9) * 0.05
-          const py = 0.035 + sl.age * (0.18 + 0.14 * sl.r(3)) * 0.9
-          const gain = Math.min(1, (R.speed - 0.9) / 2.5)
-          b.push(px, py, pz, (0.12 + 0.26 * sl.u) * (0.7 + 0.5 * sl.r(4)), 0.8, 0.66, 0.46, 0.34 * gain * (1 - sl.u) ** 1.2)
+      world.steps.forEach((evs, m) => {
+        for (const ev of evs) {
+          const age = s - ev.t
+          if (age < 0 || age > 0.65) continue
+          const u = age / 0.65
+          const R = riderAt(m, ev.t)
+          const hx = Math.sin(R.heading)
+          const hz = Math.cos(R.heading)
+          for (let k = 0; k < 3; k++) {
+            const r1 = srand(B_SEED + m, Math.round(ev.t * 240) + k, 1)
+            const r2 = rand(B_SEED + m, Math.round(ev.t * 240) + k, 2)
+            const x = ev.x - hx * (0.05 + 0.3 * u * (0.4 + r2)) + r1 * 0.05
+            const z = ev.z - hz * (0.05 + 0.3 * u * (0.4 + r2)) + srand(B_SEED + m, Math.round(ev.t * 240) + k, 3) * 0.05
+            const y = 0.02 + u * (0.1 + 0.1 * r2)
+            b.push(x, y, z, (0.08 + 0.2 * u) * (0.7 + 0.5 * r2) * (0.6 + 0.6 * ev.power), 0.8, 0.66, 0.46, 0.4 * (0.4 + ev.power) * (1 - u) ** 1.3)
+          }
         }
-      }
+      })
       b.end()
     }
     // impact dust and sparks at each contact

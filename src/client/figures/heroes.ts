@@ -1,6 +1,7 @@
 // The seven unique hero rigs (docs/spec/31-hero-figures.md identity table). Each follows its clause literally.
 // Everything is procedural three.js: LatheGeometry for robes and helmets, ExtrudeGeometry for blades / crescents /
 // fans / beards, TubeGeometry for feathers and tassels, capsules and spheres for limbs and heads.
+import { Group } from 'three'
 import { FB, shapeFrom } from './kit'
 import { addCape, featherFan, glaive, longBeard, mountRider, pheasantFeather, serpentSpear, tigerWhiskers, twinCrescentHalberd } from './gear'
 import { D, addFace, finishRig, hairCap, helmet, makeHumanoid, scarf, spear, sword } from './parts'
@@ -14,6 +15,26 @@ export interface HeroBuildOpts {
   mounted?: boolean
   /** Give the rig its own materials (the board tints them per unit). */
   own?: boolean
+}
+
+/**
+ * Body scale of the three brothers (the novel: Guan Yu 9 chi, Zhang Fei 8, Liu Bei 7.5; owner note 2026-11-01): Guan Yu is the
+ * tallest at 1.15x Liu Bei, Zhang Fei 1.07x and broader. The whole body (and the horse) is scaled, not just the weapon.
+ */
+export const HERO_SCALE: Record<string, number> = { 'liu-bei': 1, 'guan-yu': 1.15, 'zhang-fei': 1.07 }
+
+/** Wraps everything under the rig's group in a scaled child, so the joints and the clips keep working in unscaled units. */
+function scaleBody(rig: Rig, k: number): Rig {
+  if (k === 1) return rig
+  const inner = new Group()
+  inner.name = 'body'
+  for (const c of [...rig.group.children]) inner.add(c)
+  inner.scale.setScalar(k)
+  rig.group.add(inner)
+  rig.height *= k
+  if (rig.footprint !== undefined) rig.footprint *= k
+  rig.bodyScale = k
+  return rig
 }
 
 /** Heroes that ride in the identity table. */
@@ -68,7 +89,7 @@ function guanYu(fb: FB, mounted: boolean): Rig {
   const h = makeHumanoid(fb, {
     skin: red, armour: '#2f7f52', trim: GOLD, sleeve: '#26262e', boots: '#1d1a17', belt: GOLD, buckle: '#f0cf6a',
     skirt: 'robe', skirtColor: green, skirtTrim: GOLD, pauldron: { color: '#2a2a32', style: 'round' }, mirrors: false, collar: true,
-    sleeveStyle: 'tight', stout: 1.03, baseR: mounted ? 0.44 : undefined,
+    sleeveStyle: 'tight', stout: 1.03, ring: mounted ? 0.44 : undefined,
   })
   // dark armour breastplate with gold edge showing over the robe
   fb.lathe(h.torso, [[0.158, 0.075], [0.176, 0.075], [0.176, 0.17], [0.15, 0.185], [0.158, 0.17]], '#2a2a32')
@@ -82,6 +103,8 @@ function guanYu(fb: FB, mounted: boolean): Rig {
   // face paint: darker deep-red forehead and cheekbone shading
   for (const sd of [-1, 1]) fb.sph(h.head, '#8f1a14', [sd * 0.1, HY + 0.0, 0.135], [0.04, 0.05, 0.02], { shadow: false })
   const beard = longBeard(fb, h.head, '#0d0b0d')
+  // taller and more dignified: a head a little smaller against the body (about 2.7 heads), still MGSD
+  h.head.scale.setScalar(0.92)
   // the crescent glaive: the tallest weapon in the game
   glaive(fb, h.weapon, 0.98)
   h.weapon.rotation.set(0.06, 0, 0)
@@ -103,7 +126,7 @@ function zhangFei(fb: FB, _mounted: boolean): Rig {
   const h = makeHumanoid(fb, {
     skin, armour: blue, trim: '#9aa0b0', sleeve: black, boots: '#0f0f13', belt: '#202028', buckle: '#9aa0b0',
     skirt: 'tassets', skirtColor: black, skirtTrim: '#9aa0b0', pauldron: { color: black, style: 'round' }, studs: '#aab0c0', collar: true,
-    stout: 1.13, handRadius: 0.064,
+    stout: 1.2, handRadius: 0.064,
   })
   // black shoulder lames and blue panel
   fb.lathe(h.torso, [[0.172, 0.1], [0.19, 0.1], [0.19, 0.16], [0.172, 0.16]], black)
@@ -117,12 +140,17 @@ function zhangFei(fb: FB, _mounted: boolean): Rig {
     eyes: 'stare', brow: { thick: 0.032, angle: 0.4, len: 0.09, color: '#0b0908' }, mouth: 'shout', nose: true, cheeks: '#c26a4c',
   })
   tigerWhiskers(fb, h.head, '#0e0c0e')
+  // red over the black and deep blue: a cape that sways, a waist sash with hanging ends, and the red tassel on the spear
+  const cape = addCape(fb, h.torso, { outer: '#c0281d', lining: '#7e1811', len: 0.46, spread: 0.12, trim: '#9aa0b0' })
+  cape.scale.set(1.18, 1, 1.2) // wide enough to clear his broad chest
+  fb.lathe(h.torso, [[0.152 * 1.2, -0.03], [0.168 * 1.2, -0.03], [0.168 * 1.2, 0.045], [0.152 * 1.2, 0.045]], '#c0281d', { name: 'sash' })
+  for (const [x, len] of [[0.07, 0.2], [0.115, 0.15]] as const) fb.tube(h.hips, `zf-sash|${len}`, [[0, 0, 0], [0.012, -0.06, 0.02], [0.02, -len * 0.7, 0.03], [0.03, -len, 0.02]], 0.03, 0.016, '#c0281d', { p: [x, 0.0, 0.2] }, { flat: 0.4 })
   // the serpent spear, held forward at an angle
   serpentSpear(fb, h.weapon, 1.05)
   h.weapon.rotation.set(0.22, 0, -0.05)
   h.armR.rotation.set(-0.7, 0, 0.3)
   h.armL.rotation.set(-0.4, 0, -0.4)
-  return finishRig(h, 'hero')
+  return finishRig(h, 'hero', { cape })
 }
 
 // ---------- Zhao Yun ----------
@@ -131,7 +159,7 @@ function zhaoYun(fb: FB, mounted: boolean): Rig {
   const silver = '#aeb8c4'
   const h = makeHumanoid(fb, {
     skin: '#f2d2b0', armour: white, trim: silver, sleeve: '#f6f7f9', boots: '#dfe3e8', belt: '#3d6fb3', buckle: silver,
-    skirt: 'tassets', skirtColor: '#e6e9ee', skirtTrim: silver, pauldron: { color: '#d3dae2', style: 'round' }, mirrors: true, collar: true, baseR: mounted ? 0.44 : undefined,
+    skirt: 'tassets', skirtColor: '#e6e9ee', skirtTrim: silver, pauldron: { color: '#d3dae2', style: 'round' }, mirrors: true, collar: true, ring: mounted ? 0.44 : undefined,
   })
   // blue sash across the waist with a hanging tail
   fb.lathe(h.torso, [[0.139, -0.03], [0.162, -0.03], [0.162, 0.04], [0.139, 0.04]], '#3d6fb3')
@@ -196,7 +224,7 @@ function luBu(fb: FB, mounted: boolean): Rig {
   const h = makeHumanoid(fb, {
     skin, armour: red, trim: gold, sleeve: '#17141a', boots: '#17141a', belt: gold, buckle: '#f6d77a',
     skirt: 'tassets', skirtColor: '#17141a', skirtTrim: gold, pauldron: { color: gold, style: 'round' }, mirrors: true, collar: true,
-    stout: 1.06, legs: '#17141a', baseR: mounted ? 0.44 : undefined,
+    stout: 1.06, legs: '#17141a', ring: mounted ? 0.44 : undefined,
   })
   // red armour plates over the black under-robe skirt
   for (let i = 0; i < 9; i++) {
@@ -232,7 +260,7 @@ function caoCao(fb: FB, mounted: boolean): Rig {
   const h = makeHumanoid(fb, {
     skin, armour: black, trim: gold, sleeve: purple, boots: '#14121a', belt: purple, buckle: gold,
     skirt: 'tassets', skirtColor: purple, skirtTrim: gold, pauldron: { color: purple, style: 'round' }, mirrors: true, collar: true,
-    legs: '#14121a', baseR: mounted ? 0.44 : undefined,
+    legs: '#14121a', ring: mounted ? 0.44 : undefined,
   })
   // gold edges on the shoulders and hem
   for (const sd of [-1, 1]) fb.add(h.torso, fb.torusGeo(0.082, 0.009), fb.metal(gold), { p: [sd * (D.shX + 0.012), D.shY + 0.025, 0], r: [Math.PI / 2 - 0.2, 0, sd * 0.2], shadow: false })
@@ -276,6 +304,6 @@ export function buildHeroRig(id: string, opts: HeroBuildOpts = {}): Rig | undefi
   if (!isHeroId(id)) return undefined
   const fb = new FB(opts.own ?? false)
   const mounted = (HERO_RIDES[id] ?? false) && opts.mounted !== false
-  return BUILDERS[id](fb, mounted)
+  return scaleBody(BUILDERS[id](fb, mounted), HERO_SCALE[id] ?? 1)
 }
 
