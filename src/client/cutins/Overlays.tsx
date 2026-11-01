@@ -28,7 +28,7 @@ function Defs() {
 }
 
 function Title({ o }: { o: OverlayState['title'] }) {
-  if (o.alpha <= 0.002 || o.reveal <= 0.002) return null
+  if (!o.text || o.alpha <= 0.002 || o.reveal <= 0.002) return null
   return (
     <div className="co-title" style={{ opacity: o.alpha }}>
       <div className="co-title-swash" style={{ opacity: o.reveal }} />
@@ -43,17 +43,17 @@ function Title({ o }: { o: OverlayState['title'] }) {
 }
 
 function Callout({ o }: { o: OverlayState['callout'] }) {
-  if (o.alpha <= 0.002 || o.reveal <= 0.002) return null
+  if (!o.text || o.alpha <= 0.002 || o.reveal <= 0.002) return null
   const pop = 1 + (1 - EASE.out(o.reveal)) * 0.18
   return (
-    <div className="co-callout" style={{ opacity: o.alpha, transform: `rotate(-5deg) scale(${pop})`, WebkitMaskImage: wipe(o.reveal, 30), maskImage: wipe(o.reveal, 30) }}>
+    <div className={`co-callout${o.side === 'left' ? ' left' : ''}`} data-testid="cutin-callout" style={{ opacity: o.alpha, transform: `rotate(-5deg) scale(${pop})`, WebkitMaskImage: wipe(o.reveal, 30), maskImage: wipe(o.reveal, 30) }}>
       <span style={{ filter: 'url(#co-rough)', display: 'inline-block' }}>{o.text}</span>
     </div>
   )
 }
 
 function Damage({ o }: { o: OverlayState['damage'] }) {
-  if (o.alpha <= 0.002 || o.paint <= 0.002) return null
+  if (!o.text || o.alpha <= 0.002 || o.paint <= 0.002) return null
   // the swoosh under the figures is drawn first, then the numerals are painted in after it
   const swoosh = clamp01(o.paint * 1.6)
   const nums = clamp01(o.paint * 1.5 - 0.35)
@@ -75,6 +75,42 @@ function Damage({ o }: { o: OverlayState['damage'] }) {
           filter="url(#co-brush)"
         />
       </svg>
+    </div>
+  )
+}
+
+function Slips({ slips }: { slips: OverlayState['slips'] }) {
+  if (!slips.length) return null
+  return (
+    <div className="co-slips">
+      {slips.map((s, i) => (
+        <div
+          key={`${i}-${s.text}`}
+          className={`co-slip ${s.tone}`}
+          data-testid="cutin-slip"
+          style={{ opacity: s.alpha, bottom: `${s.row * 8.4}cqh`, WebkitMaskImage: wipe(s.reveal, 18), maskImage: wipe(s.reveal, 18) }}
+        >
+          {s.text}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function WindArrow({ o }: { o: NonNullable<OverlayState['windArrow']> }) {
+  const L = 300
+  return (
+    <div className="co-wind" style={{ opacity: o.alpha }}>
+      <svg viewBox="0 0 200 200" width="100%" style={{ transform: `rotate(${o.angle}deg)`, overflow: 'visible' }}>
+        <g filter="url(#co-brush)">
+          <path d="M20 108 C 60 90, 110 112, 160 98" fill="none" stroke="#14100d" strokeWidth="26" strokeLinecap="round" strokeDasharray={L} strokeDashoffset={L * (1 - o.reveal)} opacity="0.86" />
+          <path d="M20 100 C 60 82, 110 104, 160 90" fill="none" stroke="#efe6d2" strokeWidth="15" strokeLinecap="round" strokeDasharray={L} strokeDashoffset={L * (1 - o.reveal)} />
+          <path d="M140 52 L 192 94 L 142 140 L 154 96 Z" fill="#efe6d2" stroke="#14100d" strokeWidth="5" strokeLinejoin="round" opacity={o.reveal > 0.8 ? 1 : 0} />
+        </g>
+      </svg>
+      <div className="co-wind-label" style={{ opacity: o.reveal }}>
+        {o.label}
+      </div>
     </div>
   )
 }
@@ -189,6 +225,8 @@ export function Overlays({ ev, safe = false }: { ev: Evaluated; safe?: boolean }
       <Title o={o.title} />
       <Callout o={o.callout} />
       <Damage o={o.damage} />
+      <Slips slips={o.slips} />
+      {o.windArrow && <WindArrow o={o.windArrow} />}
       <Seal o={o.seal} />
       {o.veil > 0.002 && <div className="co-veil" style={{ opacity: o.veil }} />}
       {safe && (

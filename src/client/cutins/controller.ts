@@ -54,6 +54,7 @@ export class CutinController {
 
   setScene(scene: CutinScene): void {
     this.scene = scene
+    this.windowEnd = null
     this.setTime(0)
     this.emitState()
   }
@@ -67,35 +68,50 @@ export class CutinController {
     this.render()
   }
 
+  /** Scene time at which playback finishes (a non-final chain link stops before its pull-out). Defaults to the scene's end. */
+  windowEnd: number | null = null
+  private get endAt(): number {
+    return this.windowEnd ?? this.scene.duration
+  }
+
+  /**
+   * Advance the clock by `dt` real seconds (times the speed), render, and report the end of the window. Used by the rAF loop
+   * below and, directly, by the in-game player and by tests that step the clock themselves (no wall time involved).
+   */
+  advance(dt: number): void {
+    if (!this.playing) return
+    let nt = this.t + dt * this.speed
+    let ev: Transport | null = null
+    if (nt >= this.endAt) {
+      if (this.loop) {
+        nt = nt % this.endAt
+        ev = 'wrap'
+      } else {
+        nt = this.endAt
+        this.playing = false
+        this.emitState()
+        ev = 'finish'
+      }
+    }
+    this.ticking = true
+    try {
+      this.setTime(nt)
+    } finally {
+      this.ticking = false
+    }
+    if (ev) this.emitTransport(ev)
+  }
+
   play(): void {
     if (this.playing) return
-    if (this.t >= this.scene.duration - 1e-6) this.t = 0
+    if (this.t >= this.endAt - 1e-6) this.t = 0
     this.playing = true
     this.last = performance.now()
     const tick = (now: number): void => {
       if (!this.playing) return
       const dt = Math.min(0.1, (now - this.last) / 1000)
       this.last = now
-      let nt = this.t + dt * this.speed
-      let ev: Transport | null = null
-      if (nt >= this.scene.duration) {
-        if (this.loop) {
-          nt = nt % this.scene.duration
-          ev = 'wrap'
-        } else {
-          nt = this.scene.duration
-          this.playing = false
-          this.emitState()
-          ev = 'finish'
-        }
-      }
-      this.ticking = true
-      try {
-        this.setTime(nt)
-      } finally {
-        this.ticking = false
-      }
-      if (ev) this.emitTransport(ev)
+      this.advance(dt)
       if (this.playing) this.raf = requestAnimationFrame(tick)
     }
     this.raf = requestAnimationFrame(tick)
@@ -103,10 +119,19 @@ export class CutinController {
     this.emitTransport('play')
   }
 
+  /** Mark the clock as running with no rAF loop of its own: the caller calls `advance(dt)`. */
+  playExternal(): void {
+    if (this.playing) return
+    if (this.t >= this.endAt - 1e-6) this.t = 0
+    this.playing = true
+    this.emitState()
+    this.emitTransport('play')
+  }
+
   pause(): void {
     if (!this.playing) return
     this.playing = false
-    cancelAnimationFrame(this.raf)
+    if (typeof cancelAnimationFrame !== 'undefined') cancelAnimationFrame(this.raf)
     this.emitState()
     this.emitTransport('pause')
   }

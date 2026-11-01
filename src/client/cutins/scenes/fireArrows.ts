@@ -5,8 +5,11 @@
 // World frame: +y up, archers kneel at z = -2.4 facing +z, the millet field and 7 rebels lie at z ~ 1.4..5.3, and the
 // breeze blows toward +x (the field's far side), so flames run to the right when seen from the rebel side.
 import { seededOrder, rand, srand } from '../rng'
-import { storyClock, type Cue, type CutinScene, type TimeScaleSeg, type Vec3 } from '../timeline'
+import { storyClock, type Cue, type CutinScene, type Slip, type TimeScaleSeg, type Vec3 } from '../timeline'
 import { FIRE, type Ignition } from '../fireModel'
+import { SCENE_INFO } from '../sceneInfo'
+import type { LinkPlan } from '../plan'
+import { defenderOf, groundKind } from './act'
 
 export const A_DURATION = 7.0
 export const A_SEED = 7101
@@ -150,28 +153,46 @@ function buildCues(plan: readonly ArrowPlan[], falls: number[]): Cue[] {
   return cues
 }
 
-export function makeFireArrows(sampleDamage = 420, sampleFalls = 2): CutinScene {
+/**
+ * Scene A (Fire Arrows) and, with `variant: 'volley'`, A' (Volley): the same grammar without the brazier and the fire. The
+ * defaults reproduce the review page's original sample (Jian Yong, 420 damage, two fall); a LinkPlan overrides every actor
+ * and number with the engine event's.
+ */
+export function makeFireArrows(sampleDamage = 420, sampleFalls = 2, params?: LinkPlan, variant: 'fire' | 'volley' = 'fire'): CutinScene {
+  const volley = variant === 'volley'
+  const p = params
+  const px = volley ? 'V' : 'A'
+  const info = SCENE_INFO[volley ? 'Ap' : 'A']
   const plan = arrowPlan()
   const falls = fallers(sampleFalls)
-  const dmg = `−${sampleDamage.toLocaleString('en-US')}`
+  const dmg = sampleDamage > 0 ? `−${sampleDamage.toLocaleString('en-US')}` : ''
+  const casterName = p ? p.caster.name : 'Jian Yong'
+  const title = p ? p.stratName : volley ? 'Arrow Rain' : 'Fire Attack'
+  const first = !p || p.link === 0
+  const slips: Slip[] = []
+  if (p && p.targets > 1) slips.push({ text: `${p.targets} units struck`, at: 5.7, tone: 'ink', row: 0 })
+  if (p?.routed) slips.push({ text: 'Routed', at: 5.8, tone: 'cinnabar', row: p.targets > 1 ? 1 : 0 })
+  if (p && !volley && p.ignited) slips.push({ text: 'Set alight', at: 5.75, tone: 'cinnabar', row: slips.length })
   return {
-    id: 'A',
-    title: 'Fire Attack',
-    officer: 'Jian Yong',
+    id: volley ? 'Ap' : 'A',
+    title,
+    officer: casterName,
     duration: A_DURATION,
     seed: A_SEED,
     sample: { damage: sampleDamage, falls: sampleFalls },
+    ...(p ? { params: p } : {}),
+    chain: { skipTo: info.skipTo, cutAt: info.cutAt, resultAt: info.resultAt },
     beats: [
-      { id: 'A1', start: 0.0, end: 0.7, label: 'Dive from the board into Jian Yong’s tile' },
-      { id: 'A2', start: 0.7, end: 1.9, label: 'Archers dip arrows in the brazier, tips catch one by one' },
-      { id: 'A3', start: 1.9, end: 2.6, label: 'Synchronised draw, bows bend, “Loose!”' },
-      { id: 'A4', start: 2.6, end: 4.0, label: 'Tilt up and track the volley, slow-motion at the apex' },
-      { id: 'A5', start: 4.0, end: 5.6, label: 'Reverse shot: impact, flames run downwind, rebels fall' },
-      { id: 'A6', start: 5.6, end: 7.0, label: 'Rise to a wide shot, pull out to the table, seal' },
+      { id: `${px}1`, start: 0.0, end: 0.7, label: `Dive from the board into ${casterName}’s tile` },
+      { id: `${px}2`, start: 0.7, end: 1.9, label: volley ? 'Archers nock plain arrows in a line' : 'Archers dip arrows in the brazier, tips catch one by one' },
+      { id: `${px}3`, start: 1.9, end: 2.6, label: 'Synchronised draw, bows bend, “Loose!”' },
+      { id: `${px}4`, start: 2.6, end: 4.0, label: 'Tilt up and track the volley, slow-motion at the apex' },
+      { id: `${px}5`, start: 4.0, end: 5.6, label: volley ? 'Reverse shot: the arrows thud in, defenders fall' : 'Reverse shot: impact, flames run downwind, defenders fall' },
+      { id: `${px}6`, start: 5.6, end: 7.0, label: 'Rise to a wide shot, pull out to the table, seal' },
     ],
     shots: [
       {
-        beat: 'A1',
+        beat: `${px}1`,
         from: 0,
         to: 0.7,
         mode: 'smooth',
@@ -182,7 +203,7 @@ export function makeFireArrows(sampleDamage = 420, sampleFalls = 2): CutinScene 
         ],
       },
       {
-        beat: 'A2',
+        beat: `${px}2`,
         from: 0.7,
         to: 1.9,
         mode: 'smooth',
@@ -194,7 +215,7 @@ export function makeFireArrows(sampleDamage = 420, sampleFalls = 2): CutinScene 
         ],
       },
       {
-        beat: 'A3',
+        beat: `${px}3`,
         from: 1.9,
         to: 2.6,
         mode: 'smooth',
@@ -205,7 +226,7 @@ export function makeFireArrows(sampleDamage = 420, sampleFalls = 2): CutinScene 
         ],
       },
       {
-        beat: 'A4',
+        beat: `${px}4`,
         from: 2.6,
         to: 4.0,
         mode: 'smooth',
@@ -217,7 +238,7 @@ export function makeFireArrows(sampleDamage = 420, sampleFalls = 2): CutinScene 
         ],
       },
       {
-        beat: 'A5',
+        beat: `${px}5`,
         from: 4.0,
         to: 5.6,
         mode: 'smooth',
@@ -228,7 +249,7 @@ export function makeFireArrows(sampleDamage = 420, sampleFalls = 2): CutinScene 
         ],
       },
       {
-        beat: 'A6',
+        beat: `${px}6`,
         from: 5.6,
         to: 7.0,
         mode: 'smooth',
@@ -248,11 +269,12 @@ export function makeFireArrows(sampleDamage = 420, sampleFalls = 2): CutinScene 
     timeScale: A_TIMESCALE,
     cues: buildCues(plan, falls),
     overlays: {
-      title: { text: 'Fire Attack', sub: 'Jian Yong', inAt: 0.2, inDur: 0.55, outAt: 2.25, outDur: 0.35 },
+      title: { text: title, sub: casterName, inAt: first ? 0.2 : info.skipTo + 0.05, inDur: 0.55, outAt: first ? 2.25 : info.skipTo + 1.7, outDur: 0.35 },
       callout: { text: 'Loose!', at: 2.02, inDur: 0.18, hold: 0.36, outDur: 0.18 },
       damage: { text: dmg, at: 5.72, paintDur: 0.55, outAt: 99, outDur: 0.1 },
-      seal: { at: 6.5, dur: 0.22, glyph: '火' },
-      flashes: [{ at: 4.05, dur: 0.15, kind: 'fire', peak: 0.38 }],
+      seal: { at: 6.5, dur: 0.22, glyph: info.glyph },
+      flashes: [{ at: 4.05, dur: 0.15, kind: volley ? 'ink' : 'fire', peak: volley ? 0.2 : 0.38 }],
+      ...(slips.length ? { slips } : {}),
       speed: [[0, 0]],
       dof: [
         [0, 0.05],
@@ -264,6 +286,19 @@ export function makeFireArrows(sampleDamage = 420, sampleFalls = 2): CutinScene 
       ],
       veil: [[0, 0]],
     },
+  }
+}
+
+/** The layout the world needs from a plan: defender kind and palette, the ground and whether the field catches fire. */
+export function fireWorldSpec(scene: CutinScene): { fire: boolean; ignited: boolean; ground: ReturnType<typeof groundKind>; defKind: ReturnType<typeof defenderOf>; terrain: string } {
+  const p = scene.params
+  const fire = scene.id === 'A'
+  return {
+    fire,
+    ignited: fire && (p ? p.ignited : true),
+    ground: p ? groundKind(p.terrain) : 'millet',
+    defKind: p ? defenderOf(p) : { kind: 'rebel', palette: 'yellow' },
+    terrain: p ? p.terrain : 'farm',
   }
 }
 

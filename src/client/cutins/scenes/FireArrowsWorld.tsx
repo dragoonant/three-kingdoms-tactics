@@ -1,16 +1,19 @@
 // Scene A world: the brazier, six kneeling archers, Jian Yong, the burning millet and seven rebels. Every pose and every
 // particle is a pure function of story time (see fireArrows.ts for the plan and cues).
 import { useFrame } from '@react-three/fiber'
-import { useEffect, useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
+import { useDisposeWorld } from '../dispose'
 import { Group, Matrix4, MeshStandardMaterial, PointLight, Vector3, type Object3D } from 'three'
-import { figures, type Rig } from '../../figures'
+import { type Rig } from '../../figures'
+import { buildCasterRig } from '../casters'
+import { spawnFormation } from './formation'
 import { burstPosition, sampleSlot, type SlotConfig } from '../particles'
 import { applyClip, fallBack, idle, kneel, locomotion, mix as mixClip, stagger, staggerShift, stepTurn } from '../../figures/clips'
 import { Puppet, fitFigure, mix, pArmsUp, pIdle, sstep } from '../poseKit'
 import { TubeBuffer, arrowTip, bowBasis, makeArrowProp, placeArrow, type ArrowProp } from '../props'
 import { rand, srand } from '../rng'
 import { FIRE, igniteTime } from '../fireModel'
-import { Millet } from '../stage/Millet'
+import { Ground } from '../stage/Ground'
 import { ParticleBuffer, flameColour } from '../stage/ParticleBuffer'
 import { Stage, pxPerUnit, useFrameRef } from '../stage/Stage'
 import { cueFor, type CutinScene } from '../timeline'
@@ -27,6 +30,7 @@ import {
   igniteAt,
   ignitions,
   rebelPos,
+  fireWorldSpec,
   type ArrowPlan,
 } from './fireArrows'
 
@@ -49,8 +53,7 @@ interface Archer {
   x: number
 }
 
-function makeArcher(i: number): Archer {
-  const rig = figures.buildTroop('archer', 'han', i)
+function makeArcher(i: number, rig: Rig): Archer {
   const fs = fitFigure(rig)
   const p = new Puppet(rig)
   p.j('weapon')?.traverse((o) => {
@@ -95,7 +98,7 @@ const tmp = {
 }
 
 /** Poses archer `i` at story time s. Returns where its held arrows are, in the archer's own space. */
-function poseArcher(a: Archer, i: number, s: number, out: ArcherOut): void {
+function poseArcher(a: Archer, i: number, s: number, out: ArcherOut, fire: boolean): void {
   const { p, rig, reach: L, fs } = a
   const u1 = 1 / fs
   const ig = igniteAt(i)
@@ -109,7 +112,7 @@ function poseArcher(a: Archer, i: number, s: number, out: ArcherOut): void {
   p.reset()
   // the archers kneel on one knee in their line (docs/spec/51 A2/A3); the weapon arms are posed below
   applyClip(rig, kneel(1))
-  const dip = bell(s, ig - 0.42, ig - 0.12, ig + 0.1, ig + 0.32)
+  const dip = fire ? bell(s, ig - 0.42, ig - 0.12, ig + 0.1, ig + 0.32) : 0
   const raise = sstep((s - (ig + 0.12)) / 0.5)
   // draw: ramps up together, then the string is let go and the hand flies back before settling
   const drawUp = sstep((s - DRAW_START) / (DRAW_FULL - DRAW_START))
@@ -169,7 +172,7 @@ function poseArcher(a: Archer, i: number, s: number, out: ArcherOut): void {
   const dirBow = new Vector3().copy(B).addScaledVector(u3, 0.1).sub(hL).normalize()
   const dir = new Vector3().copy(dirRest).lerp(dirDip, dip).lerp(dirBow, raise).normalize()
   const side = new Vector3().crossVectors(dir, Y).normalize()
-  const glow = sstep((s - (ig - 0.04)) / 0.16)
+  const glow = fire ? sstep((s - (ig - 0.04)) / 0.16) : 0
   for (let j = 0; j < 3; j++) {
     const off = (j - 1) * 0.011 * u1
     const d = new Vector3().copy(dir).addScaledVector(side, (j - 1) * 0.07).normalize()
@@ -222,8 +225,7 @@ interface Rebel {
   z: number
 }
 
-function makeRebel(i: number): Rebel {
-  const rig = figures.buildTroop('rebel', 'yellow', i)
+function makeRebel(i: number, rig: Rig): Rebel {
   fitFigure(rig)
   rig.group.rotation.order = 'YXZ'
   const [x, z] = rebelPos(i)
@@ -336,10 +338,17 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
 
   const world = useMemo(() => {
     const plan: ArrowPlan[] = arrowPlan()
-    const ign = ignitions(plan)
-    const archers = Array.from({ length: A_LAYOUT.archerCount }, (_, i) => makeArcher(i))
-    const jian = makeStanding(figures.buildHero('jian-yong'))
-    const rebels = Array.from({ length: A_LAYOUT.rebelCount }, (_, i) => makeRebel(i))
+    const spec0 = fireWorldSpec(scene)
+    const ign = spec0.ignited ? ignitions(plan) : []
+    const spec = fireWorldSpec(scene)
+    const p = scene.params
+    const archerRigs = spawnFormation('archer', p?.caster.palette ?? 'han', A_LAYOUT.archerCount, 'line', A_SEED)
+    // a mounted defender would need the horse poses: the fire scenes stand them down as foot troops of the same side
+    const dk = spec.defKind.kind === 'cavalry' ? 'infantry' : spec.defKind.kind
+    const rebelRigs = spawnFormation(dk, spec.defKind.palette, A_LAYOUT.rebelCount, 'ragged', A_SEED + 3)
+    const archers = archerRigs.map((f, i) => makeArcher(i, f.rig))
+    const jian = makeStanding(p ? buildCasterRig(p.caster, false) : buildCasterRig({ unit: 'jian-yong', officer: 'jian-yong', name: 'Jian Yong', side: 'han', palette: 'han', kind: 'archer', type: 'archers', mounted: false, troopsBefore: 1, maxTroops: 1 }, false))
+    const rebels = rebelRigs.map((f, i) => makeRebel(i, f.rig))
     const falls = fallers(scene.sample.falls)
     const flight = plan.map(() => makeArrowProp(0.36))
     flight.forEach((f) => f.group.scale.setScalar(1.7))
@@ -350,7 +359,7 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
     // launch positions come from the real pose at the moment of release, so the arrows leave the bows
     const launchFrom: Vector3[] = plan.map(() => new Vector3())
     archers.forEach((a, i) => {
-      poseArcher(a, i, LOOSE_AT - 0.002, outs[i]!)
+      poseArcher(a, i, LOOSE_AT - 0.002, outs[i]!, spec.fire)
       for (let j = 0; j < 3; j++) {
         const nock = a.rig.group.localToWorld(outs[i]!.nock[j]!.clone())
         const dir = outs[i]!.dir[j]!.clone().transformDirection(a.rig.group.matrixWorld)
@@ -366,7 +375,7 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
       embers: new ParticleBuffer(420, 'add', 2.4),
       smoke: new ParticleBuffer(170, 'alpha', 0.9),
     }
-    return { plan, ign, archers, jian, rebels, falls, flight, outs, launchFrom, fx }
+    return { plan, ign, archers, jian, rebels, falls, flight, outs, launchFrom, fx, spec }
   }, [scene])
 
   // the launch points feed the plan used for flight
@@ -376,15 +385,12 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
   const coalMat = useMemo(() => new MeshStandardMaterial({ color: '#2a0d04', emissive: '#ff5a14', emissiveIntensity: 1.6, roughness: 1 }), [])
   const ironMat = useMemo(() => new MeshStandardMaterial({ color: '#2b2724', roughness: 0.45, metalness: 0.7 }), [])
 
-  useEffect(
-    () => () => {
-      world.archers.forEach((a) => a.rig.dispose())
-      world.rebels.forEach((r) => r.rig.dispose())
-      world.jian.rig.dispose()
-      Object.values(world.fx).forEach((f) => f.dispose())
-    },
-    [world],
-  )
+  useDisposeWorld(world, () => {
+    world.archers.forEach((a) => a.rig.dispose())
+    world.rebels.forEach((r) => r.rig.dispose())
+    world.jian.rig.dispose()
+    Object.values(world.fx).forEach((f) => f.dispose())
+  })
 
   const tipW = useMemo(() => new Vector3(), [])
   const fcol: [number, number, number] = useMemo(() => [1, 1, 1], [])
@@ -397,7 +403,7 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
     const kd = Math.min(2.6, Math.max(1, camera.position.distanceTo(new Vector3(1.2, 0.2, 2.8)) / 3.8))
 
     // --- figures
-    archers.forEach((a, i) => poseArcher(a, i, s, outs[i]!))
+    archers.forEach((a, i) => poseArcher(a, i, s, outs[i]!, world.spec.fire))
     poseJian(jian, s, scene)
     rebels.forEach((r, i) => poseRebel(r, i, s, scene, falls.includes(i)))
     archers.forEach((a, i) => {
@@ -428,13 +434,13 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
         center.set(a.to[0], a.to[1] + 0.34, a.to[2])
       }
       const nock = center.clone().addScaledVector(dir, -0.3)
-      placeArrow(f, nock, dir, st.q >= 1 ? Math.max(0, 1 - (s - a.land) / 1.4) : 1)
+      placeArrow(f, nock, dir, world.spec.fire ? (st.q >= 1 ? Math.max(0, 1 - (s - a.land) / 1.4) : 1) : 0)
     })
 
     // --- brazier + lights
     const flick = 0.85 + 0.15 * Math.sin(s * 23) + 0.08 * Math.sin(s * 41 + 1)
     coalMat.emissiveIntensity = 1.2 + 0.7 * flick
-    if (lights.current.brazier) lights.current.brazier.intensity = 5 * flick
+    if (lights.current.brazier) lights.current.brazier.intensity = world.spec.fire ? 5 * flick : 0
     // field light follows the burning front
     const tFirst = world.ign.reduce((m, g) => Math.min(m, g.t), Infinity)
     const since = s - tFirst
@@ -455,7 +461,7 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
     {
       const b = fx.brazier
       b.begin(ppu)
-      const cfg: SlotConfig = { seed: A_SEED + 1, count: 260, period: 0.7, start: -5, end: 99, lifeMin: 0.4 }
+      const cfg: SlotConfig = { seed: A_SEED + 1, count: world.spec.fire ? 260 : 0, period: 0.7, start: -5, end: 99, lifeMin: 0.4 }
       for (let i = 0; i < cfg.count; i++) {
         const sl = sampleSlot(cfg, i, s)
         if (!sl.alive) continue
@@ -474,7 +480,7 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
     {
       const b = fx.tips
       b.begin(ppu)
-      for (let a = 0; a < 6; a++) {
+      for (let a = 0; a < (world.spec.fire ? 6 : 0); a++) {
         const ig = igniteAt(a)
         const lit = sstep((s - (ig - 0.04)) / 0.16)
         const o = outs[a]!
@@ -533,7 +539,7 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
     {
       const b = fx.trails
       b.begin(ppu)
-      for (const a of flightPlan) {
+      for (const a of world.spec.fire ? flightPlan : []) {
         if (s < a.launch) continue
         const cfg: SlotConfig = { seed: A_SEED + 10 + a.id, count: 46, period: 0.8, start: a.launch, end: a.land, lifeMin: 0.3 }
         for (let i = 0; i < cfg.count; i++) {
@@ -558,7 +564,8 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
         for (let k = 0; k < 8; k++) {
           const sp = burstPosition(A_SEED + 3, a.id * 8 + k, a.land, s, [a.to[0], 0.08, a.to[2]], 1.0, 3.6, 0.6)
           if (!sp) continue
-          b.push(sp.p[0], sp.p[1], sp.p[2], 0.022 * (1 - sp.u * 0.6), 1, 0.7 - 0.4 * sp.u, 0.25, 0.95 * (1 - sp.u))
+          if (world.spec.fire) b.push(sp.p[0], sp.p[1], sp.p[2], 0.022 * (1 - sp.u * 0.6), 1, 0.7 - 0.4 * sp.u, 0.25, 0.95 * (1 - sp.u))
+          else b.push(sp.p[0], sp.p[1], sp.p[2], 0.016 * (1 - sp.u * 0.5), 0.92, 0.84, 0.66, 0.55 * (1 - sp.u))
         }
       }
       b.end()
@@ -623,9 +630,13 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
   return (
     <group ref={root}>
       <Stage seed={A_SEED} focus={[0.4, 0.6]} keyDir={[-5.5, 8, -6.5]} rimDir={[6.5, 3, 8]} motes={90} moteStrength={0.45} />
-      <Millet
-        box={A_LAYOUT.field}
+      <Ground
+        kind={world.spec.ground}
         seed={A_SEED}
+        center={[1.1, 2.6]}
+        halfW={3.4}
+        halfD={1.3}
+        box={A_LAYOUT.field}
         ignitions={world.ign}
         clear={[
           { x: 0.55, z: 5.05, r: 0.35 },
@@ -635,7 +646,7 @@ export function FireArrowsWorld({ scene }: { scene: CutinScene }) {
         wind={A_LAYOUT.wind}
       />
       {/* iron brazier: a long firebox on short legs in front of the line */}
-      <group position={[A_LAYOUT.brazier.x, 0, TROUGH_Z]}>
+      <group position={[A_LAYOUT.brazier.x, 0, TROUGH_Z]} visible={world.spec.fire}>
         <mesh material={ironMat} position={[0, 0.115, 0]} castShadow receiveShadow>
           <boxGeometry args={[A_LAYOUT.brazier.len, 0.07, 0.19]} />
         </mesh>

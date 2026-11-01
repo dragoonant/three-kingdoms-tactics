@@ -3,6 +3,7 @@
 // also used inline on the cinema and audition pages.
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { audio, type AudioStatus } from './index'
+import { BATTLE_SCENE_CHOICES, ENEMY_SCENE_CHOICES, useCutinSettings } from '../cutins/settings'
 import './audio.css'
 
 export function useAudioStatus(): AudioStatus {
@@ -24,7 +25,32 @@ const ROWS = [
   { key: 'sfx', label: 'Effects' },
 ] as const
 
-export function SoundPanel({ note = true }: { note?: boolean }) {
+/** The two cut-in settings (docs/spec/51): what plays for my battles and what plays for the enemy's. */
+export function SceneSettings() {
+  const { battleScenes, enemyScenes, setBattleScenes, setEnemyScenes } = useCutinSettings()
+  return (
+    <div className="snd-scenes" data-testid="scene-settings">
+      <div className="snd-group" role="group" aria-label="Battle scenes">
+        <span className="snd-label">Battle scenes</span>
+        {BATTLE_SCENE_CHOICES.map((c) => (
+          <button key={c.value} type="button" className="snd-choice" aria-pressed={battleScenes === c.value} data-testid={`battle-scenes-${c.value}`} onClick={() => setBattleScenes(c.value)}>
+            {c.label}
+          </button>
+        ))}
+      </div>
+      <div className="snd-group" role="group" aria-label="Enemy scenes">
+        <span className="snd-label">Enemy scenes</span>
+        {ENEMY_SCENE_CHOICES.map((c) => (
+          <button key={c.value} type="button" className="snd-choice" aria-pressed={enemyScenes === c.value} data-testid={`enemy-scenes-${c.value}`} onClick={() => setEnemyScenes(c.value)}>
+            {c.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function SoundPanel({ note = true, scenes = false }: { note?: boolean; scenes?: boolean }) {
   const s = useAudioStatus()
   const st = s.settings
   return (
@@ -55,6 +81,7 @@ export function SoundPanel({ note = true }: { note?: boolean }) {
           </span>
         )}
       </div>
+      {scenes && <SceneSettings />}
     </div>
   )
 }
@@ -89,8 +116,8 @@ export function SoundButton({ placement = 'below', className = '' }: { placement
       </button>
       {open && (
         <div className={`snd-pop ${placement}`} role="dialog" aria-label="Sound settings">
-          <h3>Sound</h3>
-          <SoundPanel />
+          <h3>Sound and scenes</h3>
+          <SoundPanel scenes />
         </div>
       )}
     </span>

@@ -11,7 +11,8 @@ import { Overlays } from './Overlays'
 import { FrameContext } from './stage/Stage'
 import { FireArrowsWorld } from './scenes/FireArrowsWorld'
 import { ThunderingChargeWorld } from './scenes/ThunderingChargeWorld'
-import type { Evaluated } from './timeline'
+import { ActWorld } from './scenes/ActWorld'
+import type { CutinScene, Evaluated } from './timeline'
 import './cutins.css'
 
 function Bridge({ controller, onReady, free }: { controller: CutinController; onReady: () => void; free: boolean }) {
@@ -54,9 +55,14 @@ function Bridge({ controller, onReady, free }: { controller: CutinController; on
   return null
 }
 
-function World({ controller }: { controller: CutinController }) {
-  const scene = controller.scene
-  return scene.id === 'A' ? <FireArrowsWorld scene={scene} /> : <ThunderingChargeWorld scene={scene} />
+function World({ controller, scene: given, onMount }: { controller: CutinController; scene?: CutinScene; onMount?: () => void }) {
+  const scene = given ?? controller.scene
+  useEffect(() => {
+    onMount?.()
+  }, [onMount])
+  if (scene.id === 'A' || scene.id === 'Ap') return <FireArrowsWorld scene={scene} />
+  if (scene.id === 'B') return <ThunderingChargeWorld scene={scene} />
+  return <ActWorld scene={scene} />
 }
 
 export interface CutinViewProps {
@@ -67,15 +73,24 @@ export interface CutinViewProps {
   /** 1 for exact capture; otherwise min(devicePixelRatio, 2). */
   dpr?: number
   onReady?: () => void
-  /** Bump to remount the world when the scene changes. */
+  /** Bump to remount the canvas when the scene changes. */
   sceneKey: string
+  /** Remount only the world (keeps the GL context, for scene-to-scene chains in the game); defaults to nothing. */
+  worldKey?: string
+  /** Fires after every drawn frame with the evaluated frame (the game fades the layer from it). */
+  onFrame?: (ev: Evaluated) => void
+  /** The world has mounted (fires again for every `worldKey`): the game starts its clock then. */
+  onWorldMount?: () => void
+  /** The scene the world is built from, when it must change together with `worldKey` (the game's chains); defaults to the controller's. */
+  scene?: CutinScene
 }
 
-export function CutinView({ controller, full = false, safe = false, dpr, onReady, sceneKey }: CutinViewProps) {
+export function CutinView({ controller, full = false, safe = false, dpr, onReady, sceneKey, worldKey, onFrame, onWorldMount, scene }: CutinViewProps) {
   const [ev, setEv] = useState<Evaluated>(controller.frame.current)
   const [free, setFree] = useState(controller.free)
   useEffect(() => {
     const unsub = controller.subscribe((e) => {
+      onFrame?.(e)
       if (controller.playing) setEv(e)
       else flushSync(() => setEv(e))
     })
@@ -84,7 +99,7 @@ export function CutinView({ controller, full = false, safe = false, dpr, onReady
       unsub()
       unsub2()
     }
-  }, [controller])
+  }, [controller, onFrame])
   const ready = useMemo(() => onReady ?? (() => {}), [onReady])
   const pixelRatio = dpr ?? Math.min(typeof window === 'undefined' ? 1 : window.devicePixelRatio, 2)
   const whipPx = Math.round(ev.overlay.whip * 22)
@@ -112,7 +127,7 @@ export function CutinView({ controller, full = false, safe = false, dpr, onReady
             }}
           >
             <Suspense fallback={null}>
-              <World controller={controller} />
+              <World key={worldKey} controller={controller} scene={scene} onMount={onWorldMount} />
             </Suspense>
             <OrbitControls makeDefault enabled={free} enableDamping={false} onChange={() => controller.render()} maxPolarAngle={Math.PI * 0.499} />
             <Bridge controller={controller} onReady={ready} free={free} />

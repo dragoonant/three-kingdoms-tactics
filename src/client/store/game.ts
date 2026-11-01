@@ -7,7 +7,9 @@ import type { CreateOptions } from '../../data/types'
 import { createBattle, legalActions, query, step, type Action, type BattleState, type Facing, type GameEvent, type Side } from '../../engine'
 import { setBoardSize, setSideTokens } from '../board/layout'
 import { linesFor, type LedgerEntry } from '../ledger'
-import { introBeats, planBeats, type Beat, type Speed } from '../presentation/beats'
+import { getCutinSettings } from '../cutins/settings'
+import { player } from '../cutins/player'
+import { introBeats, planBeats, type Beat, type Fx, type Speed } from '../presentation/beats'
 import { Director } from '../presentation/director'
 import { sceneFromState, type Scene } from '../presentation/scene'
 import { canControl, EMPTY_UI, isBotSide, PLAYER_SIDE, type Mode, type UiState } from './orders'
@@ -99,6 +101,8 @@ interface GameStore {
   scene: Scene
   /** True while a batch of beats is playing. */
   playing: boolean
+  /** A cut-in covers the board and its result has not landed yet: the board canvas stops drawing. */
+  cutinPaused: boolean
   beat: Beat | null
   beatNo: number
   speed: Speed
@@ -158,35 +162,37 @@ export const useGame = create<GameStore>((set, get) => {
     setScene: (s) => set({ scene: s }),
     beatStart: (b, ms) => {
       const patch: Partial<GameStore> = { beat: b, beatNo: get().beatNo + 1, playing: true }
-      if (ms > 0) {
-        const f = b.fx
-        const add: Floater[] = []
-        const fl = (x: number, y: number, text: string, tone: Floater['tone']): void => {
-          add.push({ id: floaterSeq++, x, y, text, tone })
-        }
-        if (f.t === 'damage' && f.amount > 0) fl(f.at.x, f.at.y, `−${f.amount.toLocaleString('en-US')}`, f.source === 'fire' ? 'fire' : 'hit')
-        else if (f.t === 'heal') fl(f.at.x, f.at.y, `+${f.amount.toLocaleString('en-US')}`, 'good')
-        else if (f.t === 'sawThrough') fl(f.at.x, f.at.y, 'Saw through!', 'info')
-        else if (f.t === 'confuse') fl(f.at.x, f.at.y, 'Confused', 'bad')
-        else if (f.t === 'recover') fl(f.at.x, f.at.y, 'Recovered', 'good')
-        else if (f.t === 'sway') fl(f.at.x, f.at.y, f.ok ? 'Joins us!' : 'Refused', f.ok ? 'good' : 'info')
-        else if (f.t === 'buff') fl(f.at.x, f.at.y, `${STAT_WORD[f.stat] ?? f.stat} ${f.amount > 0 ? '+' : ''}${f.amount}`, 'good')
-        else if (f.t === 'provoke') fl(f.at.x, f.at.y, 'Provoked!', 'bad')
-        else if (f.t === 'leave') fl(f.at.x, f.at.y, f.how === 'escape' ? 'Escapes!' : 'Retreats', f.how === 'escape' ? 'good' : 'info')
-        else if (f.t === 'arrive') fl(f.at.x, f.at.y, 'Reinforcements', f.vis.side === PLAYER_SIDE ? 'good' : 'bad')
-        if (add.length) {
-          patch.floaters = [...get().floaters, ...add].slice(-12)
-          const ids = new Set(add.map((a) => a.id))
-          setTimeout(() => set({ floaters: get().floaters.filter((x) => !ids.has(x.id)) }), 1500)
-        }
-        if (f.t === 'stratagem') {
-          if (sealClear) clearTimeout(sealClear)
-          sealClear = null
-          const mark: SealMark = { id: sealSeq++, unit: f.unit, name: f.name, link: f.link, bond: f.bond }
-          patch.seals = f.link === 0 ? [mark] : [...get().seals, mark]
-        }
-      }
+      // a cut-in shows its floaters and seals when its result lands, not when it starts
+      if (ms > 0 && b.fx.t !== 'cutin') collectFx(b.fx, patch)
       set(patch)
+    },
+    cutin: (b, hooks) => {
+      const fx = b.fx
+      if (fx.t !== 'cutin') {
+        hooks.onDone()
+        return
+      }
+      set({ cutinPaused: true })
+      player.start(fx.plan, {
+        onResult: () => {
+          set({ cutinPaused: false })
+          hooks.onResult()
+        },
+        onDone: () => {
+          set({ cutinPaused: false })
+          hooks.onDone()
+        },
+      })
+    },
+    cutinCancel: () => {
+      player.cancel()
+      set({ cutinPaused: false })
+    },
+    resultLanded: (b) => {
+      if (b.fx.t !== 'cutin') return
+      const patch: Partial<GameStore> = {}
+      for (const inner of b.fx.inner) collectFx(inner.fx, patch)
+      if (Object.keys(patch).length) set(patch)
     },
     committed: (events) => {
       const lines = linesFor(events, pendingBefore)
@@ -194,7 +200,7 @@ export const useGame = create<GameStore>((set, get) => {
       set({ ledger: [...get().ledger, ...lines.map((l) => ({ ...l, id: ledgerSeq++, round }))].slice(-500) })
     },
     idle: () => {
-      set({ playing: false, beat: null })
+      set({ playing: false, beat: null, cutinPaused: false })
       if (get().seals.length) {
         const delay = get().speed === 'instant' ? 0 : 1100
         sealClear = setTimeout(() => set({ seals: [] }), delay)
@@ -204,6 +210,35 @@ export const useGame = create<GameStore>((set, get) => {
   })
 
   let suppressIdle = false
+  /** Floaters (damage numbers...) and the chain's seals for one board beat, added to `patch`. */
+  function collectFx(f: Fx, patch: Partial<GameStore>): void {
+    const add: Floater[] = []
+    const fl = (x: number, y: number, text: string, tone: Floater['tone']): void => {
+      add.push({ id: floaterSeq++, x, y, text, tone })
+    }
+    if (f.t === 'damage' && f.amount > 0) fl(f.at.x, f.at.y, `−${f.amount.toLocaleString('en-US')}`, f.source === 'fire' ? 'fire' : 'hit')
+    else if (f.t === 'heal') fl(f.at.x, f.at.y, `+${f.amount.toLocaleString('en-US')}`, 'good')
+    else if (f.t === 'sawThrough') fl(f.at.x, f.at.y, 'Saw through!', 'info')
+    else if (f.t === 'confuse') fl(f.at.x, f.at.y, 'Confused', 'bad')
+    else if (f.t === 'recover') fl(f.at.x, f.at.y, 'Recovered', 'good')
+    else if (f.t === 'sway') fl(f.at.x, f.at.y, f.ok ? 'Joins us!' : 'Refused', f.ok ? 'good' : 'info')
+    else if (f.t === 'buff') fl(f.at.x, f.at.y, `${STAT_WORD[f.stat] ?? f.stat} ${f.amount > 0 ? '+' : ''}${f.amount}`, 'good')
+    else if (f.t === 'provoke') fl(f.at.x, f.at.y, 'Provoked!', 'bad')
+    else if (f.t === 'leave') fl(f.at.x, f.at.y, f.how === 'escape' ? 'Escapes!' : 'Retreats', f.how === 'escape' ? 'good' : 'info')
+    else if (f.t === 'arrive') fl(f.at.x, f.at.y, 'Reinforcements', f.vis.side === PLAYER_SIDE ? 'good' : 'bad')
+    if (add.length) {
+      patch.floaters = [...(patch.floaters ?? get().floaters), ...add].slice(-12)
+      const ids = new Set(add.map((a) => a.id))
+      setTimeout(() => set({ floaters: get().floaters.filter((x) => !ids.has(x.id)) }), 1500)
+    }
+    if (f.t === 'stratagem') {
+      if (sealClear) clearTimeout(sealClear)
+      sealClear = null
+      const mark: SealMark = { id: sealSeq++, unit: f.unit, name: f.name, link: f.link, bond: f.bond }
+      patch.seals = f.link === 0 ? [mark] : [...(patch.seals ?? get().seals), mark]
+    }
+  }
+
   function afterIdle(): void {
     if (suppressIdle) return
     const st = get()
@@ -288,6 +323,7 @@ export const useGame = create<GameStore>((set, get) => {
       events: s.opening.slice(),
       scene: sceneFromState(s),
       playing: false,
+      cutinPaused: false,
       beat: null,
       floaters: [],
       seals: [],
@@ -309,7 +345,8 @@ export const useGame = create<GameStore>((set, get) => {
       const st = get()
       if (st.screen !== 'battle') return
       if (director.playing) {
-        if (director.age > 25_000) director.skip()
+        // a chain of cut-ins runs for tens of seconds on a slow machine: the cut-in has its own, longer allowance
+        if (director.age > (director.inCutin ? 120_000 : 25_000)) director.skip()
         return
       }
       if (isBotSide(st.state.side) && !st.state.result && !botTimer) scheduleBot()
@@ -328,6 +365,7 @@ export const useGame = create<GameStore>((set, get) => {
     events: state0.opening.slice(),
     scene: sceneFromState(state0),
     playing: false,
+    cutinPaused: false,
     beat: null,
     beatNo: 0,
     speed: speedParam === 'instant' || speedParam === 'quick' || speedParam === 'full' ? speedParam : 'full',
@@ -388,7 +426,7 @@ export const useGame = create<GameStore>((set, get) => {
       const keep =
         a.type === 'move' && r.state.units.some((u) => u.id === a.unit && !u.done) ? a.unit : a.type === 'undoMove' ? a.unit : null
       const nextSel = keep && canControl(r.state, r.state.units.find((u) => u.id === keep)) ? keep : null
-      const beats = planBeats(r.events, before)
+      const beats = planBeats(r.events, before, { settings: getCutinSettings(), speed: st.speed, playerSide: PLAYER_SIDE })
       set({
         state: r.state,
         log: [...st.log, a],

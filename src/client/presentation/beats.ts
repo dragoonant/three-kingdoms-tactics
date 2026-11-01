@@ -4,6 +4,7 @@ import type { BattleState, Facing, GameEvent, Pos, Side, TroopType } from '../..
 import { FACING_ANGLE } from '../board/layout'
 import { angDiff, travelSpeed, turnAllowance } from '../board/travel'
 import { sideTitle } from '../names'
+import { planCutins, sequenceTiming, type PlanOptions, type SequencePlan } from '../cutins/plan'
 import type { UnitVis } from './scene'
 
 export type Speed = 'full' | 'quick' | 'instant'
@@ -35,6 +36,11 @@ export type Fx =
   | { t: 'buff'; unit: string; at: Pos; stat: string; amount: number }
   | { t: 'provoke'; unit: string; at: Pos; by: string }
   | { t: 'note'; text: string }
+  /**
+   * A battle cut-in standing in for the action's combat events (docs/spec/51 v0.3): the board's own beats for those events are
+   * `inner` (floaters, seals), shown as the camera rises back out; the beat's `commit` is every event it replaces.
+   */
+  | { t: 'cutin'; plan: SequencePlan; inner: Beat[] }
 
 export interface Beat {
   id: number
@@ -56,13 +62,15 @@ const UNDO_MS = 220
 /** Playback duration in ms for a beat at a speed. */
 export function beatDuration(b: Beat, speed: Speed): number {
   if (speed === 'instant') return 0
+  // a cut-in's own length already follows the speed it was planned at (Quick plays it at 1.5x)
+  if (b.fx.t === 'cutin') return b.ms
   if (speed === 'quick') return Math.max(40, Math.round(b.ms * 0.4))
   return b.ms
 }
 
 
 /** Plan beats for a batch. `before` is the live state the events were produced from. */
-export function planBeats(events: GameEvent[], before: BattleState): Beat[] {
+export function planBeats(events: GameEvent[], before: BattleState, cutin?: PlanOptions): Beat[] {
   const beats: Beat[] = []
   let n = 0
   const push = (fx: Fx, ms: number, ...commit: GameEvent[]): void => {
@@ -85,6 +93,21 @@ export function planBeats(events: GameEvent[], before: BattleState): Beat[] {
   }
   let chainSize = 1
   const consumed = new Set<number>()
+  // A cut-in replaces the action's combat events with one beat; the board's own beats for them ride along as `inner`.
+  const range = cutin ? planCutins(events, before, cutin)[0] : undefined
+  if (range) {
+    const slice = events.slice(range.from, range.to)
+    for (let j = range.from; j < range.to; j++) {
+      consumed.add(j)
+      const e = events[j]!
+      if (e.kind === 'moved') {
+        positions.set(e.unit, { ...e.to })
+        facings.set(e.unit, e.facing)
+      } else if (e.kind === 'turned') facings.set(e.unit, e.to)
+    }
+    const inner = planBeats(slice, before)
+    push({ t: 'cutin', plan: range.plan, inner }, Math.round(sequenceTiming(range.plan).seconds * 1000), ...slice)
+  }
 
   for (let i = 0; i < events.length; i++) {
     if (consumed.has(i)) continue

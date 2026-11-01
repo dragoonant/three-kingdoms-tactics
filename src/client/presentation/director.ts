@@ -14,6 +14,19 @@ export interface DirectorIO {
   committed(events: GameEvent[]): void
   /** The whole batch is over and the scene equals the final one. */
   idle(): void
+  /**
+   * A battle cut-in begins (a `cutin` beat). The io plays the scene and calls `onResult` when the camera starts to rise out
+   * (the board then shows the result) and `onDone` when it has finished. Absent: cut-in beats are skipped over.
+   */
+  cutin?(b: Beat, hooks: CutinHooks): void
+  /** The batch was skipped while a cut-in played: stop it at once (no further hooks will be honoured). */
+  cutinCancel?(): void
+  /** The board's result lands (before its events are committed): floaters and seals for the cut-in's inner beats. */
+  resultLanded?(b: Beat): void
+}
+export interface CutinHooks {
+  onResult(): void
+  onDone(): void
 }
 
 /** Non-reactive animation clock read by the 3D layer every frame. */
@@ -31,11 +44,17 @@ export class Director {
   private current: Beat | null = null
   private running = false
   private startedAt = 0
+  /** Beats whose events have been committed (a cut-in commits at its result moment, before it ends). */
+  private landed = new WeakSet<Beat>()
 
   constructor(private io: DirectorIO) {}
 
   get playing(): boolean {
     return this.running
+  }
+  /** A cut-in is on screen. */
+  get inCutin(): boolean {
+    return this.running && this.current?.fx.t === 'cutin'
   }
   /** ms since the current batch began (for the watchdog). */
   get age(): number {
@@ -56,7 +75,11 @@ export class Director {
     if (this.timer) clearTimeout(this.timer)
     this.timer = null
     const rest: GameEvent[] = []
-    if (this.current) rest.push(...this.current.commit)
+    if (this.current?.fx.t === 'cutin') this.io.cutinCancel?.()
+    if (this.current && !this.landed.has(this.current)) {
+      rest.push(...this.current.commit)
+      this.landed.add(this.current)
+    }
     for (const b of this.queue) rest.push(...b.commit)
     this.current = null
     this.queue = []
@@ -87,6 +110,19 @@ export class Director {
       anim.t0 = performance.now()
       anim.ms = ms
       this.io.beatStart(b, ms)
+      if (b.fx.t === 'cutin' && ms > 0 && this.io.cutin) {
+        // the cut-in plays itself: the beat ends when it says so, and its events land when the camera rises out
+        this.io.cutin(b, {
+          onResult: () => this.land(b),
+          onDone: () => {
+            if (this.current !== b) return
+            this.land(b)
+            this.current = null
+            this.pump()
+          },
+        })
+        return
+      }
       if (ms <= 0) {
         this.endBeat(b)
         continue
@@ -100,9 +136,17 @@ export class Director {
     }
   }
 
-  private endBeat(b: Beat): void {
-    this.current = null
+  /** Commit a beat's events to the presented scene (once). */
+  private land(b: Beat): void {
+    if (this.landed.has(b)) return
+    this.landed.add(b)
+    this.io.resultLanded?.(b)
     this.io.setScene(applyEvents(this.io.scene(), b.commit))
     this.io.committed(b.commit)
+  }
+
+  private endBeat(b: Beat): void {
+    this.current = null
+    this.land(b)
   }
 }

@@ -7,23 +7,76 @@ import { audio } from '../client/audio'
 import { SoundPanel } from '../client/audio/SoundControl'
 import { CutinController } from '../client/cutins/controller'
 import { CutinView } from '../client/cutins/CutinView'
+import type { Arc, Terrain } from '../engine'
+import type { SceneId, StrikeTrail } from '../client/cutins/plan'
 import { makeFireArrows } from '../client/cutins/scenes/fireArrows'
+import { SCENE_IDS, buildScene, samplePlan } from '../client/cutins/scenes'
+import { SCENE_INFO } from '../client/cutins/sceneInfo'
 import { makeThunderingCharge } from '../client/cutins/scenes/thunderingCharge'
 import type { CutinScene, Evaluated } from '../client/cutins/timeline'
 import { Gallery } from './Gallery'
 import './cinema.css'
 
-type SceneId = 'A' | 'B'
-
-const SCENES: Record<SceneId, CutinScene> = {
-  A: makeFireArrows(420, 2),
-  B: makeThunderingCharge(1060, 4),
+/** Sample parameters for the review page: the same fields the planner reads from a real event. */
+interface Variant {
+  terrain?: Terrain
+  arc?: Arc
+  trail?: StrikeTrail
+  counter?: boolean
+  routed?: boolean
+  /** Chain link index (0 = opener): later links skip the dive and bring their title in at once. */
+  link?: number
 }
+const TERRAINS: Terrain[] = ['farm', 'forest', 'hill', 'village', 'shallows', 'deck', 'plain']
+const SCENE_LABEL: Record<SceneId, string> = {
+  A: 'A · Fire Arrows',
+  Ap: 'A′ · Volley',
+  B: 'B · Charge',
+  C: 'C · Duel Strike',
+  D: 'D · Thunder Roar',
+  R: 'R · Ruse',
+  W: 'W · Wind',
+  'S-melee': 'Short · Melee',
+  'S-cavalry': 'Short · Cavalry',
+  'S-archer': 'Short · Archers',
+}
+const hasTerrain = (id: SceneId): boolean => id !== 'W'
+const hasArc = (id: SceneId): boolean => id.startsWith('S-')
+const hasCounter = (id: SceneId): boolean => id === 'S-melee' || id === 'S-cavalry'
+
+function sceneFor(id: SceneId, v: Variant = {}): CutinScene {
+  // the original two review samples stay exactly as the owner saw them unless a variant is chosen
+  if (!v.terrain && !v.arc && !v.trail && v.counter === undefined && !v.routed && !v.link) {
+    if (id === 'A') return makeFireArrows(420, 2)
+    if (id === 'B') return makeThunderingCharge(1060, 4)
+  }
+  const base = samplePlan(id)
+  const over: Parameters<typeof samplePlan>[1] = {}
+  if (v.terrain) over.terrain = v.terrain
+  if (v.arc) over.arc = v.arc
+  if (v.trail) {
+    over.trail = v.trail
+    over.strat = v.trail === 'x' ? 'twin-blades' : v.trail === 'arc' ? 'crescent-sweep' : 'serpent-thrust'
+    over.stratName = v.trail === 'x' ? 'Twin Blades' : v.trail === 'arc' ? 'Crescent Sweep' : 'Serpent Thrust'
+  }
+  if (v.counter === false) over.counter = null
+  if (v.link) {
+    over.link = v.link
+    over.links = v.link + 1
+  }
+  if (v.routed) {
+    over.routed = true
+    over.falls = SCENE_INFO[id].front
+  }
+  void base
+  return buildScene(samplePlan(id, over))
+}
+const sceneKeyOf = (id: SceneId, v: Variant): string => `${id}|${v.terrain ?? ''}|${v.arc ?? ''}|${v.trail ?? ''}|${v.counter ?? ''}|${v.routed ? 'r' : ''}|${v.link ?? ''}`
 
 interface CinemaApi {
   ready: boolean
   setTime(t: number): Promise<void>
-  scene(id?: string): string
+  scene(id?: string, variant?: Variant): string
   duration(): number
   time(): number
   beats(): { id: string; start: number; end: number; label: string }[]
@@ -35,7 +88,15 @@ declare global {
 }
 
 const params = new URLSearchParams(window.location.search)
-const initialScene: SceneId = params.get('scene') === 'B' ? 'B' : 'A'
+const initialScene: SceneId = (SCENE_IDS as string[]).includes(params.get('scene') ?? '') ? (params.get('scene') as SceneId) : 'A'
+const initialVariant: Variant = {
+  ...(params.get('terrain') ? { terrain: params.get('terrain') as Terrain } : {}),
+  ...(params.get('arc') ? { arc: params.get('arc') as Arc } : {}),
+  ...(params.get('trail') ? { trail: params.get('trail') as StrikeTrail } : {}),
+  ...(params.get('counter') ? { counter: params.get('counter') === '1' } : {}),
+  ...(params.get('routed') === '1' ? { routed: true } : {}),
+  ...(params.get('link') ? { link: Number(params.get('link')) } : {}),
+}
 const initialT = params.has('t') ? Number(params.get('t')) : null
 const uiOff = params.get('ui') === '0'
 const testMode = params.get('test') === '1'
@@ -45,7 +106,7 @@ const nextFrame = (): Promise<void> => new Promise((r) => requestAnimationFrame(
 
 function useController(): CutinController {
   const ref = useRef<CutinController | null>(null)
-  if (!ref.current) ref.current = new CutinController(SCENES[initialScene])
+  if (!ref.current) ref.current = new CutinController(sceneFor(initialScene, initialVariant))
   return ref.current
 }
 
@@ -126,20 +187,21 @@ function Scrubber({ c, ev }: { c: CutinController; ev: Evaluated }) {
 interface PanelProps {
   c: CutinController
   sceneId: SceneId
-  setSceneId: (id: SceneId) => void
+  variant: Variant
+  setScene: (id: SceneId, v: Variant) => void
   onReady: () => void
 }
 
-function ScenePanel({ c, sceneId, setSceneId, onReady }: PanelProps) {
+function ScenePanel({ c, sceneId, variant, setScene, onReady }: PanelProps) {
   const { ev } = useCtl(c)
   const [safe, setSafe] = useState(false)
   const [, force] = useState(0)
   useEffect(() => c.onState(() => force((n) => n + 1)), [c])
   const sc = c.scene
 
-  const pick = (id: SceneId): void => {
+  const pick = (id: SceneId, v: Variant = {}): void => {
     c.pause()
-    setSceneId(id)
+    setScene(id, v)
     c.play()
   }
 
@@ -165,7 +227,7 @@ function ScenePanel({ c, sceneId, setSceneId, onReady }: PanelProps) {
     <div className="cin-main">
       <div className="cin-left">
         <div className="cin-frame-wrap">
-          <CutinView controller={c} safe={safe} sceneKey={sceneId} onReady={onReady} />
+          <CutinView controller={c} safe={safe} sceneKey={sceneKeyOf(sceneId, variant)} onReady={onReady} />
         </div>
         <div className="cin-bar">
           <div className="cin-transport">
@@ -210,13 +272,44 @@ function ScenePanel({ c, sceneId, setSceneId, onReady }: PanelProps) {
             Scene<small>{sc.title}</small>
           </h2>
           <div className="opts">
-            <button type="button" className="slip" aria-pressed={sceneId === 'A'} onClick={() => pick('A')} data-testid="scene-A">
-              A &middot; Fire Arrows
-            </button>
-            <button type="button" className="slip" aria-pressed={sceneId === 'B'} onClick={() => pick('B')} data-testid="scene-B">
-              B &middot; Charge
-            </button>
+            {SCENE_IDS.map((id) => (
+              <button key={id} type="button" className="slip" aria-pressed={sceneId === id} onClick={() => pick(id)} data-testid={`scene-${id}`}>
+                {SCENE_LABEL[id]}
+              </button>
+            ))}
           </div>
+          {(hasTerrain(sceneId) || hasArc(sceneId) || sceneId === 'C' || hasCounter(sceneId)) && (
+            <div className="opts" style={{ marginTop: 10 }} data-testid="variants">
+              {hasTerrain(sceneId) &&
+                TERRAINS.map((t) => (
+                  <button key={t} type="button" className="slip small" aria-pressed={variant.terrain === t} onClick={() => pick(sceneId, { ...variant, terrain: variant.terrain === t ? undefined : t })} data-testid={`terrain-${t}`}>
+                    {t === 'farm' ? 'millet' : t}
+                  </button>
+                ))}
+              {hasArc(sceneId) &&
+                (['front', 'side', 'rear'] as Arc[]).map((a) => (
+                  <button key={a} type="button" className="slip small" aria-pressed={variant.arc === a} onClick={() => pick(sceneId, { ...variant, arc: variant.arc === a ? undefined : a })} data-testid={`arc-${a}`}>
+                    {a} hit
+                  </button>
+                ))}
+              {hasCounter(sceneId) && (
+                <button type="button" className="slip small" aria-pressed={variant.counter === false} onClick={() => pick(sceneId, { ...variant, counter: variant.counter === false ? undefined : false })} data-testid="no-counter">
+                  no counter
+                </button>
+              )}
+              {sceneId === 'C' &&
+                (['x', 'arc', 'line'] as StrikeTrail[]).map((tr) => (
+                  <button key={tr} type="button" className="slip small" aria-pressed={variant.trail === tr} onClick={() => pick(sceneId, { ...variant, trail: variant.trail === tr ? undefined : tr })} data-testid={`trail-${tr}`}>
+                    {tr === 'x' ? 'twin blades' : tr === 'arc' ? 'glaive' : 'spear'}
+                  </button>
+                ))}
+              {sceneId !== 'W' && sceneId !== 'R' && (
+                <button type="button" className="slip small" aria-pressed={!!variant.routed} onClick={() => pick(sceneId, { ...variant, routed: variant.routed ? undefined : true })} data-testid="routed">
+                  routed
+                </button>
+              )}
+            </div>
+          )}
           <div className="opts" style={{ marginTop: 10 }}>
             <button type="button" className="slip small" aria-pressed={c.free} onClick={() => c.setFree(!c.free)} data-testid="free-cam">
               Free camera
@@ -266,11 +359,12 @@ function ScenePanel({ c, sceneId, setSceneId, onReady }: PanelProps) {
 interface AppProps {
   c: CutinController
   sceneId: SceneId
-  setSceneId: (id: SceneId) => void
+  variant: Variant
+  setScene: (id: SceneId, v: Variant) => void
   onReady: () => void
 }
 
-function App({ c, sceneId, setSceneId, onReady }: AppProps) {
+function App({ c, sceneId, variant, setScene, onReady }: AppProps) {
   const [tab, setTab] = useState<'scenes' | 'gallery'>('scenes')
   useEffect(() => {
     if (initialT === null && !testMode) c.play()
@@ -299,7 +393,7 @@ function App({ c, sceneId, setSceneId, onReady }: AppProps) {
           </button>
         </nav>
       </header>
-      {tab === 'scenes' ? <ScenePanel c={c} sceneId={sceneId} setSceneId={setSceneId} onReady={onReady} /> : <Gallery />}
+      {tab === 'scenes' ? <ScenePanel c={c} sceneId={sceneId} variant={variant} setScene={setScene} onReady={onReady} /> : <Gallery />}
     </div>
   )
 }
@@ -307,13 +401,15 @@ function App({ c, sceneId, setSceneId, onReady }: AppProps) {
 function Root() {
   const c = useController()
   const [sceneId, setSceneIdState] = useState<SceneId>(initialScene)
+  const [variant, setVariant] = useState<Variant>(initialVariant)
   const apiRef = useRef<CinemaApi | null>(null)
 
-  const setSceneId = useCallback(
-    (id: SceneId) => {
+  const setScene = useCallback(
+    (id: SceneId, v: Variant = {}) => {
       if (apiRef.current) apiRef.current.ready = false
       setSceneIdState(id)
-      c.setScene(SCENES[id])
+      setVariant(v)
+      c.setScene(sceneFor(id, v))
     },
     [c],
   )
@@ -333,12 +429,12 @@ function Root() {
     audio.setMood('battle')
     const off = c.onTransport((e) => {
       const secs = c.scene.duration / Math.max(0.1, c.speed)
-      if (e === 'play' || e === 'wrap') audio.cutinStart('full', secs)
+      if (e === 'play' || e === 'wrap') audio.cutinStart(SCENE_INFO[c.scene.id].full ? 'full' : 'short', secs)
       else if (e === 'pause' || e === 'finish') audio.cutinEnd()
       else if (e === 'seek' && !c.playing) audio.cutinSkip()
     })
     // The page starts playing from a child effect that runs before this one, so catch up with it.
-    if (c.playing) audio.cutinStart('full', c.scene.duration / Math.max(0.1, c.speed))
+    if (c.playing) audio.cutinStart(SCENE_INFO[c.scene.id].full ? 'full' : 'short', c.scene.duration / Math.max(0.1, c.speed))
     return () => {
       off()
       audio.cutinSkip()
@@ -356,9 +452,9 @@ function Root() {
           await nextFrame()
           await nextFrame()
         },
-        scene(id?: string) {
-          if (id === 'A' || id === 'B') setSceneId(id)
-          return id === 'A' || id === 'B' ? id : c.scene.id
+        scene(id?: string, v?: Variant) {
+          if (id && (SCENE_IDS as string[]).includes(id)) setScene(id as SceneId, v ?? {})
+          return id && (SCENE_IDS as string[]).includes(id) ? id : c.scene.id
         },
         duration: () => c.scene.duration,
         time: () => c.t,
@@ -371,16 +467,16 @@ function Root() {
       delete window.__cinema
       c.dispose()
     }
-  }, [c, setSceneId])
+  }, [c, setScene])
 
   if (uiOff) {
     return (
       <div className="ui0">
-        <CutinView controller={c} dpr={1} sceneKey={sceneId} onReady={onReady} />
+        <CutinView controller={c} dpr={1} sceneKey={sceneKeyOf(sceneId, variant)} onReady={onReady} />
       </div>
     )
   }
-  return <App c={c} sceneId={sceneId} setSceneId={setSceneId} onReady={onReady} />
+  return <App c={c} sceneId={sceneId} variant={variant} setScene={setScene} onReady={onReady} />
 }
 
 createRoot(document.getElementById('root')!).render(<Root />)

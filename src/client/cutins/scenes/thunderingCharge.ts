@@ -6,7 +6,10 @@
 // impact the wedge wheels to the right (+x) in a half circle and ends facing the broken line again.
 import { HORSE_GAITS, gaitBlend, type HorseGaitName, type LegName } from '../../figures/gait'
 import { rand, srand, seededOrder } from '../rng'
-import { storyClock, type CamKey, type Cue, type CutinScene, type TimeScaleSeg, type Vec3 } from '../timeline'
+import { storyClock, type CamKey, type Cue, type CutinScene, type Slip, type TimeScaleSeg, type Vec3 } from '../timeline'
+import { SCENE_INFO } from '../sceneInfo'
+import type { LinkPlan } from '../plan'
+import { defenderOf, groundKind } from './act'
 
 export const B_DURATION = 7.0
 export const B_SEED = 8203
@@ -322,23 +325,34 @@ function trackKeys(): CamKey[] {
   return keys
 }
 
-export function makeThunderingCharge(sampleDamage = 1060, sampleFalls = 4): CutinScene {
+/** Scene B. The defaults are the review page's original sample (Guan Yu, 1,060 damage, four fall); a LinkPlan overrides every actor and number. */
+export function makeThunderingCharge(sampleDamage = 1060, sampleFalls = 4, params?: LinkPlan): CutinScene {
+  const p = params
+  const info = SCENE_INFO.B
+  const first = !p || p.link === 0
+  const casterName = p ? p.caster.name : 'Guan Yu'
+  const title = p ? p.stratName : 'Thundering Charge'
+  const slips: Slip[] = []
+  if (p && p.targets > 1) slips.push({ text: `${p.targets} units struck`, at: 6.0, tone: 'ink', row: 0 })
+  if (p?.routed) slips.push({ text: 'Routed', at: 6.1, tone: 'cinnabar', row: p.targets > 1 ? 1 : 0 })
   const z0 = startZ()
   const C: Vec3 = [0, 0.42, z0]
   const falls = flingPlan(sampleFalls)
   const L50 = leaderAt(5.0)
   const L55 = leaderAt(5.6)
-  const dmg = `−${sampleDamage.toLocaleString('en-US')}`
+  const dmg = sampleDamage > 0 ? `−${sampleDamage.toLocaleString('en-US')}` : ''
   const camB5: Vec3 = [-2.7, 0.62, 5.5]
   return {
     id: 'B',
-    title: 'Thundering Charge',
-    officer: 'Guan Yu',
+    title,
+    officer: casterName,
     duration: B_DURATION,
     seed: B_SEED,
     sample: { damage: sampleDamage, falls: sampleFalls },
+    ...(p ? { params: p } : {}),
+    chain: { skipTo: info.skipTo, cutAt: info.cutAt, resultAt: info.resultAt },
     beats: [
-      { id: 'B1', start: 0.0, end: 0.6, label: 'Dive into Guan Yu’s tile' },
+      { id: 'B1', start: 0.0, end: 0.6, label: `Dive into ${casterName}’s tile` },
       { id: 'B2', start: 0.6, end: 1.6, label: 'Hero shot: the horse half-rears, glaive raised' },
       { id: 'B3', start: 1.6, end: 3.0, label: 'Ground-level tracking, trot to gallop, “Charge!”' },
       { id: 'B4', start: 3.0, end: 3.6, label: 'Front view of the rebel line, rising shake, rebels flinch' },
@@ -430,10 +444,11 @@ export function makeThunderingCharge(sampleDamage = 1060, sampleFalls = 4): Cuti
     timeScale: B_TIMESCALE,
     cues: buildCues(falls),
     overlays: {
-      title: { text: 'Thundering Charge', sub: 'Guan Yu', inAt: 0.12, inDur: 0.55, outAt: 1.4, outDur: 0.3 },
+      title: { text: title, sub: casterName, inAt: first ? 0.12 : info.skipTo + 0.05, inDur: 0.55, outAt: first ? 1.4 : info.skipTo + 1.5, outDur: 0.3 },
       callout: { text: 'Charge!', at: 1.72, inDur: 0.18, hold: 0.55, outDur: 0.2 },
       damage: { text: dmg, at: 5.95, paintDur: 0.55, outAt: 99, outDur: 0.1 },
-      seal: { at: 6.5, dur: 0.22, glyph: '衝' },
+      seal: { at: 6.5, dur: 0.22, glyph: info.glyph },
+      ...(slips.length ? { slips } : {}),
       flashes: [{ at: 3.6, dur: 0.15, kind: 'ink', peak: 0.7 }],
       speed: [
         [0, 0],
@@ -458,4 +473,10 @@ export function makeThunderingCharge(sampleDamage = 1060, sampleFalls = 4): Cuti
       veil: [[0, 0]],
     },
   }
+}
+
+/** What the world needs from a plan: the defenders' kind and palette and the ground under them. */
+export function chargeWorldSpec(scene: CutinScene): { ground: ReturnType<typeof groundKind>; def: ReturnType<typeof defenderOf> } {
+  const p = scene.params
+  return { ground: p ? groundKind(p.terrain) : 'plain', def: p ? defenderOf(p) : { kind: 'rebel', palette: 'yellow' } }
 }

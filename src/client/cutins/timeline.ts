@@ -2,6 +2,8 @@
 // function of WALL time t (what the scrubber scrubs). Slow-motion and hit-stop are part of the timeline: they define a
 // mapping from wall time to STORY time (what the actors and particles run on), so a scene is exactly `duration` seconds
 // long and every beat lands on the spec's time whatever the time scale does inside it.
+import type { LinkPlan, SceneId } from './plan'
+import type { ActPlan } from './scenes/act'
 import { rand } from './rng'
 
 export type Vec3 = readonly [number, number, number]
@@ -90,8 +92,12 @@ export interface Flash {
 
 export interface OverlaySchedule {
   title: { text: string; sub: string; inAt: number; inDur: number; outAt: number; outDur: number }
-  callout: { text: string; at: number; inDur: number; hold: number; outDur: number }
+  callout: { text: string; at: number; inDur: number; hold: number; outDur: number; side?: 'left' }
   damage: { text: string; at: number; paintDur: number; outAt: number; outDur: number }
+  /** Small slips (troop kind, "Confused x2", the counter number...) stamped onto the lower-left. */
+  slips?: Slip[]
+  /** The wind-arrow brush stroke of scene W: screen angle in degrees (0 = right, 90 = down) and its label. */
+  windArrow?: { at: number; angle: number; label: string; out?: number }
   seal: { at: number; dur: number; glyph: string }
   flashes: Flash[]
   /** Brush speed-line strength keyframes [wall t, 0..1]. */
@@ -102,6 +108,16 @@ export interface OverlaySchedule {
   veil: [number, number][]
 }
 
+export interface Slip {
+  text: string
+  at: number
+  /** Fades out at `out` (scene time); omit to stay to the end. */
+  out?: number
+  tone?: 'ink' | 'cinnabar' | 'jade'
+  /** 0 = the main row, 1 = the row above. */
+  row?: number
+}
+
 export interface SampleEvent {
   /** Damage dealt, from the engine event (a sample on the review page). */
   damage: number
@@ -110,7 +126,7 @@ export interface SampleEvent {
 }
 
 export interface CutinScene {
-  id: 'A' | 'B'
+  id: SceneId
   title: string
   officer: string
   duration: number
@@ -122,6 +138,12 @@ export interface CutinScene {
   overlays: OverlaySchedule
   sample: SampleEvent
   seed: number
+  /** The plan this scene was built from (the review page builds samples of the same shape). */
+  params?: LinkPlan
+  /** Chain behaviour: links 2+ start at `skipTo`, non-final links end at `cutAt`; the board result lands at `resultAt`. */
+  chain?: { skipTo: number; cutAt: number; resultAt: number }
+  /** Scenes C, D, R, W and the shorts: the actors and effects ActWorld renders. */
+  act?: ActPlan
 }
 
 // ---- time mapping ------------------------------------------------------------------------------------------------
@@ -243,9 +265,11 @@ function shakeAt(shakes: readonly ShakeEvent[], t: number): [number, number] {
 
 export interface OverlayState {
   title: { text: string; sub: string; reveal: number; alpha: number }
-  callout: { text: string; reveal: number; alpha: number }
+  callout: { text: string; reveal: number; alpha: number; side: 'left' | 'right' }
   damage: { text: string; paint: number; alpha: number }
   seal: { stamp: number; alpha: number; glyph: string }
+  slips: { text: string; tone: 'ink' | 'cinnabar' | 'jade'; row: number; alpha: number; reveal: number }[]
+  windArrow: { reveal: number; alpha: number; angle: number; label: string } | null
   flash: { kind: 'ink' | 'fire'; alpha: number; progress: number; seed: number } | null
   speedLines: number
   dof: number
@@ -292,9 +316,19 @@ export function overlayAt(scene: CutinScene, t: number, whip = 0): OverlayState 
   }
   return {
     title: { text: ti.text, sub: ti.sub, reveal: EASE.out(titleIn), alpha: t >= ti.inAt ? 1 - EASE.inOut(titleOut) : 0 },
-    callout: { text: c.text, reveal: EASE.out(calloutIn), alpha: t >= c.at ? 1 - EASE.inOut(calloutOut) : 0 },
+    callout: { text: c.text, reveal: EASE.out(calloutIn), alpha: t >= c.at ? 1 - EASE.inOut(calloutOut) : 0, side: c.side ?? 'right' },
     damage: { text: d.text, paint: EASE.inOut(dmgPaint), alpha: t >= d.at ? 1 - EASE.inOut(dmgOut) : 0 },
     seal: { stamp, alpha: t >= sl.at ? 1 : 0, glyph: sl.glyph },
+    slips: (o.slips ?? [])
+      .filter((x) => t >= x.at && (x.out === undefined || t < x.out + 0.25))
+      .map((x) => ({
+        text: x.text,
+        tone: x.tone ?? 'ink',
+        row: x.row ?? 0,
+        reveal: EASE.out(clamp01((t - x.at) / 0.22)),
+        alpha: x.out === undefined ? 1 : 1 - EASE.inOut(clamp01((t - x.out) / 0.25)),
+      })),
+    windArrow: o.windArrow && t >= o.windArrow.at ? { reveal: EASE.out(clamp01((t - o.windArrow.at) / 0.5)), alpha: o.windArrow.out === undefined ? 1 : 1 - EASE.inOut(clamp01((t - o.windArrow.out) / 0.3)), angle: o.windArrow.angle, label: o.windArrow.label } : null,
     flash,
     speedLines: curve(o.speed, t),
     dof: curve(o.dof, t),

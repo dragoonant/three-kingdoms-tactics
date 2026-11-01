@@ -125,3 +125,41 @@ test('phone width: controls collapse below the frame and nothing scrolls sideway
   await page.screenshot({ path: 'e2e-out/cinema-phone.png', fullPage: true })
   expect(errors).toEqual([])
 })
+
+// v0.3: the scenes played in real battles are on the review page too, with sample parameters.
+for (const [id, beatCount] of [
+  ['Ap', 6],
+  ['C', 6],
+  ['D', 6],
+  ['R', 4],
+  ['W', 4],
+  ['S-melee', 5],
+  ['S-cavalry', 5],
+  ['S-archer', 5],
+] as const) {
+  test(`scene ${id}: on the picker, beat list and scrubber follow every beat`, async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    const errors = await open(page, `?test=1&scene=${id}`)
+    await expect(page.getByTestId(`scene-${id}`)).toHaveAttribute('aria-pressed', 'true')
+    expect(await cinema(page, (c) => c.scene())).toBe(id)
+    const beats = await cinema(page, (c) => c.beats())
+    expect(beats.length).toBe(beatCount)
+    await expect(page.getByTestId('beats').locator('button')).toHaveCount(beatCount)
+    for (const b of beats) {
+      await page.evaluate((t) => (window as unknown as { __cinema: Cinema }).__cinema.setTime(t), (b.start + b.end) / 2)
+      await expect(page.getByTestId(`beat-${b.id}`)).toHaveAttribute('aria-current', 'step')
+    }
+    expect(errors).toEqual([])
+  })
+}
+
+test('the picker lists all ten scenes and its terrain and arc variants rebuild the scene', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  const errors = await open(page, '?test=1&scene=S-melee')
+  for (const id of ['A', 'Ap', 'B', 'C', 'D', 'R', 'W', 'S-melee', 'S-cavalry', 'S-archer']) await expect(page.getByTestId(`scene-${id}`)).toBeVisible()
+  await page.getByTestId('terrain-forest').click()
+  await page.getByTestId('arc-side').click()
+  await expect(page.getByTestId('arc-side')).toHaveAttribute('aria-pressed', 'true')
+  await page.waitForFunction(() => (window as unknown as { __cinema: Cinema }).__cinema.ready === true, undefined, { timeout: 90_000 })
+  expect(errors).toEqual([])
+})

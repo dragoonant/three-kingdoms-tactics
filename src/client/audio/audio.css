@@ -43,3 +43,15 @@
 }
 /* While the popover is open the top bar (and the popover with it) rides above the wind slip and the objective card. */
 .topbar:has(.snd-pop) { z-index: 8; }
+
+/* cut-in settings under the volume sliders: grouped choices as bamboo slips, the picked one filled */
+.snd-scenes { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; padding-top: 10px; border-top: 1px solid rgba(201, 178, 124, 0.3); }
+.snd-group { display: flex; flex-direction: column; gap: 4px; }
+.snd-choice {
+  appearance: none; text-align: left; font: inherit; font-size: 14px; line-height: 1.2; padding: 5px 10px; min-height: 30px; cursor: pointer; color: var(--silk);
+  background: rgba(201, 178, 124, 0.1); border: 1px solid rgba(201, 178, 124, 0.35); border-radius: 3px;
+}
+.snd-choice:hover { background: rgba(201, 178, 124, 0.24); }
+.snd-choice[aria-pressed='true'] { background: var(--bamboo); color: var(--ink); border-color: var(--bronze); font-weight: 700; }
+.snd-choice:focus-visible { outline: 2px solid var(--lantern); outline-offset: 2px; }
+.snd-pop { max-height: calc(100vh - 84px); overflow-y: auto; }
