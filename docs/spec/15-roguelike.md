@@ -4,6 +4,8 @@
 
 This is a plan, not a frozen spec. Items marked **[decide]** are the owner's call; each has a recommendation. Nothing here is built yet.
 
+> **Under revision (2026-11-01):** the owner wants the novel as the source, every node a heavy decision (no plain reward stops), and rice as the core resource that sets troop counts, with running out of rice ending the run. §2–§5 change once the node and economy design is agreed.
+
 ## 1. The shape in one paragraph
 A **scenario** is one era, named for its major battle (Yellow Turbans → Guangzong; Red Cliffs → Chibi). A **run** starts with a small band and a seed. The **road** is a short branching map of 2–3 historical minor battles plus camps and events. It ends at the **major battle**, a large hand-built set piece with its own signature mechanic. Win the major battle and the era is won and written into the **Annals**. Lose any battle, or lose the lord, and the run ends; what you learned and unlocked stays. Each run differs because the road branches, the battles are seeded variants (enemy rosters, deployment, weather, omens), and you draft your officers, treasures and tactics as you go.
 
@@ -112,4 +114,4 @@ v1 (RL0–RL4) is about **5M tokens**, done as two or three overnight sessions. 
 3. **[decided: as recommended] How long is a run?** *Recommend: one era per run* (45–90 min), and after all v1 eras are won, unlock one long run that chains all four.
 4. **[decided: as recommended] Officer loss?** *Recommend: wounded first, fall on the second rout in a run*, with Iron Oath as the one-rout hardcore toggle.
 5. **[default] Meta-progression?** *Recommend: unlocks only* (eras, officers into the draft pools, treasures, events, Mandate levels), with no permanent stat upgrades.
-6. **[default] History or the novel?** You said "from history". *Recommend: history first, with the novel's best-known set pieces kept and labelled.* That keeps Daxing Hill, Qingzhou, Sishui Gate and Hulao Gate, which are novel events.
+6. **[decided 2026-11-01: the novel]** Owner: "keep it from the novel. I'd like a romanticized version of history." Superseded text follows. History or the novel? You said "from history". *Recommend: history first, with the novel's best-known set pieces kept and labelled.* That keeps Daxing Hill, Qingzhou, Sishui Gate and Hulao Gate, which are novel events.
