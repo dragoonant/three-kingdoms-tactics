@@ -48,3 +48,12 @@ One Gemini chat ("Han-Dynasty Miniature Figure Generation", Pro mode), one promp
 - The full-size masters (2752x1536 JPG from Gemini's "Download full size image" button, about 2.2 MB each) and the in-page export bundle live outside the repo in `../three-kingdoms-tactics-masters/hero-concepts/`.
 - Export notes: the in-page `img` elements are `blob:` URLs at 1024x572 only; `fetch` on them is blocked, but canvas `drawImage` works. The download button gives the 2752x1536 original, so prefer it for masters. Two download clicks within a few seconds of each other dropped the second; wait for the "Downloading full size" toast to clear before the next click.
 - Next: edit variants from these bases in the same chat ("keep everything, change only ..."), then Hunyuan per the section above (`--nocut` for Guan Yu's robe).
+
+## Impact of PLAN D23 (owner, 2026-11-01: no bases; animated walking and riding)
+Added by the cloud session after batch 1 landed.
+- **Bases.** Batch 1 was made under the old style sentence, so the figures stand on black bases. For Hunyuan these three can stay as they are, and the base can be cut off at finalise (crop the mesh below the boot soles). **Future batches** should replace "standing on a plain round black base" in the style sentence with "standing on a plain white floor with both feet clearly visible, no base or plinth". That changes the style constant, so it starts a new set; batch 1 is not re-rolled for it.
+- **Animation.** D23 needs the generated figures to walk and ride. Fused single-mesh Hunyuan GLBs can't do that, and the KB (README rule 15) records that skeletal animation was piloted and dropped for fused meshes. **This is the open M5 decision:**
+  - (a) Generate **separate parts** per hero (head with headgear, torso, upper and lower arms, legs, weapon, plus the horse in parts) and attach them to the procedural rig's joints. This is the modular-attachment approach from Murder Squad v1, applied to our rig.
+  - (b) **Auto-rig** the fused mesh (an automatic skinning tool) onto the joint contract.
+  - (c) Use the GLB as a **static hero portrait and close-up figure**, keeping the procedural rig for locomotion.
+  Recommended: (a) for the seven heroes, because it keeps the joint contract exactly. Ask the owner before the first Hunyuan run.
