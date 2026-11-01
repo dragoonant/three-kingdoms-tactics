@@ -3,6 +3,8 @@
 import { evaluate, type CutinScene, type Evaluated } from './timeline'
 
 type Listener = (ev: Evaluated) => void
+/** Transport events for side effects such as the music: playback started, paused, ran to its end, looped, or was jumped. */
+export type Transport = 'play' | 'pause' | 'finish' | 'wrap' | 'seek'
 
 export class CutinController {
   scene: CutinScene
@@ -18,6 +20,8 @@ export class CutinController {
   private readonly stateListeners = new Set<() => void>()
   private raf = 0
   private last = 0
+  private ticking = false
+  private readonly transportListeners = new Set<(e: Transport) => void>()
 
   constructor(scene: CutinScene) {
     this.scene = scene
@@ -35,6 +39,15 @@ export class CutinController {
     return () => this.stateListeners.delete(fn)
   }
 
+  onTransport(fn: (e: Transport) => void): () => void {
+    this.transportListeners.add(fn)
+    return () => this.transportListeners.delete(fn)
+  }
+
+  private emitTransport(e: Transport): void {
+    this.transportListeners.forEach((f) => f(e))
+  }
+
   private emitState(): void {
     this.stateListeners.forEach((f) => f())
   }
@@ -47,6 +60,7 @@ export class CutinController {
 
   /** Jump to wall time t, notify, and render synchronously. */
   setTime(t: number): void {
+    if (!this.ticking) this.emitTransport('seek')
     this.t = Math.min(this.scene.duration, Math.max(0, t))
     this.frame.current = evaluate(this.scene, this.t)
     this.listeners.forEach((f) => f(this.frame.current))
@@ -63,19 +77,30 @@ export class CutinController {
       const dt = Math.min(0.1, (now - this.last) / 1000)
       this.last = now
       let nt = this.t + dt * this.speed
+      let ev: Transport | null = null
       if (nt >= this.scene.duration) {
-        if (this.loop) nt = nt % this.scene.duration
-        else {
+        if (this.loop) {
+          nt = nt % this.scene.duration
+          ev = 'wrap'
+        } else {
           nt = this.scene.duration
           this.playing = false
           this.emitState()
+          ev = 'finish'
         }
       }
-      this.setTime(nt)
+      this.ticking = true
+      try {
+        this.setTime(nt)
+      } finally {
+        this.ticking = false
+      }
+      if (ev) this.emitTransport(ev)
       if (this.playing) this.raf = requestAnimationFrame(tick)
     }
     this.raf = requestAnimationFrame(tick)
     this.emitState()
+    this.emitTransport('play')
   }
 
   pause(): void {
@@ -83,6 +108,7 @@ export class CutinController {
     this.playing = false
     cancelAnimationFrame(this.raf)
     this.emitState()
+    this.emitTransport('pause')
   }
 
   toggle(): void {
@@ -128,5 +154,6 @@ export class CutinController {
     cancelAnimationFrame(this.raf)
     this.listeners.clear()
     this.stateListeners.clear()
+    this.transportListeners.clear()
   }
 }

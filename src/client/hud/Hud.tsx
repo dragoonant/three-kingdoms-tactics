@@ -7,6 +7,7 @@ import { timelineLabel, trackerHeadline, trackerLines } from '../campaign/helper
 import type { Speed } from '../presentation/beats'
 import { useGame } from '../store/game'
 import { canControl } from '../store/orders'
+import { SoundButton } from '../audio/SoundControl'
 import { Banners } from './Banners'
 import { OfficerPanel } from './OfficerPanel'
 import { ActionFan, OrdersCard } from './Orders'
@@ -46,6 +47,7 @@ function TopBar() {
         ))}
       </div>
       <div className="bar-btns">
+        <SoundButton placement="below" />
         <button type="button" className={ledgerOpen ? 'on' : ''} aria-pressed={ledgerOpen} onClick={toggleLedger} data-testid="ledger-toggle">
           Ledger
         </button>

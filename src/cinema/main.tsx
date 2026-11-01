@@ -3,6 +3,8 @@
 // window.__cinema for the e2e tests and the renderer.
 import { useCallback, useEffect, useRef, useState, type PointerEvent as RPointerEvent } from 'react'
 import { createRoot } from 'react-dom/client'
+import { audio } from '../client/audio'
+import { SoundPanel } from '../client/audio/SoundControl'
 import { CutinController } from '../client/cutins/controller'
 import { CutinView } from '../client/cutins/CutinView'
 import { makeFireArrows } from '../client/cutins/scenes/fireArrows'
@@ -228,6 +230,16 @@ function ScenePanel({ c, sceneId, setSceneId, onReady }: PanelProps) {
             {c.free ? ' Free camera is on: pause, then drag to look around.' : ''}
           </p>
         </section>
+        <section className="panel" data-testid="music-panel">
+          <h2>
+            Music<small>charge layer</small>
+          </h2>
+          <SoundPanel />
+          <p className="sample">
+            The battle bed plays while you watch. Each scene lays the charge layer over it and fades it out when the scene ends. With Loop on it stays up across repeats; switch Loop off to hear the
+            release. Not verified by ear.
+          </p>
+        </section>
         <section className="panel">
           <h2>
             Beats<small>click to jump</small>
@@ -313,6 +325,24 @@ function Root() {
       c.setTime(c.t)
       if (apiRef.current) apiRef.current.ready = true
     })()
+  }, [c])
+
+  // Music: the battle bed under the scenes, the charge layer on top of it while a scene plays (docs/spec/60-audio.md).
+  useEffect(() => {
+    if (uiOff) return
+    audio.setMood('battle')
+    const off = c.onTransport((e) => {
+      const secs = c.scene.duration / Math.max(0.1, c.speed)
+      if (e === 'play' || e === 'wrap') audio.cutinStart('full', secs)
+      else if (e === 'pause' || e === 'finish') audio.cutinEnd()
+      else if (e === 'seek' && !c.playing) audio.cutinSkip()
+    })
+    // The page starts playing from a child effect that runs before this one, so catch up with it.
+    if (c.playing) audio.cutinStart('full', c.scene.duration / Math.max(0.1, c.speed))
+    return () => {
+      off()
+      audio.cutinSkip()
+    }
   }, [c])
 
   useEffect(() => {

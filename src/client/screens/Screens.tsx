@@ -4,6 +4,7 @@ import { SKIRMISH_ID, useGame } from '../store/game'
 import { useCampaign } from '../store/campaign'
 import { Portrait } from '../hud/parts'
 import { nameOfUnit } from '../names'
+import { SoundButton } from '../audio/SoundControl'
 
 function SealButton({ children, onClick, id }: { children: React.ReactNode; onClick: () => void; id: string }) {
   return (
@@ -59,6 +60,7 @@ export function Title() {
         </nav>
       </div>
       <p className="fine">An original fan project. Not affiliated with Koei Tecmo.</p>
+      <SoundButton placement="above" className="snd-float" />
     </main>
   )
 }

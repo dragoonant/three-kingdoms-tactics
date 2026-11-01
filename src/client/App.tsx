@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { greedyAction } from '../ai/greedy'
 import { legalActions, query } from '../engine'
+import { bindGameAudio } from './audio/gameAudio'
 import { BoardCanvas } from './board/BoardCanvas'
 import { viewApi } from './board/layout'
 import { Hud } from './hud/Hud'
@@ -53,12 +54,17 @@ export function App() {
     if (TEST_MODE) installTestHook()
   }, [])
 
+  // The music follows the screen and the battle result (docs/spec/60-audio.md).
+  useEffect(() => bindGameAudio(), [])
+
   // Any press skips the batch being played; the click that follows is swallowed so it cannot also act.
   useEffect(() => {
     let swallow = false
     const down = (e: PointerEvent): void => {
       swallow = false
       const st = useGame.getState()
+      // The sound panel stays usable while a replay plays.
+      if (e.target instanceof Element && e.target.closest('[data-sound-ui]')) return
       if (st.playing && st.screen === 'battle') {
         st.skip()
         swallow = true
