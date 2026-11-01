@@ -58,6 +58,8 @@ export function geo<T extends BufferGeometry>(key: string, make: () => T): T {
   let g = geoCache.get(key)
   if (!g) {
     g = make()
+    // shared by every rig, on the board and in the cut-ins: never released by a cut-in's GPU sweep (cutins/gpu.ts)
+    g.userData.keep = true
     geoCache.set(key, g)
   }
   return g as T
@@ -71,8 +73,13 @@ export function disposeFigureCaches(): void {
   sharedMats.clear()
 }
 
-export function cacheStats(): { geometries: number; materials: number } {
-  return { geometries: geoCache.size, materials: sharedMats.size }
+export function cacheStats(): { geometries: number; materials: number; bytes: number } {
+  let bytes = 0
+  for (const g of geoCache.values()) {
+    for (const a of Object.values(g.attributes)) bytes += (a as { array: ArrayLike<number> & { byteLength?: number } }).array.byteLength ?? 0
+    bytes += g.index?.array.byteLength ?? 0
+  }
+  return { geometries: geoCache.size, materials: sharedMats.size, bytes }
 }
 
 export const G = {

@@ -1,9 +1,11 @@
 // The renderer for scenes C, D, R, W and the three short attack scenes. It draws exactly the ActPlan of scenes/act.ts: every
 // figure's position is trackAt(track, story time), every pose is chosen by the cue that is current for that figure, and every
 // particle is a pure function of story time, so any frame can be drawn on its own (scrubbing, capture, skip).
-import { useFrame } from '@react-three/fiber'
+import { useCutinFrame } from '../stage/slot'
 import { useMemo } from 'react'
 import { useDisposeWorld } from '../dispose'
+import { keep } from '../gpu'
+import { perf } from '../perf'
 import {
   AdditiveBlending,
   CanvasTexture,
@@ -34,7 +36,7 @@ import { Ribbon, makeArrowProp, placeArrow, type ArrowProp } from '../props'
 import { rand, srand } from '../rng'
 import { Ground } from '../stage/Ground'
 import { ParticleBuffer } from '../stage/ParticleBuffer'
-import { Stage, pxPerUnit, useFrameRef } from '../stage/Stage'
+import { PadLights, POINT_LIGHTS, Stage, pxPerUnit, useFrameRef } from '../stage/Stage'
 import { cueFor, type CutinScene } from '../timeline'
 import { defenderOf, trackAt, type ActActor, type ActPlan } from './act'
 import { spawnFormation } from './formation'
@@ -489,7 +491,7 @@ function spiralTexture(): CanvasTexture {
   }
   draw(17, '#efe6d2')
   draw(9, '#14100d')
-  spiralTex = new CanvasTexture(c)
+  spiralTex = keep(new CanvasTexture(c))
   spiralTex.colorSpace = SRGBColorSpace
   return spiralTex
 }
@@ -512,7 +514,7 @@ export function ActWorld({ scene }: { scene: CutinScene }) {
   const frame = useFrameRef()
   const plan = scene.act!
 
-  const world = useMemo(() => {
+  const world = useMemo(() => perf.measure('world-build', () => {
     const { live, mouth } = buildLive(scene, plan)
     const fx = plan.fx
     const spirals = (fx.spirals ?? []).map((sx) => {
@@ -626,7 +628,7 @@ export function ActWorld({ scene }: { scene: CutinScene }) {
     const heroes = live.filter((l) => l.hero).length
     publishTroops(scene.id, live.filter((l) => l.actor.group === 'atk').length + heroes + ranks.crowds.members(ranks.atk), live.filter((l) => l.actor.group === 'def').length + ranks.crowds.members(ranks.def), ranks.crowds, melee)
     return { live, mouth, spirals, rings, trails, arrows, banners, altar, buf, clear, ringGeo, ringGeoCream, ranks, lens, low, melee }
-  }, [scene, plan])
+  }), [scene, plan])
 
   useDisposeWorld(world, () => {
     world.live.forEach((l) => l.rig.dispose())
@@ -639,7 +641,7 @@ export function ActWorld({ scene }: { scene: CutinScene }) {
 
   const tmp = useMemo(() => ({ out: { x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, pivot: 0, lying: false } as Out, a: new Vector3(), b: new Vector3() }), [])
 
-  useFrame(({ camera, gl }) => {
+  useCutinFrame(({ camera, gl }) => {
     const { story: s } = frame.current
     const fx = plan.fx
     const ppu = pxPerUnit(gl.domElement.height, (camera as { fov?: number }).fov ?? 40)
@@ -956,6 +958,7 @@ export function ActWorld({ scene }: { scene: CutinScene }) {
         <primitive key={k} object={f.points as Object3D} />
       ))}
       <pointLight position={[0, 1.2, plan.focus[1]]} color="#ffb070" intensity={0.5} distance={7} decay={2} />
+      <PadLights n={POINT_LIGHTS - 1} />
     </group>
   )
 }

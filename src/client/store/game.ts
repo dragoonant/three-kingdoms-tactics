@@ -9,6 +9,7 @@ import { setBoardSize, setSideTokens } from '../board/layout'
 import { linesFor, type LedgerEntry } from '../ledger'
 import { getCutinSettings } from '../cutins/settings'
 import { player } from '../cutins/player'
+import { prebuildFor } from '../cutins/prep'
 import { introBeats, planBeats, type Beat, type Fx, type Speed } from '../presentation/beats'
 import { Director } from '../presentation/director'
 import { sceneFromState, type Scene } from '../presentation/scene'
@@ -140,6 +141,9 @@ interface GameStore {
   endPhase: () => void
 }
 
+/** How long the enemy's move may wait for its cut-in's world to be built (it is usually a few hundred ms). */
+const PREBUILD_WAIT_MS = 4000
+
 const initialStats = (): Stats => ({ bestChain: 0, hanLost: 0, foesRouted: 0, swayed: 0 })
 
 export const useGame = create<GameStore>((set, get) => {
@@ -270,7 +274,9 @@ export const useGame = create<GameStore>((set, get) => {
         .decide(cur.state, { tier: botTier, seed: cur.seed })
         .then((d) => d.action)
         .catch((): Action => ({ type: 'endPhase' }))
-        .then((a) => {
+        .then(async (a) => {
+          // the AI's choice is known: build its cut-in's world before it plays (docs/spec/51 "Performance"), within a bound
+          await Promise.race([prebuildFor(cur.state, a, cur.speed, PLAYER_SIDE).catch(() => {}), new Promise((r) => setTimeout(r, PREBUILD_WAIT_MS))])
           botBusy = false
           const now = get()
           if (now.state !== cur.state || now.screen !== 'battle' || now.playing) {

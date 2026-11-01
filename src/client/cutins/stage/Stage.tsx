@@ -1,6 +1,7 @@
 // The miniature stage of docs/spec/51 "Concept": the table's sand, the dark tent for a sky, hanging lanterns as warm
 // bokeh, a warm key light and a rim light. Everything here is a function of the clock (no real-time state).
-import { useFrame, useThree } from '@react-three/fiber'
+import { useThree } from '@react-three/fiber'
+import { useCutinFrame } from './slot'
 import { createContext, useContext, useEffect, useMemo, useRef, type MutableRefObject } from 'react'
 import {
   AdditiveBlending,
@@ -18,11 +19,13 @@ import {
   Sprite,
   SpriteMaterial,
   SphereGeometry,
+  type Texture,
 } from 'three'
 import type { Evaluated } from '../timeline'
 import { rand, srand } from '../rng'
 import { ParticleBuffer } from './ParticleBuffer'
 import { makeBokehTexture, makeGlowTexture, makeSandTexture } from './textures'
+import { keep } from '../gpu'
 
 /** The current evaluated frame, written by the player and read by every world component in useFrame. */
 export const FrameContext = createContext<MutableRefObject<Evaluated> | null>(null)
@@ -67,10 +70,22 @@ void main() {
 }
 `
 
-function Sky() {
-  const mat = useMemo(
-    () =>
-      new ShaderMaterial({
+// The stage is the same in every scene: its geometry, materials and textures are built once and shared by every cut-in of
+// the battle (docs/spec/51 "Performance: warm-up and reuse"), so a new scene uploads none of them again.
+let stageCache: {
+  sky: { mat: ShaderMaterial; geo: SphereGeometry }
+  table: { sand: MeshStandardMaterial; rim: MeshStandardMaterial; stud: MeshStandardMaterial; floor: MeshStandardMaterial; top: PlaneGeometry; floorGeo: PlaneGeometry; rimX: BoxGeometry; rimZ: BoxGeometry; body: BoxGeometry; studGeo: BoxGeometry }
+  tex: { bokeh: Texture; glow: Texture }
+} | null = null
+function stage(): NonNullable<typeof stageCache> {
+  if (stageCache) return stageCache
+  const w = 0.32
+  const sandTex = keep(makeSandTexture())
+  sandTex.repeat.set(TABLE.halfX * 2 * 0.85, TABLE.halfZ * 2 * 0.85)
+  sandTex.wrapS = sandTex.wrapT = RepeatWrapping
+  stageCache = {
+    sky: {
+      mat: new ShaderMaterial({
         vertexShader: SKY_VERT,
         fragmentShader: SKY_FRAG,
         uniforms: { uHorizon: { value: new Color('#2b1a10') }, uZenith: { value: new Color('#070504') } },
@@ -78,9 +93,27 @@ function Sky() {
         depthWrite: false,
         fog: false,
       }),
-    [],
-  )
-  const geo = useMemo(() => new SphereGeometry(60, 32, 16), [])
+      geo: keep(new SphereGeometry(60, 32, 16)),
+    },
+    table: {
+      sand: new MeshStandardMaterial({ color: '#c2a878', map: sandTex, bumpMap: sandTex, bumpScale: 1.4, roughness: 1, metalness: 0 }),
+      rim: new MeshStandardMaterial({ color: '#3a1410', roughness: 0.5, metalness: 0.1 }),
+      stud: new MeshStandardMaterial({ color: '#a07a3a', roughness: 0.4, metalness: 0.75 }),
+      floor: new MeshStandardMaterial({ color: '#17100c', roughness: 1 }),
+      top: keep(new PlaneGeometry(TABLE.halfX * 2, TABLE.halfZ * 2).rotateX(-Math.PI / 2)),
+      floorGeo: keep(new PlaneGeometry(200, 200).rotateX(-Math.PI / 2)),
+      rimX: keep(new BoxGeometry(TABLE.halfX * 2 + w * 2, 0.34, w)),
+      rimZ: keep(new BoxGeometry(w, 0.34, TABLE.halfZ * 2)),
+      body: keep(new BoxGeometry(TABLE.halfX * 2 + w * 2, 0.9, TABLE.halfZ * 2 + w * 2)),
+      studGeo: keep(new BoxGeometry(w * 1.15, 0.1, w * 1.15)),
+    },
+    tex: { bokeh: keep(makeBokehTexture()), glow: keep(makeGlowTexture()) },
+  }
+  return stageCache!
+}
+
+function Sky() {
+  const { mat, geo } = stage().sky
   return <mesh geometry={geo} material={mat} renderOrder={-10} frustumCulled={false} />
 }
 
@@ -89,53 +122,26 @@ function Sky() {
 export const TABLE = { halfX: 10, halfZ: 8 }
 
 function Table() {
-  const sand = useMemo(() => {
-    const t = makeSandTexture()
-    t.repeat.set(TABLE.halfX * 2 * 0.85, TABLE.halfZ * 2 * 0.85)
-    t.wrapS = t.wrapT = RepeatWrapping
-    return t
-  }, [])
-  const mats = useMemo(
-    () => ({
-      sand: new MeshStandardMaterial({ color: '#c2a878', map: sand, bumpMap: sand, bumpScale: 1.4, roughness: 1, metalness: 0 }),
-      rim: new MeshStandardMaterial({ color: '#3a1410', roughness: 0.5, metalness: 0.1 }),
-      stud: new MeshStandardMaterial({ color: '#a07a3a', roughness: 0.4, metalness: 0.75 }),
-      floor: new MeshStandardMaterial({ color: '#17100c', roughness: 1 }),
-    }),
-    [sand],
-  )
-  const geo = useMemo(() => ({ top: new PlaneGeometry(TABLE.halfX * 2, TABLE.halfZ * 2).rotateX(-Math.PI / 2), floor: new PlaneGeometry(200, 200).rotateX(-Math.PI / 2) }), [])
+  const t = stage().table
   const w = 0.32
   return (
     <group>
-      <mesh geometry={geo.top} material={mats.sand} receiveShadow />
-      <mesh geometry={geo.floor} material={mats.floor} position={[0, -0.9, 0]} />
+      <mesh geometry={t.top} material={t.sand} receiveShadow />
+      <mesh geometry={t.floorGeo} material={t.floor} position={[0, -0.9, 0]} />
       {/* lacquer rim */}
-      <mesh position={[0, 0.0, -TABLE.halfZ - w / 2]} material={mats.rim} receiveShadow>
-        <boxGeometry args={[TABLE.halfX * 2 + w * 2, 0.34, w]} />
-      </mesh>
-      <mesh position={[0, 0.0, TABLE.halfZ + w / 2]} material={mats.rim} receiveShadow>
-        <boxGeometry args={[TABLE.halfX * 2 + w * 2, 0.34, w]} />
-      </mesh>
-      <mesh position={[-TABLE.halfX - w / 2, 0.0, 0]} material={mats.rim} receiveShadow>
-        <boxGeometry args={[w, 0.34, TABLE.halfZ * 2]} />
-      </mesh>
-      <mesh position={[TABLE.halfX + w / 2, 0.0, 0]} material={mats.rim} receiveShadow>
-        <boxGeometry args={[w, 0.34, TABLE.halfZ * 2]} />
-      </mesh>
+      <mesh position={[0, 0.0, -TABLE.halfZ - w / 2]} geometry={t.rimX} material={t.rim} receiveShadow />
+      <mesh position={[0, 0.0, TABLE.halfZ + w / 2]} geometry={t.rimX} material={t.rim} receiveShadow />
+      <mesh position={[-TABLE.halfX - w / 2, 0.0, 0]} geometry={t.rimZ} material={t.rim} receiveShadow />
+      <mesh position={[TABLE.halfX + w / 2, 0.0, 0]} geometry={t.rimZ} material={t.rim} receiveShadow />
       {/* the table body, dropping away below the sand */}
-      <mesh position={[0, -0.48, 0]} material={mats.rim}>
-        <boxGeometry args={[TABLE.halfX * 2 + w * 2, 0.9, TABLE.halfZ * 2 + w * 2]} />
-      </mesh>
+      <mesh position={[0, -0.48, 0]} geometry={t.body} material={t.rim} />
       {[
         [-1, -1],
         [1, -1],
         [-1, 1],
         [1, 1],
       ].map(([sx, sz], i) => (
-        <mesh key={i} position={[sx! * (TABLE.halfX + w / 2), 0.2, sz! * (TABLE.halfZ + w / 2)]} material={mats.stud}>
-          <boxGeometry args={[w * 1.15, 0.1, w * 1.15]} />
-        </mesh>
+        <mesh key={i} position={[sx! * (TABLE.halfX + w / 2), 0.2, sz! * (TABLE.halfZ + w / 2)]} geometry={t.studGeo} material={t.stud} />
       ))}
     </group>
   )
@@ -176,7 +182,7 @@ const HUE: Record<LanternSpec['hue'], string> = { amber: '#e9a85a', red: '#c8603
 function Lanterns({ seed, focus }: { seed: number; focus: [number, number] }) {
   const frame = useFrameRef()
   const specs = useMemo(() => lanternLayout(seed, focus), [seed, focus])
-  const tex = useMemo(() => ({ bokeh: makeBokehTexture(), glow: makeGlowTexture() }), [])
+  const tex = stage().tex
   const group = useRef<Group>(null)
   const sprites = useMemo(() => {
     const list: { bokeh: Sprite; core: Sprite; spec: LanternSpec }[] = []
@@ -197,7 +203,7 @@ function Lanterns({ seed, focus }: { seed: number; focus: [number, number] }) {
       for (const s of sprites) g.remove(s.bokeh, s.core)
     }
   }, [sprites])
-  useFrame(() => {
+  useCutinFrame(() => {
     const t = frame.current.t
     for (const { bokeh, core, spec } of sprites) {
       const sway = Math.sin(t * 0.9 + spec.phase) * 0.06
@@ -250,12 +256,29 @@ function Lights({ focus, keyDir, rimDir }: { focus: [number, number]; keyDir: [n
   )
 }
 
+/**
+ * Every cut-in world draws under the same set of lights: the stage's hemisphere light and three directional lights (the key
+ * casts the only shadow) plus exactly POINT_LIGHTS point lights. Three.js compiles a shader program per light count, so with
+ * one light rig a single warm-up compiles the programs of every scene. A world with fewer point lights of its own pads with
+ * unlit ones (intensity 0 adds nothing to the picture).
+ */
+export const POINT_LIGHTS = 3
+export function PadLights({ n }: { n: number }) {
+  return (
+    <>
+      {Array.from({ length: Math.max(0, n) }, (_, i) => (
+        <pointLight key={i} intensity={0} distance={1} decay={2} position={[0, -4, 0]} />
+      ))}
+    </>
+  )
+}
+
 // ---- ambient dust motes -----------------------------------------------------------------------------------------
 
 function Motes({ seed, focus, count, strength }: { seed: number; focus: [number, number]; count: number; strength: number }) {
   const frame = useFrameRef()
   const buf = useMemo(() => new ParticleBuffer(count, 'add', 1.2), [count])
-  useFrame(({ camera, gl }) => {
+  useCutinFrame(({ camera, gl }) => {
     const t = frame.current.t
     const fov = (camera as { fov?: number }).fov ?? 40
     buf.begin(pxPerUnit(gl.domElement.height, fov))

@@ -178,9 +178,71 @@ Owner: "It would be cool to see troops to be fighting each other from each side 
 - **C:** the second rank of defenders gives 0.3 tiles of ground (was 0.65) so it does not walk into the ranks behind.
 - **Capture at a real 30 fps:** `tools/shoot-battle-cutins.mjs --fps 30` steps the in-game cut-in clock by exactly 1/30 s per frame (it stepped 0.25-0.3 s before), and the store's cut-in watchdog (120 s of wall time) no longer skips a cut-in that a test or tool is stepping by hand (`player.manual`), which software GL at 30 fps would otherwise trip.
 
+## Performance: warm-up and reuse (owner 2026-11-01, PLAN D30)
+Owner: "when starting a cutscene, the game slows down tremendously, probably from loading all the models in the scene. Preload the models before fighting so it's smooth, or figure out a more efficient way to stop the slow down."
+
+**What it was (measured).** `tools/perf/cutin-hitch.mjs` plays Daxing Hill (seed 5) in headless Chromium with `?perf=1&cutins=all`. It lets each cut-in run on the wall clock and reads `window.__perf` (`src/client/cutins/perf.ts`): marks, frame times, long tasks, `renderer.info` and WebGL contexts. The numbers below are from software GL (SwiftShader), so compare the ratios. A steady cut-in frame is about 0.8–1.9 s there, and the GPU sets that pace (the main-thread draw is 10–50 ms).
+- **Before**, every cut-in mounted a new R3F `<Canvas>`, which meant a new WebGL context:
+  - creating the context and renderer took 1.0–2.4 s;
+  - building the world in JS took 70–200 ms;
+  - the first draw took 1.9–3.1 s, linking 9–10 shader programs from scratch;
+  - more programs compiled mid-scene as arrows and FX appeared (2–5 s spikes);
+  - the lazy scene chunk loaded on the first cut-in (70 ms).
+
+  Trigger to the first frame on screen was 3.3–5.9 s (3–6 steady frames), as one long task of 3.2–4.9 s.
+- **After**:
+  - no long task (over 50 ms) at the start of a prebuilt cut-in;
+  - the first draw is 8–50 ms of main thread;
+  - no program is compiled (21 programs from the warm-up, unchanged);
+  - no WebGL context is created (2 for the whole battle);
+  - geometry and texture counts return to the warm baseline after every cut-in.
+
+  The first frame is on screen 1.5–2.1 s after the trigger (1.1–2.2 steady frames). Most of that is the board's last frame still in the GPU queue; the cut-in's own first frame takes one steady frame. Without a prebuild (an order confirmed without its preview), the world is built at the start: one 120–140 ms task.
+
+**How (code):**
+- **One persistent canvas** (`CutinLayer.tsx`, mounted by `App` on the briefing, deploy, battle and end screens when battle scenes are on). It is hidden (`visibility: hidden`, `.co-idle`) and idle (`frameloop="never"`) between cut-ins. It holds *slots* (`prep.ts`, `CutinView.tsx`): each is a world in its own group, and only the active one is visible and animates (`useCutinFrame` in `stage/slot.ts` gates every cut-in `useFrame`). When the battle unloads, the canvas and everything in it are freed.
+- **Warm-up** (`prep.warmItems`, one item per idle callback, behind the intro and the first turn, with a "Preparing the field…" note while it runs):
+  - one sample world per scene the battle's units can play (their attacks and stratagems), built from the battle's own officers and troops, cycling through the battle's terrains;
+  - then a gallery (`WarmGallery.tsx`): every officer's figure (mounted when he rides or charges), every troop kind × palette as a crowd, and the remaining grounds.
+
+  Each item is mounted hidden. Then:
+  1. `renderer.compileAsync(slot, camera, slot)` runs with the slot's own lights;
+  2. one draw of the slot goes to the canvas inside a 1×1 scissor, with every hidden object shown, nothing culled and a 16×16 shadow map. This compiles the shadow-pass programs and uploads the shared buffers and textures. The same colour space and tone mapping are used as for a real frame, which a render target would not give;
+  3. the item is dropped.
+
+  The warm-up pauses while a cut-in plays and runs again on `webglcontextrestored`.
+- **One light rig.** Every world has the stage's hemisphere light and three directional lights (one shadow) plus exactly `POINT_LIGHTS` = 3 point lights (`PadLights`, intensity 0 where a scene has fewer). So the program set is the same for every scene and one warm-up covers it.
+- **Reuse.**
+  - Shared caches are kept: the figure kit's geometry, the stage's sky, table and textures, the ground's geometry, the arrow props and the spiral texture (`gpu.keep`).
+  - Crowd bakes are pinned for the battle (`pinBakes`), so a scene no longer re-bakes its ranks.
+  - Programs are pinned (`gpu.pinPrograms`), so disposing a scene's last material of a kind never deletes a program.
+  - When a slot unmounts, its own geometry, textures and instance buffers are released (`gpu.collect` / `release`); kept ones never are.
+- **Prebuild.**
+  - When the player's order preview is open (`prebuildHook.ts`), the order's cut-in is planned from a speculative engine step (the engine is pure), and its world is built, compiled and drawn once in a hidden slot. Its key is the link plan (`planKey`), so confirming finds it.
+  - The enemy's cut-in is built the same way as soon as the AI's choice is known, before the move is applied (`PREBUILD_WAIT_MS`, at most 4 s).
+  - All links of a chain are prebuilt (at most `MAX_NEXT` = 4 worlds).
+  - Unused prebuilds are dropped when the next sequence ends.
+- **Start.** The link's world is shown and its clock started in the same task (`activateSlot`, which does not wait for R3F's own commit). The board's frameloop is paused in that task too. The first wall-clock frame is drawn by the next animation frame; a draw outside it would let a second frame queue behind it on a busy GPU. Stepped by hand (tests, capture tools), it draws at once as before.
+- **Determinism.** Scenes are still a pure function of t. The review page and the capture tools use the single-world path of `CutinView` (no slots) and are unchanged apart from the shared caches and the padding lights, which add nothing to the picture.
+
+**Memory** (Daxing Hill, measured):
+- the warm pool holds 90 kit geometries (about 1.0 MB of vertex data) and 12 pinned crowd bakes (2.4 MB);
+- 21 shader programs;
+- the cut-in canvas's drawing buffer: w × h × (samples × 8 + 4) bytes, about 33 MB at 1280×720 with 4× MSAA, or about 27 MB on a 390×844 phone at DPR 1.5. Before, the buffer existed only during a cut-in, so the peak is unchanged; it is now held between cut-ins;
+- JS heap after the warm-up: see the report.
+
+The pool is capped by the battle's units, at most 4 prebuilt worlds plus the live one, and it is freed when the battle unloads.
+
+**Guards.**
+- `tests/e2e/cutin-warm.spec.ts`: after the warm-up, a short attack, a full stratagem, a chain and an enemy cut-in, prebuilt and built at start, create no shader link, no program and no WebGL context, and leave the geometry and texture counts at the warm baseline. A prebuilt cut-in played on the wall clock has no long task over 1.5 steady frames in its first second, its first frame takes no more than 1.5 steady frames, and trigger to first frame on screen stays within 2.5 steady frames (the extra is the board's last frame, still queued on the software GPU).
+- `tests/unit/cutins-warm.test.ts`: bake pinning, the GPU sweep and kept resources, program pinning, the slot registry (prebuilt hand-over, the `MAX_NEXT` cap), the warm list and the purity of the speculative plan.
+
+**Still slow in software GL.** Mid-scene frames can take 2–5 s when the GPU falls behind on heavy frames: the command buffer fills, and a plain `uniformMatrix4fv` or `drawElements` blocks. That is throughput (about 2,500–4,000 draw calls per frame, shadow pass included), not compile or upload, and it was there before. The warm-up itself blocks for about 2.5–5 s per new set of programs under SwiftShader, which has no `KHR_parallel_shader_compile`; it runs behind the intro and the first turn.
+
 ## Revision log
 - v0.1 2026-11-01: first direction (scenes A and B).
 - v0.2 2026-11-01: bases removed, locomotion animated (owner: "I don't want them on bases. I want their movement on feet and on horse to be animated"). Archers kneel; B3 riders trot, canter and gallop on a distance-driven footfall cycle with hoof dust on the footfalls; rebels stagger back a step (B4, A5) and the flung rebels land and lie flat (B5); the charge's top speed is lowered so the gallop cadence reads.
 - v0.3 2026-11-01: in-battle integration direction: scenes C (Duel Strike) and D (Thunder Roar), the R and W shorts, short normal-attack scenes, chains, settings, crowd sizes.
 - v0.3 as built 2026-11-01: scenes A′ (V), C, D, R, W and the three short attack scenes, plan mapping, chains, settings and the in-game player; see "v0.3 as built".
 - v0.4 2026-11-01: the background battle around every scene (owner: "inside of a larger war"); instanced ranks in every scene (about 20–30 a side, 10–15 in the shorts), mounted defenders as riders in A, A′ and B, the hero in the front rank of a short scene, small lantern bokeh, set dressing kept out of the lens, the millet action lane and a closer S-cavalry camera; see "More troops: as built" and "Review fixes".
+- v0.5 2026-11-01: cut-ins start without a hitch (PLAN D30): one persistent cut-in canvas per battle, warm-up behind the intro, shared caches, pinned bakes and programs, prebuilt worlds for previewed orders and the AI's choice; see "Performance: warm-up and reuse".
