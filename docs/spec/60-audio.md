@@ -235,6 +235,40 @@ If a cue sounds wrong, change its prompt or `seed` in `music-cues.json`, run `ge
 - **By ear (owner), on `sounds.html`:** every manifest entry with Play/Stop; "no file yet" rows for empty slots; the **Charge overlay demo** (battle bed, cut-in start at 4 s, cut-in end 7 s later) with live gain meters for the bed and the charge layer and the phase-lock beat. The cinema page (`cinema.html`) plays the battle bed and lays the charge layer over each scene. **Nothing in this document has been verified by ear.**
 - **By machine:** `tests/unit/audio-runner.test.ts` (the section 7 runner against the fake studio: bar-aligned lengths, loudness, manifest validity, idempotency, dry run), `tests/unit/audio-director.test.ts` (ramps, phase-lock maths, chains, failsafe, silence), `tests/unit/audio-support.test.ts` (manifest, settings, moods), `tests/e2e/audio.spec.ts` (pages load with 0 errors, the settings panel opens, and a real `AudioContext` run with a generated click track proves the duck, the lock and the release on the audio clock).
 
+## Generated files (batch 1)
+
+Generated 2026-11-01 on the owner's PC with the Audio Studio (ACE-Step 1.5 turbo for music, Stable Audio Open 1.0 for the two effects) through `tools/audio/gen-music.mjs` (its first run against the real studio; 10 jobs, 0 failures, about 3 minutes of GPU time, 66 s for the cold first job and 5 to 16 s each after) and `tools/audio/master-audio.mjs --audition` (ffmpeg 9.0.2). Both candidates of every cue are in `public/audio/` as `<id>-a` and `<id>-b` (OGG q5 plus M4A 160k); the manifest points every cue id at candidate **a**, and the `<id>-b` rows let `sounds.html` play the alternative. The two together are 9.7 MB of OGG and 12 MB of M4A, over the 5 MB budget in section 5; `master-audio.mjs --pick ... --prune` after the listening pass drops the losers. Raw FLAC masters stay in `tools/out/audio/raw/` (git-ignored). Seeds are those in `music-cues.json`; the studio returned both takes of a cue from the one seeded `batch: 2` job. Full numbers per file (LRA, sample peak, RMS, first-sound offset, tempo confidence) are in `tools/out/audio/report.json` and `public/audio/candidates.json`.
+
+**Every row is not verified by ear.** Measured from the decoded OGG; lengths are the bar-exact loop lengths from section 2 (jingles and effects keep their tails or the `keepSeconds` window).
+
+| Cue | Take | Seed | Length (s) | Bars | LUFS | True peak (dBTP) | Crest (dB) | BPM requested (rough check) | Target | Mastering warnings | By ear |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `bed-title` | a | 31101 | 53.333 | 16 | -17.6 | -6.5 | 23.1 | 72 (rough check 68.2, drift -5.3%) | -16 LUFS | rough tempo check says 68.2 BPM vs requested 72; check the grid by ear or time-stretch before trusting the loop; loudness -17.6 LUFS is more than 1 LU from the -16 target | not verified by ear |
+| `bed-title` | b | 31101 | 53.333 | 16 | -16.6 | -1.0 | 26.7 | 72 (rough check 75.0, drift +4.2%) | -16 LUFS | rough tempo check says 75 BPM vs requested 72; check the grid by ear or time-stretch before trusting the loop | not verified by ear |
+| `bed-calm` | a | 31102 | 42.667 | 16 | -15.9 | -1.4 | 17.8 | 90 (rough check 89.9, drift -0.2%) | -16 LUFS | the take starts 1.03 s late; the lead-in was trimmed (check that bar 1 still lands on the downbeat) | not verified by ear |
+| `bed-calm` | b | 31102 | 42.667 | 16 | -16.2 | -1.2 | 18.5 | 90 (rough check 90.0, drift +0.0%) | -16 LUFS | the take starts 1.03 s late; the lead-in was trimmed (check that bar 1 still lands on the downbeat) | not verified by ear |
+| `bed-camp` | a | 31103 | 50.526 | 16 | -16.0 | -1.3 | 15.7 | 76 (rough check 76.0, drift +0.0%) | -16 LUFS |  | not verified by ear |
+| `bed-camp` | b | 31103 | 50.526 | 16 | -15.9 | -1.2 | 15.8 | 76 (rough check 76.0, drift +0.0%) | -16 LUFS |  | not verified by ear |
+| `bed-battle` | a | 31104 | 64.000 | 32 | -16.0 | -3.0 | 16.6 | 120 (rough check 120.0, drift +0.0%) | -16 LUFS |  | not verified by ear |
+| `bed-battle` | b | 31104 | 64.000 | 32 | -18.0 | -2.9 | 17.8 | 120 (rough check 120.0, drift +0.0%) | -16 LUFS | gain trimmed by -2.1 dB after encoding to keep the peak in bounds; loudness -18 LUFS is more than 1 LU from the -16 target | not verified by ear |
+| `bed-tense` | a | 31105 | 32.000 | 16 | -18.9 | -3.6 | 16.5 | 120 (rough check 120.0, drift +0.0%) | -16 LUFS | gain trimmed by -2.9 dB after encoding to keep the peak in bounds; loudness -18.9 LUFS is more than 1 LU from the -16 target | not verified by ear |
+| `bed-tense` | b | 31105 | 32.000 | 16 | -15.8 | -2.0 | 15.2 | 120 (rough check 120.0, drift +0.0%) | -16 LUFS |  | not verified by ear |
+| `charge` | a | 31106 | 16.000 | 8 | -16.5 | -3.2 | 14.7 | 120 (rough check 120.0, drift +0.0%) | -16 LUFS |  | not verified by ear |
+| `charge` | b | 31106 | 16.000 | 8 | -16.2 | -2.6 | 16.1 | 120 (rough check 120.0, drift +0.0%) | -16 LUFS |  | not verified by ear |
+| `jingle-victory` | a | 31107 | 14.400 | 6 | -14.0 | -1.3 | 16.5 | 100 (rough check 100.0, drift +0.0%) | -14 LUFS |  | not verified by ear |
+| `jingle-victory` | b | 31107 | 14.400 | 6 | -14.0 | -2.3 | 15.5 | 100 (rough check 100.0, drift +0.0%) | -14 LUFS |  | not verified by ear |
+| `jingle-defeat` | a | 31108 | 14.545 | 4 | -14.1 | -1.4 | 20.4 | 66 (rough check 62.6, drift -5.2%) | -14 LUFS | rough tempo check says 62.6 BPM vs requested 66; check the grid by ear or time-stretch before trusting the loop | not verified by ear |
+| `jingle-defeat` | b | 31108 | 14.545 | 4 | -13.9 | -1.7 | 22.4 | 66 (rough check 66.7, drift +1.0%) | -14 LUFS |  | not verified by ear |
+| `impact` | a | 31109 | 1.000 | – | -11.7 | -2.9 | 6.7 | – | peak -3 dBFS |  | not verified by ear |
+| `impact` | b | 31109 | 1.000 | – | -12.0 | -3.0 | 6.4 | – | peak -3 dBFS |  | not verified by ear |
+| `seal` | a | 31110 | 0.600 | – | -22.2 | -2.8 | 20.7 | – | peak -3 dBFS |  | not verified by ear |
+| `seal` | b | 31110 | 0.600 | – | -19.8 | -6.0 | 18.8 | – | peak -3 dBFS | gain trimmed by -3.2 dB after encoding to keep the peak in bounds | not verified by ear |
+
+Things to listen for first (from the numbers, not the sound): `bed-title-a` sits 1.6 LU under target with a −6.5 dBTP peak and the tempo check reads 68 BPM, so its grid may be off; `bed-tense-a` and `bed-battle-b` were pulled down after encoding to keep the peak in bounds and land 2 to 3 LU quiet, so if they are picked raise `gainDb` by ear; `bed-calm` both takes started 1.03 s late and were trimmed, so check bar 1 lands on the downbeat; `jingle-defeat-a` reads 62.6 BPM against 66 (a tail-only one-shot, so only the feel matters); `seal-b` was trimmed −3.2 dB. The two effects have crest factors of 6.4 to 6.7 dB (`impact`) and 18.8 to 20.7 dB (`seal`).
+
+Checked by machine on 2026-11-01 (dev server, `sounds.html`): all 20 manifest entries fetch and decode in Chromium at the lengths above; every slot shows 2 files; the charge overlay demo with the real `bed-battle-a` and `charge-a` files ducks the bed to a level of 0.501 (−6 dB) at cut-in start, brings the charge layer to 1.0 phase-locked on a downbeat (`beatInBar` 0), and returns the bed to 1.0 with the layer idle after cut-in end; 0 console errors, 0 failed audio requests. `npm run typecheck` and `npm run build` pass. `npm test` has 3 failures on this PC that predate the batch and are outside it: two in `tests/unit/portraits.test.ts` (the Hugging Face generator's dry run prints nothing here) and one in `tests/unit/audio-runner.test.ts` (the fake studio's `impact` effect masters to −5.5 dBFS against the −3 dBFS target; the real `impact` takes land at −2.9 and −3.0 dBTP). Nothing here is verified by ear.
+
 ## Revision log
 - v0.1 2026-11-01: first brief and system.
 - v0.2 2026-11-01: section 7 (the generation runner); section 5 aligned with it (jingles −14 LUFS, 10 ms loop declick, M4A 160 kbps, `<id>-a|b` candidate names); the old section 7 is now section 8.
+- v0.3 2026-11-01: "Generated files (batch 1)": the first real run, 10 cues x 2 takes, measurements, not verified by ear.
