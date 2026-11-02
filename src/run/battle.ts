@@ -214,6 +214,8 @@ export function battleOptions(era: EraData, s: RunState): CreateOptions {
     const f = finaleBriefing(era, s)
     if (f.removeUnits.length) run.removeUnits = f.removeUnits
     if (f.enemyTroopScale !== 1) run.enemyTroopScale = f.enemyTroopScale
+    // RL-MOD-1: startQi reaches guests too; the imperial guests' +2 of lu-zhi-letter is not the band's Qi, so hunger leaves it
+    if (Object.keys(f.guestQi).length) run.startQi = { ...(run.startQi ?? {}), ...f.guestQi }
   } else if (s.pending.enemyScale !== 1) run.enemyTroopScale = s.pending.enemyScale
   return { deploy, run }
 }
@@ -399,6 +401,8 @@ export interface FinaleBriefing {
   lines: FinaleLine[]
   removeUnits: string[]
   enemyTroopScale: number
+  /** Start Qi for the battle's guests (RL-MOD-1), by officer id. */
+  guestQi: Record<string, number>
 }
 
 /** [RL-CAL-1] The finale's day bracket for an arrival day (stockade-burned counts 4 days earlier). */
@@ -414,13 +418,15 @@ export function dayRow(era: EraData, s: RunState, day = s.day): { row: DayRow; e
 const DAY_REMOVE: Record<string, string[]> = { 'very early': ['gz-bowman-a', 'gz-bowman-b'], early: ['gz-bowman-a'] }
 const DAY_ENGINE: Record<string, boolean> = { 'very early': false, early: false, 'on time': true, late: false, 'very late': false, 'too late': false }
 const FLAG_REMOVE: Record<string, string[]> = { 'granary-burned': ['gz-vanguard-b', 'gz-horse'] }
-const FLAG_ENGINE: Record<string, boolean> = { 'granary-burned': true, 'stockade-burned': true }
+const FLAG_ENGINE: Record<string, boolean> = { 'granary-burned': true, 'stockade-burned': true, 'lu-zhi-letter': true }
+const FLAG_GUEST_QI: Record<string, Record<string, number>> = { 'lu-zhi-letter': { 'gz-imperial-spears': 2, 'gz-imperial-bows': 2 } }
 
 /** [RL-ECHO-2] [RL-REN-7] Every finale line with its cause, in order: day bracket, echoes, Renown, spirit. */
 export function finaleBriefing(era: EraData, s: RunState): FinaleBriefing {
   const { row, effectiveDay } = dayRow(era, s)
   const lines: FinaleLine[] = []
   const removeUnits: string[] = []
+  const guestQi: Record<string, number> = {}
   let scale = 1
   lines.push({ kind: 'day', text: row.text.replace('{day}', String(s.day)) + (effectiveDay !== s.day ? ` (it counts as day ${effectiveDay})` : ''), engine: DAY_ENGINE[row.label] ?? false })
   removeUnits.push(...(DAY_REMOVE[row.label] ?? []))
@@ -430,6 +436,7 @@ export function finaleBriefing(era: EraData, s: RunState): FinaleBriefing {
     const engine = FLAG_ENGINE[f] ?? f === 'no-quarter'
     lines.push({ kind: 'echo', text: fd.text, engine })
     removeUnits.push(...(FLAG_REMOVE[f] ?? []))
+    for (const [id, q] of Object.entries(FLAG_GUEST_QI[f] ?? {})) guestQi[id] = (guestQi[id] ?? 0) + q
     if (f === 'no-quarter') scale *= 1.05
   }
   for (const r of era.finale.renown) {
@@ -443,7 +450,7 @@ export function finaleBriefing(era: EraData, s: RunState): FinaleBriefing {
   lines.push({ kind: 'renown', text: `Renown ${s.renown}: Liu Bei's sway chance ${sb >= 0 ? '+' : ''}${sb} points.`, engine: true })
   const sp = spirit(s.renown)
   if (sp) lines.push({ kind: 'spirit', text: `Renown ${s.renown}: every officer starts with ${sp > 0 ? '+' : ''}${sp} Qi.`, engine: true })
-  return { day: s.day, effectiveDay, row, lines, removeUnits: [...new Set(removeUnits)], enemyTroopScale: Math.round(scale * 1000) / 1000 }
+  return { day: s.day, effectiveDay, row, lines, removeUnits: [...new Set(removeUnits)], enemyTroopScale: Math.round(scale * 1000) / 1000, guestQi }
 }
 
 /** From the finale briefing to its deploy screen. */

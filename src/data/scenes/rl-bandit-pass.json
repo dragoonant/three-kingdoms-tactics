@@ -1,0 +1,38 @@
+{
+  "pre": [
+    {
+      "speaker": "narrator",
+      "text": "The pass road climbs between wooded hills to a stockade of sharpened logs. Two chiefs hold it: Pei Yuanshao, and a dark giant with an axe."
+    },
+    {
+      "speaker": "pei-yuanshao",
+      "text": "The road is ours and so is the toll. Turn back or pay it in blood."
+    },
+    {
+      "speaker": "zhou-cang",
+      "text": "Is that Guan Yu? I have heard of him. I would rather follow a man like that than rob him."
+    },
+    {
+      "speaker": "guan-yu",
+      "text": "Then lay down the axe and come over. Brother, he means it."
+    },
+    {
+      "speaker": "liu-bei",
+      "text": "Break Pei Yuanshao, and speak to the giant if you can reach him. I would rather win the man than the pass."
+    }
+  ],
+  "post": [
+    {
+      "speaker": "narrator",
+      "text": "Pei Yuanshao's bandits scatter into the hills, and the pass road lies open."
+    },
+    {
+      "speaker": "liu-bei",
+      "text": "Their hoard feeds the band for a week. The road is free for every cart behind us."
+    },
+    {
+      "speaker": "zhang-fei",
+      "text": "And if the giant came over, I have someone to drink with who can keep up."
+    }
+  ]
+}

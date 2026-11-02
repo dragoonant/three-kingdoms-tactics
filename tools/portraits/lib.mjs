@@ -67,9 +67,12 @@ export const IDENTITY = {
   'huang-gai': 'a stout old veteran, long grey beard, bronze helmet with a pale plume, crimson armour',
   'gan-ning': 'a bold river warrior, clean-shaven, fierce eyes, bare black hair, blue armour with gold trim and small bells',
   'cai-mao': 'a wary naval commander, thick moustache, green-grey helmet, olive green armour',
+  'zhou-cang': 'a towering dark-skinned bandit warrior, full black beard, shouting, bare black hair, worn brown leather armour',
+  'pei-yuanshao': 'a wily hill bandit chief, short pointed beard, faded ochre scarf on the head, patched brown armour',
+  'dong-zhuo': 'a heavy overbearing frontier general, fleshy face, full black beard, iron helmet with a gold plume, dark red and black armour',
 }
 
-const SIDE_LOOK = { han: 'jade green', yellow: 'ochre yellow', cao: 'slate blue', dong: 'dark red and black', lu: 'deep purple' }
+const SIDE_LOOK = { han: 'jade green', yellow: 'ochre yellow', cao: 'slate blue', dong: 'dark red and black', lu: 'deep purple', court: 'iron grey' }
 const KIND_LOOK = {
   infantry: 'a steady foot soldier officer, iron helmet',
   rebel: 'a rebel foot officer, yellow scarf on the head, ragged tunic',
@@ -89,7 +92,7 @@ export function genericClause(kind, side) {
 }
 
 // ------------------------------------------------------------------ subjects (mirrors src/client/portraits.ts portraitSubjects, from the JSON files)
-const SIDES = ['han', 'yellow', 'cao', 'dong', 'lu']
+const SIDES = ['han', 'yellow', 'cao', 'dong', 'lu', 'court']
 const kindOf = (type, side) => (type === 'archers' ? 'archer' : type === 'cavalry' ? 'cavalry' : side === 'yellow' ? 'rebel' : 'infantry')
 function variantOf(id) {
   let h = 2166136261

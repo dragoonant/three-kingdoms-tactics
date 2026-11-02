@@ -15,13 +15,14 @@ export interface SideColours {
   plume: string
 }
 
-/** Side palettes track the theme tokens (--han jade, --yellow ochre, --cao slate, --dong red-black, --lu purple). */
+/** Side palettes track the theme tokens (--han jade, --yellow ochre, --cao slate, --dong red-black, --lu purple, --court iron grey). */
 export const SIDE_COLOURS: Record<SidePalette, SideColours> = {
   han: { cloth: '#2f6b5e', dark: '#1c3f37', trim: '#e9dfc2', metal: '#9aa3a0', plume: '#c8372d' },
   yellow: { cloth: '#d4a72c', dark: '#8c6d17', trim: '#f2e29a', metal: '#8a7a50', plume: '#d4a72c' },
   cao: { cloth: '#34495e', dark: '#1f2c3a', trim: '#cbd5df', metal: '#a7b0b8', plume: '#34495e' },
   dong: { cloth: '#6b1f2a', dark: '#26100f', trim: '#c9a24a', metal: '#6a6a70', plume: '#6b1f2a' },
   lu: { cloth: '#5b2c6f', dark: '#2b1536', trim: '#d9c07a', metal: '#a89cb8', plume: '#d9c07a' },
+  court: { cloth: '#5d5a52', dark: '#2e2c28', trim: '#a8864a', metal: '#8e8c86', plume: '#a8864a' },
 }
 
 const SKINS = ['#e8c5a2', '#dcb28c', '#f0d0b0']

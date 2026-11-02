@@ -371,6 +371,44 @@ describe('deploy and battles', () => {
   })
 })
 
+describe('battle modifiers reach the engine (RL1b)', () => {
+  it('[RL-HUNGER-1] [RL-REN-4] start Qi from the run lands on the deployed officers (hungry: 0)', () => {
+    const fed = sealDeploy(era, atDeploy({ renown: 75, rice: 99 }), [{ id: 'liu-bei', soldiers: 500 }, { id: 'guan-yu', soldiers: 500 }])
+    const b = createBattle('daxing-hill', fed.deployment!.seed, battleOptions(era, fed))
+    const q0 = createBattle('daxing-hill', fed.deployment!.seed, { deploy: battleOptions(era, fed).deploy }).units.find((u) => u.id === 'guan-yu')!.qi
+    expect(b.units.find((u) => u.id === 'guan-yu')!.qi).toBe(Math.min(10, q0 + 2))
+    const hungry = sealDeploy(era, atDeploy({ renown: 75, rice: 6 }), [{ id: 'liu-bei', soldiers: 500 }, { id: 'guan-yu', soldiers: 500 }])
+    expect(hungry.deployment!.hungry).toBe(true)
+    const h = createBattle('daxing-hill', hungry.deployment!.seed, battleOptions(era, hungry))
+    expect(h.units.find((u) => u.id === 'guan-yu')!.qi).toBe(0)
+    expect(h.units.find((u) => u.id === 'liu-bei')!.qi).toBe(0)
+  })
+
+  it('[RL-ECHO-2] lu-zhi-letter gives the imperial guests +2 Qi at Guangzong; granary-burned removes two sortie units', () => {
+    const s0 = { ...atDeploy({ rice: 99, day: 18, flags: ['lu-zhi-letter', 'granary-burned'] }, 'guangzong') }
+    s0.pending = { ...s0.pending!, battleId: 'guangzong', finale: true, enemyScale: 1, stopId: 'finale', choiceId: 'finale' }
+    const s = sealDeploy(era, s0, [{ id: 'liu-bei', soldiers: 500 }])
+    const o = battleOptions(era, s)
+    expect(o.run!.startQi).toEqual({ 'gz-imperial-spears': 2, 'gz-imperial-bows': 2 })
+    const b = createBattle('guangzong', s.deployment!.seed, o)
+    expect(b.units.some((u) => u.id === 'gz-horse')).toBe(false)
+    expect(b.units.some((u) => u.id === 'gz-vanguard-b')).toBe(false)
+  })
+
+  it('[RL-REN-5] a swayed recruitable officer (Zhou Cang at the bandit pass) joins the band from the battle log', () => {
+    const s0 = atDeploy({ rice: 99 }, 'rl-bandit-pass')
+    s0.pending = { ...s0.pending!, stopId: 'bandit-offer', choiceId: 'clear', win: { rice: 25, renown: 5 }, tier: 3 }
+    const s = sealDeploy(era, s0, [{ id: 'liu-bei', soldiers: 500 }])
+    const b = createBattle('rl-bandit-pass', s.deployment!.seed, battleOptions(era, s))
+    const zc = b.units.find((u) => u.officer === 'zhou-cang')!
+    const final: BattleState = { ...b, result: { winner: 'han', reason: 'commander' }, units: b.units.map((u) => (u.id === zc.id ? { ...u, side: 'han' } : u)) }
+    const ev: GameEvent[] = [{ kind: 'swayed', unit: 'liu-bei', target: zc.id, chance: 50, side: 'han' }]
+    const { state, report } = applyBattle(era, s, final, ev)
+    expect(report.recruits).toContain('zhou-cang')
+    expect(state.band.some((o) => o.rec.officerId === 'zhou-cang' && o.rec.level === 2)).toBe(true)
+  })
+})
+
 describe('rest, march, Renown, echoes and gambles', () => {
   it('[RL-REST-1] a rest choice returns every wounded man and heals the hurt', () => {
     const s = atStop('rest-or-push', { wounded: 400, tired: true })

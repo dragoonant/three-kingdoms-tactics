@@ -20,10 +20,14 @@ export function swayReason(state: BattleState, caster: Unit, target: Unit): stri
   return null
 }
 
+/** [RL-MOD-3] The officer whose sway chance a run's `swayBonus` raises (the player commander, PLAYER_COMMANDER). */
+export const SWAY_BONUS_OFFICER = 'liu-bei'
+
 /** Chance in percent, 5..90. */
 export function swayPercent(state: BattleState, caster: Unit, target: Unit): number {
   const loyalty = officerOf(state, target).loyalty ?? 100
-  const v = statOf(state, caster, 'cha') - loyalty + 40 * (1 - target.troops / target.maxTroops) + (target.confused ? 10 : 0)
+  const bonus = state.swayBonus && caster.officer === SWAY_BONUS_OFFICER ? state.swayBonus : 0
+  const v = statOf(state, caster, 'cha') - loyalty + 40 * (1 - target.troops / target.maxTroops) + (target.confused ? 10 : 0) + bonus
   return Math.max(5, Math.min(90, v))
 }
 

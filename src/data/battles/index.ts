@@ -10,7 +10,7 @@ import bowang from './bowang.json'
 import changban from './changban.json'
 import redCliffs from './red-cliffs.json'
 import provingGround from './proving-ground.json'
-// Roguelike era 1 minor battles (spec 16 section 4). Pre-registered stubs; the RL1 battle builder replaces each file.
+// Roguelike era 1 minor battles (spec 16 section 4; docs/spec/battles/rl-*.md).
 import rlVillageSiege from './rl-village-siege.json'
 import rlBanditPass from './rl-bandit-pass.json'
 import rlPrisonCart from './rl-prison-cart.json'

@@ -1,0 +1,34 @@
+{
+  "pre": [
+    {
+      "speaker": "narrator",
+      "text": "A prison cart on the Guangzong road. Inside sits Lu Zhi, Liu Bei's old teacher, in chains: he would not bribe the court's envoy, so the envoy reported him for cowardice."
+    },
+    {
+      "speaker": "pc-huo",
+      "text": "Stand aside. This is the court's business, and the court pays better than you do."
+    },
+    {
+      "speaker": "zhang-fei",
+      "text": "Brother, say the word. I have been holding this spear for a mile."
+    },
+    {
+      "speaker": "liu-bei",
+      "text": "If we do this, the court will call us outlaws. Do it anyway. Catch the cart before the county gate."
+    }
+  ],
+  "post": [
+    {
+      "speaker": "narrator",
+      "text": "Captain Huo goes down in the road and his paid men throw down their halberds. Zhang Fei breaks the cart's lock with the butt of his spear."
+    },
+    {
+      "speaker": "liu-bei",
+      "text": "Teacher. You are free, and we are outlaws. I think it was a fair trade."
+    },
+    {
+      "speaker": "narrator",
+      "text": "Lu Zhi does not argue. He asks only that his veterans be told where to find him at Guangzong."
+    }
+  ]
+}

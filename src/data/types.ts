@@ -103,6 +103,8 @@ export interface UnitDef {
   commander: boolean
   /** [R2-OBJ-2] leaves the board when troops fall to this fraction of max or below. */
   retreatAt?: number
+  /** [R2-GUEST-2] guests only: 'ai' = the player cannot order it; it acts on its own at the end of the player's phase. */
+  guestControl?: 'ai'
 }
 
 /** [R2-OPT-1] one deployed player officer. */
@@ -176,7 +178,7 @@ export type TimelineEvent = (
 export interface SideDef {
   id: Side
   name: string
-  /** CSS/theme token for the banner colour, e.g. 'yellow', 'dong', 'cao', 'lu'. */
+  /** CSS/theme token for the banner colour, e.g. 'yellow', 'dong', 'cao', 'lu', 'court'. */
   colourToken: string
 }
 

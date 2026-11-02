@@ -6,6 +6,7 @@ import { objectiveStatuses } from './objectives'
 import { gainQi, healUnit, unitFromDef } from './ops'
 import type { Roller } from './rng'
 import { fireTimeline, nearestFreeTile } from './terrain'
+import { actAiGuests, holdAiGuests } from './guests'
 import type { BattleState, GameEvent, Wind } from './types'
 import { concludeIfWon } from './victory'
 
@@ -32,6 +33,9 @@ export function spawnReinforcements(w: BattleState, ev: GameEvent[]): void {
       }
       const u = unitFromDef({ ...d, x: at.x, y: at.y })
       u.qi = REINFORCEMENT_QI
+      // [RL-MOD-1] a run's start-Qi bonus for a late-arriving deployed officer
+      const bonus = r.qiBonus?.[u.id]
+      if (bonus) gainQi(u, bonus)
       w.units.push(u)
       ev.push({
         kind: 'reinforced',
@@ -63,6 +67,7 @@ export function startPhase(w: BattleState, ev: GameEvent[]): void {
   }
   ev.push({ kind: 'phaseStarted', side: w.side, round: w.round })
   spawnReinforcements(w, ev)
+  holdAiGuests(w)
 }
 
 /** Wind at the start of a new round: overrides hold until their expiry or the next schedule entry. */
@@ -96,6 +101,11 @@ export { emitProgress }
 
 /** [R-TURN-6/7] End the current phase; may roll over the round. */
 export function endPhase(w: BattleState, ev: GameEvent[], roller: Roller): void {
+  // [R2-GUEST-2] AI-moved guests act after the player's units, before anyone recovers.
+  if (w.side === PLAYER_SIDE && w.units.some((u) => u.guestControl === 'ai')) {
+    actAiGuests(w, ev, roller)
+    if (w.result) return
+  }
   for (const u of w.units) {
     if (u.side !== w.side) continue
     if (u.confused) {
