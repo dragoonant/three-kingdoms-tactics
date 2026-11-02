@@ -8,6 +8,8 @@ import { Hud } from './hud/Hud'
 import { Briefing, End, HowTo, Title } from './screens/Screens'
 import { Camp, CampaignBriefing, Defeat, Deploy, NewCampaign, Results, Scene, Summary } from './screens/CampaignScreens'
 import { installCampaignHook } from './campaign/testHook'
+import { RunRoot } from './run/RunScreens'
+import { installRunHook } from './run/testHook'
 import { cutinTestApi, player } from './cutins/player'
 import { TEST_MODE, useGame } from './store/game'
 import { EMPTY_UI } from './store/orders'
@@ -65,6 +67,7 @@ function installTestHook(): void {
     focusUnit: (id: string, zoom?: number) => viewApi.focusUnit(id, zoom),
     resetView: () => viewApi.reset(),
     ...installCampaignHook(),
+    ...installRunHook(),
   }
   window.__cutin = cutinTestApi()
 }
@@ -135,6 +138,7 @@ export function App() {
       {screen === 'results' && <Results />}
       {screen === 'defeat' && <Defeat />}
       {screen === 'summary' && <Summary />}
+      {screen === 'run' && <RunRoot />}
       {(screen === 'battle' || screen === 'end') && <Hud />}
       {(cutinHost || cutinActive) && (
         <Suspense fallback={null}>
