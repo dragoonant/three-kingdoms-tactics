@@ -35,14 +35,18 @@ export interface TierSpec {
   lod: 'hi' | 'lo'
   /** Share of the particles drawn (embers, sparks, smoke, dust). */
   fx: number
+  /** HTML overlay effects drawn by the page compositor, outside the WebGL budget (PLAN D33). full: the authored look (SVG
+   *  turbulence on the speed lines, ink and titles, the depth-of-field backdrop blur, the whip-pan blur on the canvas). lite:
+   *  none of those (WebKit runs SVG filters on the CPU, full screen, every frame they change); speed lines are plain shapes. */
+  overlay: 'full' | 'lite'
   /** Peak draw calls a frame, shadow pass included, that the tier must stay under (tests/e2e/cutin-budget.spec.ts). */
   budget: number
 }
 
 export const TIERS: Record<Tier, TierSpec> = {
-  high: { label: 'High', dpr: 1.5, msaa: true, shadowType: 'pcf', shadowMap: 1536, casters: 'all', crowd: 'full', melee: 'full', lod: 'hi', fx: 1, budget: 800 },
-  medium: { label: 'Medium', dpr: 1.25, msaa: true, shadowType: 'pcf', shadowMap: 1024, casters: 'near', crowd: 'lite', melee: 'lite', lod: 'hi', fx: 0.6, budget: 500 },
-  low: { label: 'Low', dpr: 1, msaa: false, shadowType: 'basic', shadowMap: 1024, casters: 'heroes', crowd: 'lite', melee: 'off', lod: 'lo', fx: 0.4, budget: 300 },
+  high: { label: 'High', dpr: 1.5, msaa: true, shadowType: 'pcf', shadowMap: 1536, casters: 'all', crowd: 'full', melee: 'full', lod: 'hi', fx: 1, overlay: 'full', budget: 800 },
+  medium: { label: 'Medium', dpr: 1.25, msaa: true, shadowType: 'pcf', shadowMap: 1024, casters: 'near', crowd: 'lite', melee: 'lite', lod: 'hi', fx: 0.6, overlay: 'lite', budget: 500 },
+  low: { label: 'Low', dpr: 1, msaa: false, shadowType: 'basic', shadowMap: 1024, casters: 'heroes', crowd: 'lite', melee: 'off', lod: 'lo', fx: 0.4, overlay: 'lite', budget: 300 },
 }
 
 export const QUALITY_CHOICES: { value: QualityChoice; label: string }[] = [

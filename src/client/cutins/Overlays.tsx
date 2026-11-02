@@ -1,6 +1,7 @@
 // HTML overlays synced to evaluate(scene, t): brushed stratagem title, the single call-out, the painted damage number,
 // the seal stamp, hit flashes and speed lines. All of it is a pure function of the Evaluated frame.
 import './cutins.css'
+import { TIERS, useQuality } from './quality'
 import { rand } from './rng'
 import { EASE, clamp01, type Evaluated, type OverlayState } from './timeline'
 
@@ -177,6 +178,35 @@ function InkBurst({ seed, progress }: { seed: number; progress: number }) {
   )
 }
 
+/** Lite speed lines: the same streaks with a fixed ragged edge baked into the path, moved by a transform, no SVG filter. */
+const LITE_STREAKS = Array.from({ length: 15 }, (_, i) => {
+  const len = 22 + rand(77, i, 2) * 34
+  const w = 0.6 + rand(77, i, 5) * 1.5
+  const k = 6
+  const top: string[] = []
+  const bottom: string[] = []
+  for (let j = 0; j <= k; j++) {
+    const f = j / k
+    const half = w * (1 - 0.85 * f)
+    const jt = (rand(77, i, 10 + j) - 0.5) * 0.5
+    const jb = (rand(77, i, 30 + j) - 0.5) * 0.5
+    top.push(`${(f * len).toFixed(2)},${(-half + jt).toFixed(2)}`)
+    bottom.unshift(`${(f * len).toFixed(2)},${(half + jb).toFixed(2)}`)
+  }
+  return { d: `M${top.join(' L')} L${bottom.join(' L')} Z`, y: 6 + rand(77, i, 1) * 88, sp: 1.7 + rand(77, i, 3) * 1.6, off: rand(77, i, 4), fill: i % 3 === 0 ? '#e0cd9a' : '#efe6d2', opacity: 0.28 + 0.5 * rand(77, i, 6) }
+})
+
+function SpeedLinesLite({ amount, t }: { amount: number; t: number }) {
+  if (amount <= 0.01) return null
+  return (
+    <svg className="co-speed" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ opacity: amount }}>
+      {LITE_STREAKS.map((l, i) => (
+        <path key={i} d={l.d} transform={`translate(${(130 - (((t * l.sp + l.off) * 100) % 160)).toFixed(2)} ${l.y.toFixed(2)})`} fill={l.fill} opacity={l.opacity} />
+      ))}
+    </svg>
+  )
+}
+
 function SpeedLines({ amount, t }: { amount: number; t: number }) {
   if (amount <= 0.01) return null
   const lines = []
@@ -207,12 +237,13 @@ function SpeedLines({ amount, t }: { amount: number; t: number }) {
 
 export function Overlays({ ev, safe = false }: { ev: Evaluated; safe?: boolean }) {
   const o = ev.overlay
+  const lite = useQuality((q) => TIERS[q.tier].overlay === 'lite')
   return (
-    <div className="co-overlay">
-      <Defs />
+    <div className={`co-overlay${lite ? ' co-lite' : ''}`} data-overlay={lite ? 'lite' : 'full'}>
+      {!lite && <Defs />}
       <div className="co-vignette" />
-      {o.dof > 0.01 && <div className="co-dof" style={{ opacity: o.dof }} />}
-      <SpeedLines amount={o.speedLines} t={ev.t} />
+      {!lite && o.dof > 0.01 && <div className="co-dof" style={{ opacity: o.dof }} />}
+      {lite ? <SpeedLinesLite amount={o.speedLines} t={ev.t} /> : <SpeedLines amount={o.speedLines} t={ev.t} />}
       {o.flash && o.flash.kind === 'fire' && (
         <div className="co-wash" style={{ background: 'radial-gradient(ellipse at 50% 58%, rgba(255,214,150,0.95), rgba(255,120,40,0.55) 55%, rgba(255,90,20,0) 100%)', opacity: o.flash.alpha }} />
       )}

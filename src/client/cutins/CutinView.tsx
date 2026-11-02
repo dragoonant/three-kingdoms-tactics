@@ -338,16 +338,20 @@ export function CutinView({ controller, full = false, safe = false, dpr, onReady
   const ready = useMemo(() => onReady ?? (() => {}), [onReady])
   const slotMount = onSlotMount ?? noop
   const pixelRatio = dpr ?? Math.min(typeof window === 'undefined' ? 1 : window.devicePixelRatio, 2)
-  const whipPx = Math.round(ev.overlay.whip * 22)
+  const liteOverlay = useQuality((q) => TIERS[q.tier].overlay === 'lite')
+  // the whip-pan blur filters the whole WebGL canvas through the page compositor: full overlays only (PLAN D33)
+  const whipPx = liteOverlay ? 0 : Math.round(ev.overlay.whip * 22)
   return (
     <div className={`co-frame${full ? ' co-full' : ''}`} data-testid="cutin-frame">
       <FrameContext.Provider value={controller.frame}>
         <div className="co-stage" style={whipPx > 0.5 ? { filter: 'url(#co-hblur)' } : undefined}>
-          <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden>
-            <filter id="co-hblur" x="-10%" y="-5%" width="120%" height="110%">
-              <feGaussianBlur stdDeviation={`${whipPx} 0`} />
-            </filter>
-          </svg>
+          {!liteOverlay && (
+            <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden>
+              <filter id="co-hblur" x="-10%" y="-5%" width="120%" height="110%">
+                <feGaussianBlur stdDeviation={`${whipPx} 0`} />
+              </filter>
+            </svg>
+          )}
           <Canvas
             key={sceneKey}
             frameloop="never"
