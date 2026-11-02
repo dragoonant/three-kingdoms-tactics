@@ -10,6 +10,11 @@ import bowang from './bowang.json'
 import changban from './changban.json'
 import redCliffs from './red-cliffs.json'
 import provingGround from './proving-ground.json'
+// Roguelike era 1 minor battles (spec 16 section 4). Pre-registered stubs; the RL1 battle builder replaces each file.
+import rlVillageSiege from './rl-village-siege.json'
+import rlBanditPass from './rl-bandit-pass.json'
+import rlPrisonCart from './rl-prison-cart.json'
+import rlDongZhuoRescue from './rl-dong-zhuo-rescue.json'
 
 export const BATTLE_REGISTRY: Record<string, BattleDef> = {
   'daxing-hill': daxingHill as unknown as BattleDef,
@@ -23,4 +28,9 @@ export const BATTLE_REGISTRY: Record<string, BattleDef> = {
   'red-cliffs': redCliffs as unknown as BattleDef,
   // Not part of the campaign arc: exercises every engine v2 mechanic (tests and sim).
   'proving-ground': provingGround as unknown as BattleDef,
+  // Roguelike only (not in the campaign arc).
+  'rl-village-siege': rlVillageSiege as unknown as BattleDef,
+  'rl-bandit-pass': rlBanditPass as unknown as BattleDef,
+  'rl-prison-cart': rlPrisonCart as unknown as BattleDef,
+  'rl-dong-zhuo-rescue': rlDongZhuoRescue as unknown as BattleDef,
 }

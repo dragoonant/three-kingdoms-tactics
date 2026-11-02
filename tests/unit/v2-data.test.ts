@@ -71,9 +71,10 @@ describe('v2 data: officers, stratagems, registry', () => {
     expect(s['fire-ships']).toMatchObject({ tag: 'Fire', cost: 4, range: { min: 1, max: 1 }, area: 'cross', power: 1.2, stat: 'war', effect: { type: 'ignite' } })
   })
 
-  it('R2-DATA-2 the registry holds the nine arc battles plus the proving ground; the arc order matches campaign.json', () => {
+  it('R2-DATA-2 the registry holds the nine arc battles, the proving ground and the roguelike minor battles; the arc order matches campaign.json', () => {
     expect(ARC).toEqual(['daxing-hill', 'qingzhou', 'guangzong', 'hulao-gate', 'xuzhou', 'xiapi', 'bowang', 'changban', 'red-cliffs'])
-    expect(listBattleIds().sort()).toEqual([...ARC, 'proving-ground'].sort())
+    const RL = ['rl-village-siege', 'rl-bandit-pass', 'rl-prison-cart', 'rl-dong-zhuo-rescue']
+    expect(listBattleIds().sort()).toEqual([...ARC, 'proving-ground', ...RL].sort())
     for (const id of ARC) expect(SCENES[id], id).toBeDefined()
     expect([CAMPAIGN.prologue, CAMPAIGN.epilogue].every((id) => SCENES[id])).toBe(true)
     expect(CAMPAIGN.startRoster).toEqual([{ officerId: 'liu-bei', level: 3 }, { officerId: 'guan-yu', level: 3 }, { officerId: 'zhang-fei', level: 3 }])

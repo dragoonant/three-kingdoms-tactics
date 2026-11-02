@@ -115,8 +115,24 @@ export interface DeployEntry {
   stratagems: string[]
 }
 
+/** Roguelike run modifiers (spec 15 section 7, spec 16; rules RL-* in 10-rules.md section 11). Frozen contract for RL1. */
+export interface RunModifiers {
+  /** Added to each listed player officer's starting Qi after the battle's own start Qi (Renown, rest, hunger, tired, echoes). Clamped by the engine's Qi bounds. */
+  startQi?: Record<string, number>
+  /** Same bonus for every player officer (applied before startQi). */
+  startQiAll?: number
+  /** Multiplies every non-player, non-guest unit's troops and maxTroops (spec 16 `tierScale`), rounded to 10. Default 1. */
+  enemyTroopScale?: number
+  /** Added to Liu Bei's sway chance, in percentage points (RL-REN sway bonus). */
+  swayBonus?: number
+  /** Officer ids removed from the battle before it starts (echo roster changes). */
+  removeUnits?: string[]
+}
+
 export interface CreateOptions {
   deploy?: DeployEntry[]
+  /** Roguelike run modifiers; absent for the campaign, tests and quick battles. */
+  run?: RunModifiers
 }
 
 export type Tile2 = [number, number]
