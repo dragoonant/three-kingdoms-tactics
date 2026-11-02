@@ -239,6 +239,63 @@ The pool is capped by the battle's units, at most 4 prebuilt worlds plus the liv
 
 **Still slow in software GL.** Mid-scene frames can take 2–5 s when the GPU falls behind on heavy frames: the command buffer fills, and a plain `uniformMatrix4fv` or `drawElements` blocks. That is throughput (about 2,500–4,000 draw calls per frame, shadow pass included), not compile or upload, and it was there before. The warm-up itself blocks for about 2.5–5 s per new set of programs under SwiftShader, which has no `KHR_parallel_shader_compile`; it runs behind the intro and the first turn.
 
+## Performance: per-frame budgets and quality tiers (owner 2026-11-02, PLAN D32)
+Owner, after D30: "I tested It on my iPhone duo, still a ton of slowdown. It is using the new code". Asked where: the whole cut-in plays choppy (not the start, not the board, not the warm-up). D30 fixed the start; what was left was the cost of every frame, which a phone's GPU and Safari's WebGL could not sustain.
+
+**What it was (measured).** `tools/perf/cutin-frame.mjs` opens every scene on the review page (cinema.html, with a mounted defender, the heaviest target) and reads, at each beat's midpoint: draw calls and triangles of the main pass and of the shadow pass (the shadow map's `render` is wrapped), the shadow casters, programs, textures and materials, the draw-producing objects in view by group (tagged roots: `userData.perf` on the stage, the ranks and the melee; rig groups named `figure`; horses), and the main-thread JS of one frame split into scene update (every `useFrame`) and render submit (`gl.render`), at 1x and under a 4x CPU throttle (CDP `Emulation.setCPUThrottlingRate`). The GPU is drained before each timed frame, so the submit is not waiting on the last one. Draw calls, triangles and JS ms do not depend on the GPU; SwiftShader's frame rate is not a gate.
+- **Before:** 1,170–3,500 draw calls a frame at the peak beat (C 3,507, A′ 2,627, B 2,455), about half of them in the shadow pass, because everything cast a shadow (1,142 casters in A). The procedural figures were the cost: a mounted hero is about 110 meshes, a foot troop about 45, and each mesh was one draw in the main pass and one in the shadow pass. In A, the rigged first rank of mounted defenders alone was 657 draws in view, the archers and Jian Yong 280. Render submit was 4–16 ms of JS per frame on the desktop CPU and 22–102 ms at 4x throttle, which is most of a phone's frame on its own.
+
+**The cuts (every tier).** No visible change at High: the contact sheets of every scene's beats (`tools/render-cutins.mjs --beats-only`) are the same before and after, mean absolute difference under 0.03 of 255 and no pixel off by more than 24.
+- **Figures are a handful of draws** (`figures/compact.ts`, applied to every rig a cut-in builds: `cutins/casters.ts` `cutinRig`, the formations, the crowds' rigged first rank). The body is one `SkinnedMesh` per face side whose bones are the rig's own joint objects; every vertex follows exactly one joint with weight 1, the same transform parenting gave it. The weapon and off-hand joints (the scenes hide them) and the `arrow` node (the crowd finds it by name) are one merged mesh per (joint, face side) under that joint. The materials are baked into per-vertex colour, roughness, metalness and emissive, so every figure shares four materials (`figureMaterial`). A mounted hero goes from about 110 draws to 4–5, a foot troop from about 45 to 5–7, and the triangle count does not change. The joint contract is untouched: the joints are the same objects, still driven by the clips (a unit test poses a hero and a troop and compares every vertex's bounds with the uncompacted rig). Merged geometry is cached by its sources (geometry ids, materials, bones, relative transforms), so copies of a design share one upload; it is kept (`gpu.keep`) when its sources are. Each figure's skeleton owns a bone texture, freed with the slot (`gpu.collect` now gathers skeletons).
+- **Culling still works.** A skinned figure's culling sphere follows its joints (recomputed when three asks: the joints' positions in the mesh's frame, each padded by the reach of the parts it carries). Merged meshes have their own bounding spheres.
+- **Arrows are one draw each** (`props.ts`): shaft, head and rag are one baked geometry per length; each arrow keeps its own material, whose emissive intensity is its glow (the rag's colour is a per-vertex emissive mask).
+- **Static dressing is merged** (`Ground.tsx` `Static`, `compact.ts` `mergeStatic`): the trees, tufts, rocks, houses, fences and deck planks of a ground are one draw per material with the same materials; the originals stay mounted and hidden. The water ripples and the millet move and are not merged.
+- **The drawing buffer is not preserved** outside `?test=1` and `?preserve=1` on both canvases (the cut-in canvas and the board). On phones, iOS above all, preserving it costs a full-buffer copy every frame. The tests and the capture tools run with `?test=1`.
+
+**Quality tiers** (`cutins/quality.ts` owns them; the settings panel's "Cut-in quality: Auto / High / Medium / Low" row and `?quality=auto|high|medium|low` choose; `?crowd=` still overrides the crowd profile):
+
+| | High (desktop) | Medium (phone start) | Low (phone) |
+|---|---|---|---|
+| Pixel ratio cap | 1.5 | 1.25 | 1 |
+| MSAA | on | on | off |
+| Shadow type, key light's map | PCF, 1536 | PCF, 1024 | basic, 1024 |
+| Shadow casters | everything | the figures and the stage dressing | the named officers (caster, hero) |
+| Instanced ranks (`crowd`) | full (2 variants, shadows) | lite (60%, 1 variant, no shadows) | lite |
+| Background melee | full | lite (half the knots, no riders) | off |
+| Figure detail | full | full | low (fewer segments on generated primitives, as the instanced ranks) |
+| Particles drawn | all | 60% | 40% |
+| Draw-call budget a frame, shadows included (peak) | 800 (not gated) | 500 | 300 |
+
+- **Auto** (the default): the starting tier comes from the device (iOS, or touch with a screen whose shorter side is 820 px or less: Medium; otherwise High) and from a remembered step-down. After the warm-up it watches the board's frames for a second and starts one tier lower if their median is over 25 ms. During a cut-in it steps down one tier, live, when the median of the last 15 frame intervals is over 25 ms (intervals over 400 ms are pauses, not frames), and remembers the step in localStorage (`tkt.cutinQuality.auto.v1`, in try/catch). It never steps up mid-scene; a manual choice is never stepped. In `?test=1` the default is High with no live stepping unless the page asks for `?quality=auto`.
+- **A tier change never creates a WebGL context and never meets a new shader program.** MSAA and the shadow-map type are a context attribute and part of every program key, so they are fixed when the cut-in canvas is created (the tier at mount). Everything else follows the live tier: pixel ratio (R3F `setDpr`), the shadow map's size (no program depends on it: a new size takes a new map), who casts (`casterPolicy.ts`; each mesh's built value is kept in `userData.cast0`, and the warm-up draws every possible caster once, so the shadow-pass programs exist whatever the tier), particle share. Crowd density, melee and figure detail apply to the next world built.
+
+**Per-frame numbers after** (cinema.html, mounted defender, peak beat; `tools/perf/cutin-frame.mjs --quality high,medium,low`):
+
+| Scene | Before: calls (of which shadow), triangles | High | Medium | Low |
+|---|---|---|---|---|
+| A | 2,380 (1,142), 1,236k | 542 (223), 1,236k | 289 (79), 685k | 203 (6), 153k |
+| A′ | 2,627 (1,230), 1,218k | 502 (204), 1,219k | 259 (68), 664k | 182 (4), 144k |
+| B | 2,455 (1,154), 1,351k | 409 (165), 1,352k | 192 (23), 753k | 145 (5), 169k |
+| C | 3,507 (1,686), 1,747k | 508 (203), 1,747k | 345 (129), 1,416k | 196 (5), 191k |
+| D | 1,919 (1,013), 1,151k | 368 (149), 1,210k | 206 (75), 877k | 111 (5), 143k |
+| R | 1,170 (537), 896k | 308 (103), 896k | 147 (29), 545k | 98 (5), 135k |
+| W | 400 (113), 464k | 171 (37), 464k | 77 (5), 197k | 50 (5), 73k |
+| S-melee | 1,729 (790), 821k | 348 (137), 821k | 212 (63), 664k | 127 (5), 95k |
+| S-cavalry | 2,215 (1,073), 1,028k | 426 (177), 1,028k | 251 (77), 854k | 154 (5), 126k |
+| S-archer | 1,763 (822), 743k | 380 (157), 758k | 220 (63), 612k | 130 (0), 89k |
+
+Main-thread JS of one frame (median over the beats, desktop CPU; render submit in brackets): before 5–22 ms (4–16); High 6–16 ms (4–11); Low 4–10 ms (3–6). At a 4x CPU throttle the peak beat went from 26–114 ms to 25–68 ms at High and 20–59 ms at Low; what is left is spread over the scene logic, the crowds' pose evaluation and three's per-object work, with no single hot spot (CPU profile of A at Low).
+
+**On-screen HUD.** `?perf=hud` shows, top left: fps and frame ms (median and p95 of the animation-frame intervals over the last second), the draw calls and triangles of the last frame of whichever canvas drew last (`cutin` or `board`, shadow pass included), and the cut-in tier (with "(auto)" and the number of live step-downs). It is plain DOM (`cutins/hud.ts`); the renderers register themselves.
+
+**Guards.**
+- `tests/e2e/cutin-budget.spec.ts`: every scene type (A, A′, B, C, D, R, W and the three shorts), mounted defender, at the phone viewport (390 x 844), at Low and Medium: every beat's draw calls, shadow pass included, are at or under the tier's budget.
+- `tests/e2e/cutin-quality.spec.ts`: with frames forced slow (`window.__cutinQuality.inflate(ms)`: every measured interval reads as a 60 fps frame plus ms), Auto steps High to Medium to Low, remembers it across a reload, and creates no WebGL context; frames that read as 60 fps never step. The settings row sets and remembers a manual tier and `?quality=` overrides it. `?perf=hud` shows its numbers on the board and in a cut-in.
+- `tests/unit/cutins-quality.test.ts`: the tier selection (device, remembered step, warm-up check), the governor, the tier table's order, compaction (draws, joint identity, posed bounds equal to the uncompacted rig, a hidden weapon, the culling sphere, shared geometry), the static merge, the one-draw arrow and the caster policy.
+- `tests/e2e/cutin-warm.spec.ts` (D30) still holds: no program, shader link or WebGL context during a cut-in, and geometry and texture counts back at the warm baseline (the warm-up gallery now also builds every troop variant as a compacted rig, so each variant's merged geometry is uploaded behind the intro).
+
+**Known gaps.** Not yet measured on a real phone: the gate is draw calls and JS ms, not fps. The instanced ranks are still one InstancedMesh per (variant, joint, face side), 37–100 draws per scene; they and the background melee are not culled per crowd (`frustumCulled` is off on their instanced meshes, as before). A skinned figure updates its bone texture every frame (one small upload per figure on screen). At Low only the named officers cast, so a short scene whose caster is not a named officer (S-archer's sample) has no shadow at all. A live step-down changes crowd density, melee and figure detail only for the next world built (a prebuilt world keeps the tier it was built at). The board's own figures are not compacted (the owner did not report the board as slow).
+
 ## Revision log
 - v0.1 2026-11-01: first direction (scenes A and B).
 - v0.2 2026-11-01: bases removed, locomotion animated (owner: "I don't want them on bases. I want their movement on feet and on horse to be animated"). Archers kneel; B3 riders trot, canter and gallop on a distance-driven footfall cycle with hoof dust on the footfalls; rebels stagger back a step (B4, A5) and the flung rebels land and lie flat (B5); the charge's top speed is lowered so the gallop cadence reads.
@@ -246,3 +303,4 @@ The pool is capped by the battle's units, at most 4 prebuilt worlds plus the liv
 - v0.3 as built 2026-11-01: scenes A′ (V), C, D, R, W and the three short attack scenes, plan mapping, chains, settings and the in-game player; see "v0.3 as built".
 - v0.4 2026-11-01: the background battle around every scene (owner: "inside of a larger war"); instanced ranks in every scene (about 20–30 a side, 10–15 in the shorts), mounted defenders as riders in A, A′ and B, the hero in the front rank of a short scene, small lantern bokeh, set dressing kept out of the lens, the millet action lane and a closer S-cavalry camera; see "More troops: as built" and "Review fixes".
 - v0.5 2026-11-01: cut-ins start without a hitch (PLAN D30): one persistent cut-in canvas per battle, warm-up behind the intro, shared caches, pinned bakes and programs, prebuilt worlds for previewed orders and the AI's choice; see "Performance: warm-up and reuse".
+- v0.6 2026-11-02: cut-ins hold a phone frame budget (PLAN D32): figures drawn as a skinned body plus their weapon (a handful of draws instead of about 50-110), one-draw arrows, merged set dressing, no preserved drawing buffer outside tests, quality tiers (Auto / High / Medium / Low) with per-tier draw-call budgets, and `?perf=hud`; see "Performance: per-frame budgets and quality tiers".

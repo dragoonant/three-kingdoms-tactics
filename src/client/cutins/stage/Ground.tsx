@@ -4,7 +4,8 @@
 // Everything is static except the water ripples and the millet, which are functions of the clock.
 import { useCutinFrame } from './slot'
 import { keep } from '../gpu'
-import { useMemo, useRef, type ReactElement } from 'react'
+import { useLayoutEffect, useMemo, useRef, type ReactElement, type ReactNode } from 'react'
+import { mergeStatic } from '../../figures/compact'
 import { BoxGeometry, ConeGeometry, CylinderGeometry, DodecahedronGeometry, Group, Mesh, MeshStandardMaterial, PlaneGeometry, RingGeometry, SphereGeometry } from 'three'
 import type { GroundKind } from '../scenes/act'
 import { rand, srand } from '../rng'
@@ -65,6 +66,39 @@ const geo = {
 Object.values(geo).forEach((g) => keep(g))
 
 const NO_DISCS: { x: number; z: number; r: number }[] = []
+
+/**
+ * Static dressing drawn merged: one draw per material instead of one per tree, tuft, rock or house part (figures/compact.ts
+ * mergeStatic), with the same materials, so the picture does not change (docs/spec/51 "Performance: per-frame budgets").
+ */
+function Static({ children }: { children: ReactNode }) {
+  const ref = useRef<Group>(null)
+  // after every commit of the dressing (its own effects have run): merge again only when what it holds changed
+  const sig = useRef('')
+  const undo = useRef<(() => void) | null>(null)
+  useLayoutEffect(() => {
+    const g = ref.current
+    if (!g) return
+    const ids: string[] = []
+    g.traverse((o) => {
+      if (o.name !== 'merged-static') ids.push(o.uuid)
+    })
+    const s = ids.join(',')
+    if (s === sig.current) return
+    sig.current = s
+    undo.current?.()
+    undo.current = mergeStatic(g)
+  })
+  useLayoutEffect(
+    () => () => {
+      undo.current?.()
+      undo.current = null
+      sig.current = ''
+    },
+    [],
+  )
+  return <group ref={ref}>{children}</group>
+}
 
 const free = (x: number, z: number, clear: GroundProps['clear'], pad = 0): boolean => clear.every((c) => Math.hypot(c.x - x, c.z - z) > c.r + pad)
 
@@ -227,7 +261,14 @@ function Plain({ seed, center, halfW, halfD, clear }: GroundProps) {
 }
 
 export function Ground(given: GroundProps): ReactElement {
+  // tagged for the frame probe (tools/perf/cutin-frame.mjs): the ground and its dressing count as "stage"
+  return <group userData={STAGE_TAG}>{groundOf(given)}</group>
+}
+const STAGE_TAG = { perf: 'stage' }
+
+function groundOf(given: GroundProps): ReactElement {
   const { clear, lens } = given
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- called once, unconditionally, from Ground's render
   const merged = useMemo(() => (lens && lens.length ? [...clear, ...lens] : clear), [clear, lens])
   const props = given.kind === 'shallows' ? given : { ...given, clear: merged }
   switch (props.kind) {
@@ -243,16 +284,36 @@ export function Ground(given: GroundProps): ReactElement {
         />
       )
     case 'forest':
-      return <Forest {...props} />
+      return (
+        <Static>
+          <Forest {...props} />
+        </Static>
+      )
     case 'hill':
-      return <Hill {...props} />
+      return (
+        <Static>
+          <Hill {...props} />
+        </Static>
+      )
     case 'village':
-      return <Village {...props} />
+      return (
+        <Static>
+          <Village {...props} />
+        </Static>
+      )
     case 'shallows':
       return <Shallows {...props} />
     case 'deck':
-      return <Deck {...props} />
+      return (
+        <Static>
+          <Deck {...props} />
+        </Static>
+      )
     default:
-      return <Plain {...props} />
+      return (
+        <Static>
+          <Plain {...props} />
+        </Static>
+      )
   }
 }

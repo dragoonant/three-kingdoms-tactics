@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { audio, type AudioStatus } from './index'
 import { BATTLE_SCENE_CHOICES, ENEMY_SCENE_CHOICES, useCutinSettings } from '../cutins/settings'
+import { QUALITY_CHOICES, TIERS, useQuality } from '../cutins/quality'
 import './audio.css'
 
 export function useAudioStatus(): AudioStatus {
@@ -28,6 +29,7 @@ const ROWS = [
 /** The two cut-in settings (docs/spec/51): what plays for my battles and what plays for the enemy's. */
 export function SceneSettings() {
   const { battleScenes, enemyScenes, setBattleScenes, setEnemyScenes } = useCutinSettings()
+  const quality = useQuality()
   return (
     <div className="snd-scenes" data-testid="scene-settings">
       <div className="snd-group" role="group" aria-label="Battle scenes">
@@ -43,6 +45,14 @@ export function SceneSettings() {
         {ENEMY_SCENE_CHOICES.map((c) => (
           <button key={c.value} type="button" className="snd-choice" aria-pressed={enemyScenes === c.value} data-testid={`enemy-scenes-${c.value}`} onClick={() => setEnemyScenes(c.value)}>
             {c.label}
+          </button>
+        ))}
+      </div>
+      <div className="snd-group" role="group" aria-label="Cut-in quality">
+        <span className="snd-label">Cut-in quality</span>
+        {QUALITY_CHOICES.map((c) => (
+          <button key={c.value} type="button" className="snd-choice" aria-pressed={quality.choice === c.value} data-testid={`cutin-quality-${c.value}`} onClick={() => quality.setChoice(c.value)}>
+            {c.value === 'auto' && quality.choice === 'auto' ? `Auto (${TIERS[quality.auto].label})` : c.label}
           </button>
         ))}
       </div>

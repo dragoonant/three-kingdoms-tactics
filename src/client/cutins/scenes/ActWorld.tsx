@@ -29,7 +29,7 @@ import {
 } from 'three'
 import { figures, type Rig } from '../../figures'
 import { applyClip, drawBow, fallBack, idle, locomotion, mix as mixClip, stagger, staggerShift, thrust } from '../../figures/clips'
-import { buildCasterRig } from '../casters'
+import { buildCasterRig, cutinRig } from '../casters'
 import { burstPosition, sampleSlot, type SlotConfig } from '../particles'
 import { Puppet, fitFigure, limbsOnly, mix, pArmsUp, pRear, sstep } from '../poseKit'
 import { Ribbon, makeArrowProp, placeArrow, type ArrowProp } from '../props'
@@ -80,7 +80,7 @@ function buildLive(scene: CutinScene, act: ActPlan): { live: Live[]; mouth: Mesh
       rig = buildCasterRig(c, act.groups.find((g) => g.id === 'atk')?.kind === 'cavalry')
     } else {
       const r = byGroup.get(actor.group)?.[actor.index]
-      rig = r ?? figures.buildTroop('infantry', 'han', 0)
+      rig = r ?? cutinRig(figures.buildTroop('infantry', 'han', 0))
     }
     const k = fitFigure(rig)
     void k

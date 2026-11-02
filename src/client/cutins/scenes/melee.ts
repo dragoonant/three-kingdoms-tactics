@@ -12,7 +12,7 @@ import { rand, srand } from '../rng'
 import { ParticleBuffer } from '../stage/ParticleBuffer'
 import { TABLE } from '../stage/Stage'
 import type { Disc } from '../stage/lens'
-import { CrowdScript, CrowdSet, crowdQuality, type CrowdQuality } from './ranks'
+import { CrowdScript, CrowdSet, meleeQuality, type CrowdQuality } from './ranks'
 
 export interface MeleeSide {
   palette: SidePalette
@@ -74,7 +74,7 @@ function freeAt(x: number, z: number, pad: number, exclude: readonly Disc[]): bo
 }
 
 export function backgroundMelee(o: MeleeOpts): Melee | null {
-  const q = o.quality ?? crowdQuality()
+  const q = o.quality ?? meleeQuality()
   if (q === 'off') return null
   const lite = q === 'lite'
   const seed = o.seed
@@ -174,7 +174,7 @@ export function backgroundMelee(o: MeleeOpts): Melee | null {
   }
 
   // the crowds: one per side and kind, the members standing at their places (crowd frame = world)
-  const crowds = new CrowdSet()
+  const crowds = new CrowdSet('melee')
   const all: { c: Crowd; roles: Role[] }[] = []
   for (let side = 0; side < 2; side++) {
     for (let rider = 0; rider < 2; rider++) {

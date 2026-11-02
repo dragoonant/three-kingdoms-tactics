@@ -8,6 +8,10 @@ import { createCrowd } from './crowd'
 import { useDisposeWorld } from './dispose'
 import type { GallerySpec } from './prep'
 import { fitFigure } from './poseKit'
+import { spawnTroop } from './scenes/formation'
+
+/** formation.ts spawnFormation picks variants 0..2. */
+const TROOP_VARIANTS = 3
 import { Ground } from './stage/Ground'
 import { PadLights, POINT_LIGHTS, Stage } from './stage/Stage'
 
@@ -20,6 +24,16 @@ export function WarmGallery({ spec, onMount }: { spec: GallerySpec; onMount?: ()
       fitFigure(rig)
       rig.group.position.set(-5 + (i % 12) * 0.85, 0, -3 + Math.floor(i / 12) * 1.1)
       return rig
+    })
+    // every troop variant of every crowd kind as a compacted rig too: the scenes' hand-posed front ranks pick variants by seed,
+    // and each variant's merged geometry (figures/compact.ts) is uploaded here rather than on the cut-in's first frame
+    spec.crowds.forEach((c, i) => {
+      for (let v = 0; v < TROOP_VARIANTS; v++) {
+        const rig = spawnTroop(c.kind, c.palette, v)
+        fitFigure(rig)
+        rig.group.position.set(-5 + (i % 8) * 1.4 + v * 0.4, 0, -1.5 + Math.floor(i / 8) * 1.6)
+        rigs.push(rig)
+      }
     })
     const crowds = spec.crowds.map((c, i) =>
       createCrowd({ kind: c.kind, side: c.palette, count: 6, seed: 11 + i, frontRankFull: 1, variants: 2, detail: 'lo', castShadow: true, origin: [-5 + (i % 8) * 1.4, 0, 1 + Math.floor(i / 8) * 1.6] }),

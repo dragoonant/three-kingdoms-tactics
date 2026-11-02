@@ -108,7 +108,7 @@ function decimateTube(g: BufferGeometry): BufferGeometry {
 }
 
 /** A lower-detail stand-in for a generated primitive; geometries of other types come back unchanged. `tiny`: the part is a few millimetres across on screen. */
-function lowGeometry(g: BufferGeometry, tiny: boolean): BufferGeometry {
+export function lowGeometry(g: BufferGeometry, tiny: boolean): BufferGeometry {
   const key = `${g.uuid}|${tiny ? 't' : 'n'}`
   const hit = reduced.get(key)
   if (hit) return hit
@@ -140,6 +140,9 @@ function lowGeometry(g: BufferGeometry, tiny: boolean): BufferGeometry {
     default:
       break
   }
+  // cached for the session like the figure kit's own geometry: a compacted phone-tier figure (figures/compact.ts) built from it
+  // can then be cached and kept too, instead of being rebuilt and uploaded by every cut-in
+  if (out !== g) out.userData.keep = true
   reduced.set(key, out)
   return out
 }

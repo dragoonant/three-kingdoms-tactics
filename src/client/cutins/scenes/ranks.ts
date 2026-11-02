@@ -8,6 +8,7 @@
 import { Group, Vector3 } from 'three'
 import { createCrowd, crowdScale, type Crowd, type CrowdOptions, type FormationName } from '../crowd'
 import type { SidePalette, TroopKindName } from '../plan'
+import { specNow } from '../quality'
 
 /**
  * `full` (default): 2 troop variants, shadows on. `lite` (`?crowd=lite`, or `?shadows=0`): 60% of the members, one variant,
@@ -23,13 +24,24 @@ function query(name: string): string | null {
   }
 }
 
-export function crowdQuality(): CrowdQuality {
+/** `?crowd=` (or `?shadows=0`) when the page asks for a profile, else null. */
+function crowdQuery(): CrowdQuality | null {
   const q = query('crowd')
   if (q === 'off' || q === '0') return 'off'
   if (q === 'lite' || q === 'lo') return 'lite'
   if (q === 'full') return 'full'
   if (query('shadows') === '0') return 'lite'
-  return 'full'
+  return null
+}
+
+/** The instanced ranks' profile: `?crowd=` when given, else the quality tier's (cutins/quality.ts). */
+export function crowdQuality(): CrowdQuality {
+  return crowdQuery() ?? specNow().crowd
+}
+
+/** The background melee's profile: `?crowd=` when given, else the quality tier's. */
+export function meleeQuality(): CrowdQuality {
+  return crowdQuery() ?? specNow().melee
 }
 
 export interface RankSpec {
@@ -129,6 +141,10 @@ export class CrowdScript {
 /** The crowds of one scene: one Group to mount, one update per frame, the counts the review tools report. */
 export class CrowdSet {
   readonly group = new Group()
+  constructor(tag: 'ranks' | 'melee' = 'ranks') {
+    // the frame probe's object groups (tools/perf/cutin-frame.mjs)
+    this.group.userData.perf = tag
+  }
   readonly list: Crowd[] = []
   add(c: Crowd | null): Crowd | null {
     if (c) {

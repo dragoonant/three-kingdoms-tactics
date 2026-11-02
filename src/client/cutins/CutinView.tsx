@@ -13,6 +13,9 @@ import { memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRe
 import { flushSync } from 'react-dom'
 import { ACESFilmicToneMapping, type DirectionalLight, Group, type Light, type Object3D, PerspectiveCamera, SRGBColorSpace, Vector4, WebGLRenderer, type Scene } from 'three'
 import { perf } from './perf'
+import { applyCasters } from './casterPolicy'
+import { hud } from './hud'
+import { cutinFrame, TIERS, tierNow, useQuality } from './quality'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import type { CutinController } from './controller'
 import { collect, pinPrograms, release } from './gpu'
@@ -44,10 +47,17 @@ function Bridge({ controller, onReady, free }: { controller: CutinController; on
     controller.renderNow = perf.active
       ? () => {
           const t0 = performance.now()
+          cutinFrame(t0)
           advance(t0 / 1000, true)
           perf.frame(t0, drain)
         }
-      : () => advance(performance.now() / 1000, true)
+      : () => {
+          const t0 = performance.now()
+          // Auto's live step-down watches the interval between drawn frames (cutins/quality.ts)
+          cutinFrame(t0)
+          advance(t0 / 1000, true)
+        }
+    hud.attach('cutin', gl)
     // first frame once the world has mounted
     // after React's commit: the overlay uses flushSync, which must not run inside a lifecycle
     queueMicrotask(() => {
@@ -81,6 +91,12 @@ function Bridge({ controller, onReady, free }: { controller: CutinController; on
 // memo: the view re-renders on every frame (the overlays); the world's JSX does not need to be diffed again
 const World = memo(function World({ controller, scene: given, onMount }: { controller: CutinController; scene?: CutinScene; onMount?: () => void }) {
   const scene = given ?? controller.scene
+  const ref = useRef<Group>(null)
+  const casters = useQuality((s) => TIERS[s.tier].casters)
+  // who casts shadows at this tier (casterPolicy.ts); the world's children are attached by now (their effects ran first)
+  useLayoutEffect(() => {
+    if (ref.current) applyCasters(ref.current, casters)
+  }, [casters])
   useEffect(() => {
     perf.mark('world-mounted')
     onMount?.()
@@ -90,9 +106,7 @@ const World = memo(function World({ controller, scene: given, onMount }: { contr
     marked.current = true
     perf.mark('world-render')
   }
-  if (scene.id === 'A' || scene.id === 'Ap') return <FireArrowsWorld scene={scene} />
-  if (scene.id === 'B') return <ThunderingChargeWorld scene={scene} />
-  return <ActWorld scene={scene} />
+  return <group ref={ref}>{scene.id === 'A' || scene.id === 'Ap' ? <FireArrowsWorld scene={scene} /> : scene.id === 'B' ? <ThunderingChargeWorld scene={scene} /> : <ActWorld scene={scene} />}</group>
 })
 
 // ---- slots ------------------------------------------------------------------------------------------------------------
@@ -198,6 +212,7 @@ function Warmer({ slots, busy, onReady }: { slots: readonly Slot[]; busy: () => 
             // so every buffer and texture is uploaded now; lights keep their state (the light rig decides the programs)
             const shown: Object3D[] = []
             const culled: Object3D[] = []
+            const cast: Object3D[] = []
             g.traverse((o) => {
               if (!o.visible && !(o as Light).isLight) {
                 o.visible = true
@@ -206,6 +221,11 @@ function Warmer({ slots, busy, onReady }: { slots: readonly Slot[]; busy: () => 
               if (o.frustumCulled) {
                 o.frustumCulled = false
                 culled.push(o)
+              }
+              // every mesh that may cast at some tier casts here, so a tier change never meets a new shadow program
+              if (o.userData.cast0 === true && !o.castShadow) {
+                o.castShadow = true
+                cast.push(o)
               }
               const l = o as DirectionalLight
               if (!l.isDirectionalLight || !l.castShadow) return
@@ -227,6 +247,7 @@ function Warmer({ slots, busy, onReady }: { slots: readonly Slot[]; busy: () => 
               hidden.forEach((o) => (o.visible = true))
               shown.forEach((o) => (o.visible = false))
               culled.forEach((o) => (o.frustumCulled = true))
+              cast.forEach((o) => (o.castShadow = false))
               for (const { l, w, h } of shrunk) {
                 l.shadow.map?.dispose()
                 l.shadow.map = null
@@ -286,7 +307,20 @@ export interface CutinViewProps {
 const never = (): boolean => false
 const noop = (): void => {}
 
+/** The canvas keeps its drawing buffer only where a tool reads pixels back (`?test=1`, `?preserve=1`): on phones, iOS above all,
+ * preserving it costs a full-buffer copy every frame. */
+const PRESERVE = (() => {
+  try {
+    const q = new URLSearchParams(window.location.search)
+    return q.get('test') === '1' || q.get('preserve') === '1'
+  } catch {
+    return true
+  }
+})()
+
 export function CutinView({ controller, full = false, safe = false, dpr, onReady, sceneKey, worldKey, onFrame, onWorldMount, scene, slots, activeKey = null, onSlotMount, onSlotReady, busy, overlays = true, onRenderer }: CutinViewProps) {
+  // MSAA and the shadow-map type are context / program choices: the tier at mount decides them (cutins/quality.ts)
+  const [mount] = useState(() => TIERS[tierNow()])
   const [ev, setEv] = useState<Evaluated>(controller.frame.current)
   const [free, setFree] = useState(controller.free)
   useEffect(() => {
@@ -318,9 +352,9 @@ export function CutinView({ controller, full = false, safe = false, dpr, onReady
             key={sceneKey}
             frameloop="never"
             dpr={pixelRatio}
-            shadows="percentage"
+            shadows={mount.shadowType === 'basic' ? 'basic' : 'percentage'}
             camera={{ fov: 40, near: 0.03, far: 220, position: [0, 3, -8] }}
-            gl={(d) => perf.measure('renderer-create', () => new WebGLRenderer({ ...d, antialias: true, preserveDrawingBuffer: true, powerPreference: 'high-performance' }))}
+            gl={(d) => perf.measure('renderer-create', () => new WebGLRenderer({ ...d, antialias: mount.msaa, preserveDrawingBuffer: PRESERVE, powerPreference: 'high-performance' }))}
             onCreated={({ gl }: { gl: WebGLRenderer }) => {
               perf.setRenderer(gl)
               perf.mark('renderer-ready')

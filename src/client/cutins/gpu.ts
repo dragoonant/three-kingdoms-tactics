@@ -10,7 +10,7 @@
 //                    material of a kind never deletes a program the next cut-in needs again (three releases a program when
 //                    its last material is disposed).
 // No React here; three only.
-import { InstancedMesh, type BufferGeometry, type Material, type Object3D, type Texture, type WebGLRenderer } from 'three'
+import { InstancedMesh, type BufferGeometry, type Material, type Object3D, type Skeleton, type SkinnedMesh, type Texture, type WebGLRenderer } from 'three'
 
 type Keepable = BufferGeometry | Texture
 
@@ -36,25 +36,30 @@ export interface Sweep {
   geometries: BufferGeometry[]
   textures: Texture[]
   instanced: InstancedMesh[]
+  /** Skeletons of compacted figures (figures/compact.ts): each owns a bone texture. */
+  skeletons: Skeleton[]
 }
 
 export function collect(root: Object3D): Sweep {
   const geos = new Set<BufferGeometry>()
   const texs = new Set<Texture>()
   const inst: InstancedMesh[] = []
+  const skel = new Set<Skeleton>()
   root.traverse((o) => {
+    if ((o as SkinnedMesh).isSkinnedMesh && (o as SkinnedMesh).skeleton) skel.add((o as SkinnedMesh).skeleton)
     const m = o as Object3D & { geometry?: BufferGeometry; material?: Material | Material[] }
     if (m.geometry && !isKept(m.geometry)) geos.add(m.geometry)
     if (m.material) for (const mat of Array.isArray(m.material) ? m.material : [m.material]) texturesOf(mat, texs)
     if (o instanceof InstancedMesh) inst.push(o)
   })
-  return { geometries: [...geos], textures: [...texs].filter((t) => !isKept(t)), instanced: inst }
+  return { geometries: [...geos], textures: [...texs].filter((t) => !isKept(t)), instanced: inst, skeletons: [...skel] }
 }
 
 export function release(s: Sweep): void {
   for (const g of s.geometries) g.dispose()
   for (const t of s.textures) t.dispose()
   for (const i of s.instanced) i.dispose()
+  for (const k of s.skeletons) k.dispose()
 }
 
 const pinned = new WeakSet<object>()

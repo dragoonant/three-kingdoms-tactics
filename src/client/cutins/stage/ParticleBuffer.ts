@@ -1,6 +1,7 @@
 // A CPU-filled point-sprite buffer. Scenes call begin(), push() for every live particle, end(); the positions are pure
 // functions of time (particles.ts), so nothing here keeps state between frames.
 import { AdditiveBlending, BufferAttribute, BufferGeometry, NormalBlending, Points, ShaderMaterial } from 'three'
+import { specNow } from '../quality'
 
 export type ParticleMode = 'add' | 'alpha'
 
@@ -38,6 +39,9 @@ export class ParticleBuffer {
   private readonly geo: BufferGeometry
   private readonly mat: ShaderMaterial
   private n = 0
+  /** Particles offered this frame, and the share of them drawn (the quality tier's `fx`; 1 draws every one). */
+  private k = 0
+  private keep = 1
   readonly max: number
 
   /** hard: falloff exponent (1 = soft glow, 3 = tight spark). */
@@ -68,10 +72,17 @@ export class ParticleBuffer {
   begin(pxPerUnit: number): void {
     this.mat.uniforms.uScale!.value = pxPerUnit
     this.n = 0
+    this.k = 0
+    this.keep = specNow().fx
   }
 
   push(x: number, y: number, z: number, size: number, r: number, g: number, b: number, a: number): void {
     if (this.n >= this.max || a <= 0.002 || size <= 0) return
+    if (this.keep < 1) {
+      // an even, deterministic thinning: keep the particle when the running share crosses an integer
+      const k = this.k++
+      if (Math.floor((k + 1) * this.keep) === Math.floor(k * this.keep)) return
+    }
     const i = this.n++
     this.pos[i * 3] = x
     this.pos[i * 3 + 1] = y

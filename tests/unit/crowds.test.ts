@@ -87,12 +87,14 @@ describe('crowd rendering budget', () => {
     expect(c.frontRank.length).toBeGreaterThan(3)
   })
 
-  it('hi mode draws the whole front at full detail instanced: far fewer draw calls than rigs', () => {
+  it('hi mode draws the whole front at full detail instanced; compacted rigs (PLAN D32) cost even less', () => {
     const rig = make({ kind: 'cavalry', side: 'han', count: 30, seed: 2, frontRankFull: 3 })
     const hi = make({ kind: 'cavalry', side: 'han', count: 30, seed: 2, frontRankFull: 3, frontRankMode: 'hi' })
     expect(hi.stats().full).toBe(0)
-    expect(hi.stats().drawCalls).toBeLessThan(rig.stats().drawCalls)
     expect(hi.stats().drawCalls).toBeLessThan(150)
+    // a rigged front rank is compacted to a skinned body and its weapon (figures/compact.ts): a handful of draws per rider
+    expect(rig.stats().drawCalls - rig.stats().instancedMeshes).toBeLessThanOrEqual(3 * 8)
+    expect(rig.stats().drawCalls).toBeLessThan(hi.stats().drawCalls)
   })
 
   it('lo detail has far fewer triangles than the rig it was baked from', () => {
