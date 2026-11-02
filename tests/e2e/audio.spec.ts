@@ -1,8 +1,13 @@
 import { expect, test, type Page } from '@playwright/test'
 
-// Audio (docs/spec/60-audio.md). There are no real audio files yet, so most checks run with the empty manifest; the one
-// graph test routes in a generated click-track WAV (test data only, never shipped) to drive the real Web Audio path.
+// Audio (docs/spec/60-audio.md). Batch 1 files ship since b74545c; the "files pending" checks below keep the empty path
+// covered by routing in an empty manifest, one test checks the shipped manifest, and the graph test routes in a generated
+// click-track WAV (test data only, never shipped) to drive the real Web Audio path.
 // Nothing here judges how the music sounds: that is by ear, on sounds.html.
+
+async function emptyManifest(page: Page): Promise<void> {
+  await page.route('**/audio/manifest.json', (r) => r.fulfill({ json: { version: 1, tracks: [] } }))
+}
 
 function watch(page: Page): string[] {
   const errors: string[] = []
@@ -12,6 +17,7 @@ function watch(page: Page): string[] {
 
 test('sounds.html loads with 0 page errors, shows "no file yet" for every slot, and the volume panel works', async ({ page }) => {
   const errors = watch(page)
+  await emptyManifest(page)
   await page.setViewportSize({ width: 1100, height: 800 })
   await page.goto('./sounds.html?test=1')
   await expect(page.getByTestId('no-tracks')).toBeVisible()
@@ -41,6 +47,7 @@ test('sounds.html loads with 0 page errors, shows "no file yet" for every slot, 
 
 test('cinema.html shows the music panel (files pending) with 0 page errors', async ({ page }) => {
   const errors = watch(page)
+  await emptyManifest(page)
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('./cinema.html?test=1')
   await page.waitForFunction(() => (window as unknown as { __cinema?: { ready: boolean } }).__cinema?.ready === true, undefined, { timeout: 90_000 })
@@ -55,6 +62,7 @@ test('cinema.html shows the music panel (files pending) with 0 page errors', asy
 
 test('the title and the battle top bar open the sound settings', async ({ page }) => {
   const errors = watch(page)
+  await emptyManifest(page)
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('./?test=1')
   await expect(page.getByTestId('title-screen')).toBeVisible()
@@ -76,6 +84,18 @@ test('the title and the battle top bar open the sound settings', async ({ page }
   await page.screenshot({ path: 'e2e-out/battle-sound.png' })
   // the bed follows the screen
   expect(await page.evaluate(() => (window as unknown as { __audio: { getMood(): string } }).__audio.getMood())).toBe('battle')
+  expect(errors).toEqual([])
+})
+
+test('the shipped manifest (batch 1) fills every slot on sounds.html with 0 page errors', async ({ page }) => {
+  const errors = watch(page)
+  await page.setViewportSize({ width: 1100, height: 800 })
+  await page.goto('./sounds.html?test=1')
+  await expect(page.getByTestId('tracks')).toBeVisible()
+  const slots = page.getByTestId('slots').locator('li')
+  expect(await slots.count()).toBe(10)
+  for (const li of await slots.all()) await expect(li).not.toContainText('no file yet')
+  await expect(page.getByTestId('music-note')).not.toHaveText('Music: files pending')
   expect(errors).toEqual([])
 })
 
