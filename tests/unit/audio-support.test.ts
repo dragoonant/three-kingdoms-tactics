@@ -1,4 +1,6 @@
 // Manifest validation and URLs, settings persistence, mood choice and the demo cue sheet.
+import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { busGains, DEFAULT_SETTINGS, loadSettings, parseSettings, saveSettings, SETTINGS_KEY, sliderToGain } from '../../src/client/audio/audioEngine'
 import { CHARGE_DEMO, CueSheet } from '../../src/client/audio/demoScript'
@@ -12,10 +14,15 @@ import manifestJson from '../../public/audio/manifest.json'
 const T = { bpm: 120, beatsPerBar: 4, loopStart: 0, loopEnd: 16, gainDb: 0 }
 
 describe('manifest', () => {
-  it('the shipped manifest is valid and empty (files are produced later)', () => {
+  it('the shipped manifest is valid, keeps every entry, and every file it names is shipped', () => {
     const warns: string[] = []
-    expect(normalizeManifest(manifestJson, (m) => warns.push(m))).toEqual({ version: 1, tracks: [] })
+    const m = normalizeManifest(manifestJson, (w) => warns.push(w))
     expect(warns).toEqual([])
+    expect(m.tracks.length).toBe((manifestJson as { tracks: unknown[] }).tracks.length)
+    for (const t of m.tracks) {
+      expect(existsSync(resolve(__dirname, '../../public/audio', t.file)), t.file).toBe(true)
+      if (t.alt) expect(existsSync(resolve(__dirname, '../../public/audio', t.alt)), t.alt).toBe(true)
+    }
   })
   it('drops bad entries and duplicate ids, fills defaults, keeps good ones', () => {
     const warns: string[] = []
