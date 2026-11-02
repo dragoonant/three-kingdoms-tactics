@@ -100,8 +100,8 @@ Rule IDs in brackets (e.g. `[R-ATK-1]`) are what tests are named after.
 ## 10. Randomness
 - `[R-RNG-1]` Every random draw comes from the engine's seeded RNG in a fixed order. The same seed and action list always reproduce the same battle.
 
-## 11. Roguelike run rules (RL-) — design, not yet implemented (RL1)
-These rules govern a run of "Roads to War" (`15-roguelike.md`), between battles. Era 1's numbers are in `docs/spec/data/era1-stops.json` and `16-roguelike-era1.md`; the paper sim (`tools/roguelike/paper-sim.mjs`) follows them. Constants are per era (`rules` in the era data); the values below are era 1's. The run layer (`src/run/`) will be pure and deterministic like the engine; battle modifiers become engine rules with these ids.
+## 11. Roguelike run rules (RL-) — run layer built in RL1a (`src/run/`); battle modifiers in the engine are RL1b/RL2
+These rules govern a run of "Roads to War" (`15-roguelike.md`), between battles. Era 1's numbers are in `src/data/eras/era1.json` and `16-roguelike-era1.md`; the game (`src/run/`) and the paper sim (`tools/roguelike/paper-sim.mjs`, which runs on `src/run`) share them. Tests in `tests/unit/run-*.test.ts` are named by these ids. Constants are per era (`rules` in the era data); the values below are era 1's. The run layer (`src/run/`) will be pure and deterministic like the engine; battle modifiers become engine rules with these ids.
 
 **The run**
 - `[RL-RUN-1]` A run is one era. It starts with the era's start state (era 1: 50 rice, 1,500 soldiers, 0 wounded, Renown 30, day 0, Liu Bei, Guan Yu and Zhang Fei at level 3) and a run seed. The run state holds rice, healthy soldiers, wounded soldiers, Renown, day, flags, the band (each officer's level, XP, cap bonus, hurt and wounded marks) and the seed.
@@ -132,6 +132,7 @@ These rules govern a run of "Roads to War" (`15-roguelike.md`), between battles.
 - `[RL-DEPLOY-2]` Each deployed officer is given 250 to his command cap healthy soldiers, in steps of 50; the total cannot exceed the healthy pool. These are his unit's troops (and max troops) in the battle. Guests' troops never come from the pool.
 - `[RL-DEPLOY-3]` A battle costs ⌈fielded ÷ 250⌉ bags, paid when the deploy is sealed. A deployment that would leave 0 rice is refused.
 - `[RL-DEPLOY-4]` A battle takes 1 day (its upkeep is paid after the battle).
+- `[RL-DEPLOY-5]` *(RL1a)* A battle's deploy slots are the era's slots for it, never more than the battle's player starts. An officer who is one of the battle's own guests (Jian Yong at Daxing Hill), or who has no officer data yet, cannot be deployed; the deploy screen says why.
 
 **Losses and officers**
 - `[RL-LOSS-1]` After a battle, for each deployed unit, lost = fielded − troops left (all of them if routed). Half the lost, rounded to the nearest 10, are killed; the rest become wounded. Survivors return to the healthy pool. Losses from stops, marches and paths are split the same way unless the effect says "all killed".
@@ -164,4 +165,5 @@ These rules govern a run of "Roads to War" (`15-roguelike.md`), between battles.
 - `[RL-GAMBLE-1]` A gamble prints its odds and both outcomes. It is resolved by one draw from the run's seeded RNG.
 - `[RL-RNG-1]` Every run draw comes from sfc32 seeded (like `R-RNG-1`) from the run seed, the purpose (road or fate) and the stop index, so the same seed always draws the same road and a choice never shifts the draws of later stops. A battle's own seed is derived the same way.
 - `[RL-CHOICE-1]` Every choice slip prints its exact effects in rice, soldiers, wounded, days, Renown, recruits, Qi and stated flags, and the "rice lasts N days" after it.
+- `[RL-SAVE-1]` *(RL1a)* The run autosaves after every step (`RunState` with a version field). Sealing a deploy pays its rice at once; a reload during that battle restarts it from round 1 with the same seed and deployment. A save of another version, or one that fails the shape check, is refused and the run cannot be continued.
 - `[RL-CHOICE-2]` A choice whose rice cost exceeds the rice held is shown greyed with the reason and cannot be sealed. A stop always offers at least one sealable choice; if none can be paid, the army scatters.

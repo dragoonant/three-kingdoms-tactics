@@ -30,7 +30,9 @@ export type Screen =
   | 'results'
   | 'defeat'
   | 'summary'
-export type PlayMode = 'skirmish' | 'campaign'
+  // Roads to War (docs/spec/15-roguelike.md): one screen; the run store picks the view
+  | 'run'
+export type PlayMode = 'skirmish' | 'campaign' | 'run'
 /** Which AI tier plays the enemy (random, easy or normal). */
 /** Enemy AI strength. 'normal' in play; `?bot=random|easy|normal` overrides it (debugging, and tests that check flow rather than balance). */
 let botTier: Tier = readBotTier()
@@ -89,6 +91,11 @@ let battleEndHandler: BattleEndHandler | null = null
 export function setBattleEndHandler(h: BattleEndHandler | null): void {
   battleEndHandler = h
 }
+let runBattleEndHandler: BattleEndHandler | null = null
+/** The run layer (Roads to War) registers here to hear that a run battle ended. */
+export function setRunBattleEndHandler(h: BattleEndHandler | null): void {
+  runBattleEndHandler = h
+}
 
 interface GameStore {
   screen: Screen
@@ -123,6 +130,8 @@ interface GameStore {
   showTable: (battleId: string, seed: number, options?: CreateOptions) => BattleState
   /** Start a campaign battle: the table is set from `options` and the round scroll plays. */
   beginCampaign: (battleId: string, seed: number, options?: CreateOptions) => void
+  /** Start a Roads to War battle (mode 'run'): its end goes to the run layer. */
+  beginRun: (battleId: string, seed: number, options?: CreateOptions) => void
   restart: () => void
   act: (a: Action) => { ok: boolean; code?: string; message?: string }
   skip: () => void
@@ -250,6 +259,11 @@ export const useGame = create<GameStore>((set, get) => {
       if (st.mode === 'campaign' && battleEndHandler) {
         set({ ui: EMPTY_UI })
         battleEndHandler(st.state, st.events)
+        return
+      }
+      if (st.mode === 'run' && runBattleEndHandler) {
+        set({ ui: EMPTY_UI })
+        runBattleEndHandler(st.state, st.events)
         return
       }
       set({ screen: 'end', ui: EMPTY_UI })
@@ -390,7 +404,7 @@ export const useGame = create<GameStore>((set, get) => {
       // Leaving for the title shows a fresh sand table again.
       if (screen === 'title') {
         const was = get().screen
-        if (was === 'battle' || was === 'end' || get().mode === 'campaign') {
+        if (was === 'battle' || was === 'end' || get().mode === 'campaign' || get().mode === 'run') {
           resetBattle()
           set({ mode: 'skirmish' })
         }
@@ -412,6 +426,13 @@ export const useGame = create<GameStore>((set, get) => {
     beginCampaign: (battleId, seed, options) => {
       const s = loadBattle(battleId, seed, options)
       set({ screen: 'battle', mode: 'campaign' })
+      pendingBefore = s
+      director.play(introBeats(s), sceneFromState(s))
+    },
+
+    beginRun: (battleId, seed, options) => {
+      const s = loadBattle(battleId, seed, options)
+      set({ screen: 'battle', mode: 'run' })
       pendingBefore = s
       director.play(introBeats(s), sceneFromState(s))
     },

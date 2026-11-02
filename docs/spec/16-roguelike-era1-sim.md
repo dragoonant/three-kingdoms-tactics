@@ -1,12 +1,12 @@
 # 16 — Era 1 paper sim report (RL0, 2026-11-01)
 
-**What this is.** `tools/roguelike/paper-sim.mjs` plays era 1 of "Roads to War" (`16-roguelike-era1.md`) end to end on paper: it draws each seed's road, walks it with four simple policies, applies every road rule exactly (`10-rules.md` §11, RL-) and reads every number from `docs/spec/data/era1-stops.json`. It is plain Node with no dependencies and is deterministic (sfc32 seeded like `src/engine/rng.ts`).
+**What this is.** `tools/roguelike/paper-sim.mjs` plays era 1 of "Roads to War" (`16-roguelike-era1.md`) end to end on paper: it draws each seed's road, walks it with four simple policies, applies every road rule exactly (`10-rules.md` §11, RL-) and reads every number from `src/data/eras/era1.json`. Since RL1a it runs on the game's own run layer (`src/run`, through tsx), so the road, the economy, the stops, deploy pricing and the result are the game's code; only the policies and the placeholder battle model are the sim's own. It is deterministic (sfc32 seeded like `src/engine/rng.ts`).
 
 ```
-node tools/roguelike/paper-sim.mjs                  # 500 seeds per policy (seeds 1-500), summary + dominance check
-node tools/roguelike/paper-sim.mjs --md             # + choice shares per stop
-node tools/roguelike/paper-sim.mjs --first 5001     # holdout seeds
-node tools/roguelike/paper-sim.mjs --narrate 6 --policies benevolent,ruthless,balanced
+npx tsx tools/roguelike/paper-sim.mjs                  # 500 seeds per policy (seeds 1-500), summary + dominance check
+npx tsx tools/roguelike/paper-sim.mjs --md             # + choice shares per stop
+npx tsx tools/roguelike/paper-sim.mjs --first 5001     # holdout seeds
+npx tsx tools/roguelike/paper-sim.mjs --narrate 6 --policies benevolent,ruthless,balanced
 ```
 
 **What it is not.** Battles are **not played**. They use the placeholder model below, which stands in for the RL4 run bench (every battle played by the engine with the utility AI). The model only decides the road economy: whether a band of a given size, spirit and hunger tends to win a battle of a given size, and what it costs. Win rates in this report are for the model, not for a human at the real battles.
@@ -40,6 +40,18 @@ node tools/roguelike/paper-sim.mjs --narrate 6 --policies benevolent,ruthless,ba
 | greedy-fighter | takes every battle, careless with rice | 0.6 / 3.0 / 0.5; only panics at 3 days | never | never | 12 days |
 
 ## 2. Results (500 seeds per policy)
+
+### RL1a (2026-11-02): the same sim on the game's run layer
+`npx tsx tools/roguelike/paper-sim.mjs` now plays every road step with `src/run` and folds the model's battle outcome in with `applyOutcome`, exactly as a real battle's result is. Seeds 1–500:
+
+| Policy | Win | Starved | Lost a road battle | Lost the finale | Reached finale | Rice-days at arrival (median) | Arrived with <=3 days | Fielded at finale (median) | Hungry at finale | Renown at end (median) | Arrival day (median) | Battles before finale (median) | Officers at finale (median) | An officer fell |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| benevolent | 59% | 2% | 15% | 25% | 84% | 4 | 48% | 3000 | 54% | 80 | 20 | 3 | 5 | 0% |
+| ruthless | 47% | 0% | 6% | 46% | 94% | 6 | 8% | 2350 | 8% | 0 | 13 | 1 | 4 | 0% |
+| balanced | 47% | 1% | 8% | 44% | 91% | 6 | 25% | 2550 | 29% | 20 | 17 | 2 | 4 | 0% |
+| greedy-fighter | 21% | 17% | 39% | 23% | 46% | 2 | 58% | 2150 | 56% | 60 | 21 | 4 | 4 | 1% |
+
+The distributions match v0.5 within a few points. The differences come from three rules the game applies and the RL0 sim did not: the mountain path is never force-marched (RL-ROAD-5; the ruthless road arrives a day later, median day 13 instead of 12); a stop's leg modifiers apply to the last leg to Guangzong (refugees +1, a forced push -2); and the finale is deployed through the game's deploy check. Rice at arrival is a day higher for the benevolent and balanced roads (median 4 and 6), and hungry finales are 2–4 points rarer. Holdout seeds 5001–5500: benevolent 56%, ruthless 46%, balanced 44%, greedy-fighter 19%.
 
 ### v0.5 (owner rulings 2026-11-01): Daxing Hill is always on the road
 Tier 1 is now the single fixed stop `daxing-hill` (no "guard Zhuo's walls" option), so every run fights at least once before the finale; the road HUD gains the finale forecast (`RL-HUNGER-2`). Everything else is unchanged from v0.4.

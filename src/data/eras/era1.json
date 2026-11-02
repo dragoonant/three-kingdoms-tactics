@@ -1,28 +1,7 @@
 {
+  "version": 2,
   "era": "yellow-turbans",
-  "version": 1,
-  "note": "Era 1 'Yellow Turbans' road data (docs/spec/16-roguelike-era1.md). Seed for src/data/eras/ and src/data/stops/ in RL1. All prose is our own paraphrase of the novel. Numbers tuned by tools/roguelike/paper-sim.mjs (docs/spec/16-roguelike-era1-sim.md).",
-  "start": {
-    "rice": 50,
-    "soldiers": 1500,
-    "wounded": 0,
-    "renown": 30,
-    "day": 0,
-    "band": [
-      {
-        "officer": "liu-bei",
-        "level": 3
-      },
-      {
-        "officer": "guan-yu",
-        "level": 3
-      },
-      {
-        "officer": "zhang-fei",
-        "level": 3
-      }
-    ]
-  },
+  "note": "Era 1 'Yellow Turbans' of Roads to War: the road template, every stop and its choices (exact effects), echoes, the finale day table and each stop's speech slips. The one source for the game (src/run), the paper sim (tools/roguelike/paper-sim.mjs) and the tables in docs/spec/16-roguelike-era1.md. All prose is our own paraphrase of the novel; liberties are flagged in each stop's source and scene.",
   "rules": {
     "upkeepPer": 500,
     "battleRicePer": 250,
@@ -46,11 +25,32 @@
     "giftAt": 50,
     "giftDiv": 5
   },
+  "start": {
+    "rice": 50,
+    "soldiers": 1500,
+    "wounded": 0,
+    "renown": 30,
+    "day": 0,
+    "band": [
+      {
+        "officer": "liu-bei",
+        "level": 3
+      },
+      {
+        "officer": "guan-yu",
+        "level": 3
+      },
+      {
+        "officer": "zhang-fei",
+        "level": 3
+      }
+    ]
+  },
   "officers": {
     "liu-bei": {
       "name": "Liu Bei",
       "lead": 78,
-      "q": 1.0,
+      "q": 1,
       "commander": true
     },
     "guan-yu": {
@@ -207,7 +207,7 @@
     "tierScale": [
       0.8,
       0.85,
-      1.0,
+      1,
       1.05,
       1.1,
       1.15,
@@ -220,44 +220,44 @@
       "new": false,
       "E": 2000,
       "guests": 800,
-      "slots": 4,
-      "variant": "rl-youzhou"
+      "slots": 4
     },
     "qingzhou": {
       "new": false,
       "E": 2600,
       "guests": 600,
-      "slots": 4,
-      "variant": "rl-relief"
+      "slots": 4
     },
-    "village-siege": {
+    "rl-village-siege": {
       "new": true,
       "E": 1800,
       "guests": 150,
-      "slots": 3,
-      "variant": "village"
+      "slots": 3
     },
-    "prison-cart": {
+    "rl-prison-cart": {
       "new": true,
       "E": 2000,
       "guests": 0,
-      "slots": 3,
-      "variant": "base"
+      "slots": 3
     },
-    "dong-zhuo-rescue": {
+    "rl-dong-zhuo-rescue": {
       "new": true,
       "E": 2300,
       "guests": 500,
-      "slots": 4,
-      "variant": "base"
+      "slots": 4
     },
     "guangzong": {
       "new": false,
       "E": 5500,
       "guests": 1500,
       "slots": 5,
-      "variant": "rl-finale",
       "finale": true
+    },
+    "rl-bandit-pass": {
+      "new": true,
+      "E": 1800,
+      "guests": 150,
+      "slots": 3
     }
   },
   "finale": {
@@ -278,7 +278,7 @@
       {
         "maxDay": 20,
         "label": "on time",
-        "E": 1.0,
+        "E": 1,
         "text": "You arrived on day {day}: the palisade stands complete."
       },
       {
@@ -485,6 +485,32 @@
       "text": "The brothers carry their forged weapons: Liu Bei, Guan Yu and Zhang Fei have War +4 for the run."
     }
   },
+  "prologue": [
+    {
+      "speaker": "narrator",
+      "text": "Spring of the first year of Zhongping. The Way of Great Peace has tied yellow cloth round the heads of half the empire, and the county walls are papered with calls to arms."
+    },
+    {
+      "speaker": "zhang-fei",
+      "text": "Three of us, one peach orchard, one jar of wine I was saving for a wedding. Nobody is getting married this year anyway."
+    },
+    {
+      "speaker": "guan-yu",
+      "text": "Before we drink, say what we are swearing to. A man who swears to nothing in particular keeps his word to nobody."
+    },
+    {
+      "speaker": "liu-bei",
+      "text": "To prop up the house of Han, and to shelter the common people while we do it. Not on one day of birth, but on one day of death."
+    },
+    {
+      "speaker": "zhang-fei",
+      "text": "Sworn. Now the hard part: an army that eats, on a butcher's savings."
+    },
+    {
+      "speaker": "narrator",
+      "text": "Rice is the clock of this road. Every soldier eats every day, and when the sacks are empty the band scatters, oath or no oath."
+    }
+  ],
   "stops": [
     {
       "id": "zhuo-notice",
@@ -528,6 +554,24 @@
             "renown": -10,
             "soldiers": 300
           }
+        }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "Under the notice on the Zhuo wall the brothers count what they have: a farm, a butcher's stall, a name nobody knows yet."
+        },
+        {
+          "speaker": "zhang-fei",
+          "text": "Sell the farm. Sell the stall. A man who keeps his pigs while the country burns deserves to be eaten by them."
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "Or we feast the county in the orchard and let them hear the oath. A name travels further than a cart."
+        },
+        {
+          "speaker": "guan-yu",
+          "text": "The county granary is full and its idle sons are bored. Taking both is quick. Being forgiven for it is slow."
         }
       ]
     },
@@ -584,6 +628,25 @@
             "rice": 30,
             "renown": -15
           }
+        }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "Two horse dealers from Zhongshan ride into the camp: Zhang Shiping and Su Shuang, their herd penned behind them, the northern roads shut by the rebels."
+        },
+        {
+          "speaker": "zhang-shiping",
+          "name": "Zhang Shiping",
+          "text": "We have heard of three men who swore in a peach orchard. We would like to see whether the story is taller than the men."
+        },
+        {
+          "speaker": "guan-yu",
+          "text": "Give a smith good steel and a week, and the story will grow to fit us."
+        },
+        {
+          "speaker": "zhang-fei",
+          "text": "Or we walk your herd south through the turbans and sell it ourselves. Horses do not ask who owns them."
         }
       ]
     },
@@ -643,6 +706,24 @@
             },
             "renown": -5
           }
+        }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "Cheng Yuanzhi brings his turbaned host down on Zhuo. Magistrate Zou Jing has walls, a few drilled companies and very little else."
+        },
+        {
+          "speaker": "zou-jing",
+          "text": "You are the three from the orchard? Good. My column marches at dawn. Bring every man who can hold a spear."
+        },
+        {
+          "speaker": "guan-yu",
+          "text": "Their carts and their farms are camped in the millet. A night fire there would cost them their supper, and cost us some of our good name."
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "Either way we fight at the hill. Decide only what we carry into it."
         }
       ]
     },
@@ -709,6 +790,28 @@
             ]
           }
         }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "A rider comes in with his horse half dead: Qingzhou is ringed with turbans and Governor Gong Jing is eating the seed grain."
+        },
+        {
+          "speaker": "gong-jing",
+          "text": "Tell whoever reads this: we can hold the walls ten days. After that we will be holding them with our teeth."
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "They outnumber us. Then we do not fight them where they stand. We make them chase us into the ridges."
+        },
+        {
+          "speaker": "zhang-fei",
+          "text": "Or we sneak rice past them in the dark and let Gong Jing owe us. I like being owed."
+        },
+        {
+          "speaker": "guan-yu",
+          "text": "Or we walk on south. Walls have held before without us. Some have not."
+        }
       ]
     },
     {
@@ -729,7 +832,7 @@
           "tension": "A small battle's losses and rice, for name, rice and men.",
           "effects": {
             "battle": {
-              "id": "village-siege",
+              "id": "rl-village-siege",
               "win": {
                 "renown": 10,
                 "rice": 20
@@ -768,6 +871,24 @@
               "village-fell"
             ]
           }
+        }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "Smoke above a millet village. The threshing floor is burning, the gate is barred with carts, and women stand on the wall with hoes."
+        },
+        {
+          "speaker": "zhang-fei",
+          "text": "Brother, give me a hundred men and I will have those turbans off the wall by noon."
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "And if they are more than a hundred men can turn? The village needs the whole band or none of it."
+        },
+        {
+          "speaker": "guan-yu",
+          "text": "There is a third road: we march past, and we do not look at the smoke. I would rather not take it."
         }
       ]
     },
@@ -817,6 +938,24 @@
             "soldiers": 300,
             "renown": -12
           }
+        }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "Carts, grandmothers, goats: a column from the burned counties catches up with the band and asks to march under the Han banner."
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "They have eaten their seed grain to get this far. If we turn them away, the road will finish what the rebels began."
+        },
+        {
+          "speaker": "guan-yu",
+          "text": "They will halve our pace and eat our sacks. Their young men could carry a spear, of course."
+        },
+        {
+          "speaker": "zhang-fei",
+          "text": "Feed them and wave them on, or take them in and walk slow. Either way somebody is hungry tonight."
         }
       ]
     },
@@ -875,6 +1014,25 @@
             ]
           }
         }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "Six hundred turbans throw their spears down at the pickets. Their scarves are filthy and their bellies are empty."
+        },
+        {
+          "speaker": "liao-hua",
+          "name": "Liao Hua",
+          "text": "I am Liao Hua. We followed the Way because it promised rice. It gave us none. Give us some and we will follow you."
+        },
+        {
+          "speaker": "zou-jing",
+          "text": "The standing order is no quarter. A rebel who kneels today stands up again tomorrow."
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "A man who kneels because he is hungry is a farmer again the moment he is fed."
+        }
       ]
     },
     {
@@ -910,6 +1068,24 @@
             "riceTrade": 25,
             "renown": 5
           }
+        }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "The magistrate here ran at the first rumour of rebels. His granary is sealed, his fields are ripe, and nobody is cutting them."
+        },
+        {
+          "speaker": "zhang-fei",
+          "text": "A sealed granary is a door. I have a shoulder."
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "Two days with sickles beside the farmers and they will give us a share gladly. Break the seal and they will hide the rest."
+        },
+        {
+          "speaker": "guan-yu",
+          "text": "Both roads end in full sacks. Only one of them ends with the county waving us off."
         }
       ]
     },
@@ -959,6 +1135,24 @@
             "renown": -5
           }
         }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "The autumn rains have filled the river bank to bank. The ferryman's rope is gone, and the far side is a smudge in the drizzle."
+        },
+        {
+          "speaker": "guan-yu",
+          "text": "Rivers fall. Rebels do not wait for them to."
+        },
+        {
+          "speaker": "zhang-fei",
+          "text": "The village up the bank has doors. Doors float."
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "And the village will spend the winter without them. Every road here has a price; choose which one we pay."
+        }
       ]
     },
     {
@@ -1001,8 +1195,7 @@
           "tension": "A fight for their hoard and a free road.",
           "effects": {
             "battle": {
-              "id": "village-siege",
-              "variant": "bandit-pass",
+              "id": "rl-bandit-pass",
               "win": {
                 "rice": 25,
                 "renown": 5
@@ -1017,6 +1210,26 @@
           "effects": {
             "rice": -12
           }
+        }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "Hill bandits, once Yellow Turbans, hold the pass. Their chiefs are Pei Yuanshao and a dark giant named Zhou Cang. (Alt-history: the novel has Zhou Cang join Guan Yu years later.)"
+        },
+        {
+          "speaker": "zhou-cang",
+          "name": "Zhou Cang",
+          "text": "I have heard of the red-faced general. If he follows a lord worth following, I would carry that lord's spear."
+        },
+        {
+          "speaker": "pei-yuanshao",
+          "name": "Pei Yuanshao",
+          "text": "And if he is not, the pass has a toll, the same as for any merchant."
+        },
+        {
+          "speaker": "guan-yu",
+          "text": "They have a hoard up there and a stockade with a gap in it. The road through is short if we take it by force."
         }
       ]
     },
@@ -1071,6 +1284,24 @@
             "rice": 20
           }
         }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "At Changshe the rebels camped in tall grass, and Huangfu Song set it alight on a night wind. The plain is a sea of fire."
+        },
+        {
+          "speaker": "cao-cao",
+          "text": "Cao Mengde, commander of horse. Their baggage is running loose. Ride with me, if your horses are not afraid of smoke."
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "The fire is running toward three villages. Firebreaks would save them, if we spend the day with spades instead of swords."
+        },
+        {
+          "speaker": "zhang-fei",
+          "text": "Or we follow behind and pick up the grain they drop. Less glory, no burns."
+        }
       ]
     },
     {
@@ -1113,6 +1344,24 @@
             "volunteers": true
           }
         }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "A walled rebel granary, its guards fled, its wagons still yoked. Starving farmers watch from the ditch."
+        },
+        {
+          "speaker": "guan-yu",
+          "text": "Forty sacks if we load the wagons. Three days of hauling to Guangzong."
+        },
+        {
+          "speaker": "zhang-fei",
+          "text": "Or burn it, and Zhang Liang goes without his supper when we get there."
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "Or open the gates. Those farmers have sons who will remember who fed them."
+        }
       ]
     },
     {
@@ -1133,7 +1382,7 @@
           "tension": "Honour and a finale ally, but the court calls you outlaws.",
           "effects": {
             "battle": {
-              "id": "prison-cart",
+              "id": "rl-prison-cart",
               "win": {
                 "renown": 12,
                 "flags": [
@@ -1167,6 +1416,25 @@
             "renown": -6
           }
         }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "A prison cart on the Guangzong road. Inside sits Lu Zhi, Liu Bei's old teacher, reported for cowardice because he would not bribe the court's envoy."
+        },
+        {
+          "speaker": "lu-zhi",
+          "name": "Lu Zhi",
+          "text": "Xuande. Do not look at me like that. The court has its reasons, and they are all gold."
+        },
+        {
+          "speaker": "zhang-fei",
+          "text": "Say one word, brother, and the escort finds out what a serpent spear is for."
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "Free him, and the court calls us outlaws. Pay the escort, and he travels with a blanket. Do nothing, and I have to live with it."
+        }
       ]
     },
     {
@@ -1187,7 +1455,7 @@
           "tension": "A real battle for a man who will not thank you, though some of his stragglers will.",
           "effects": {
             "battle": {
-              "id": "dong-zhuo-rescue",
+              "id": "rl-dong-zhuo-rescue",
               "win": {
                 "renown": 10,
                 "soldiers": 200
@@ -1207,6 +1475,24 @@
               "rout-unchecked"
             ]
           }
+        }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "Dust on the plain: an imperial army in full rout, Zhang Jiao's host on its heels. In the middle of the flight rides Dong Zhuo of Hedong."
+        },
+        {
+          "speaker": "guan-yu",
+          "text": "Their flank is open. One charge from the ridge and the turbans will forget who they were chasing."
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "Or we let the rout run and gather what it drops. I would not be proud of it."
+        },
+        {
+          "speaker": "zhang-fei",
+          "text": "Saving a general is good work. I only hope he says thank you."
         }
       ]
     },
@@ -1248,6 +1534,25 @@
               "dong-zhuo-grudge"
             ]
           }
+        }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "In his camp Dong Zhuo looks the brothers over and asks what rank they hold. Hearing \"none\", he turns back to his wine."
+        },
+        {
+          "speaker": "dong-zhuo",
+          "name": "Dong Zhuo",
+          "text": "Commoners. Put them somewhere they will not block the road."
+        },
+        {
+          "speaker": "zhang-fei",
+          "text": "We saved his skin this morning, and he offers us the road. Brother, let me go back in."
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "He is an imperial general. Hold your hand, or hold your tongue at least."
         }
       ]
     },
@@ -1303,6 +1608,24 @@
             }
           }
         }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "A fever comes off the marshes and runs through the ranks. At the edge of camp, hedge priests of the Way sell charm water by the cup."
+        },
+        {
+          "speaker": "guan-yu",
+          "text": "Split off the sick and wait a day. The fever burns out where it has nothing new to eat."
+        },
+        {
+          "speaker": "zhang-fei",
+          "text": "Or we march, and the ones who cannot keep up are the ones who would have died anyway."
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "And the charm water? It is the enemy's holy water. Men will see their lord buying it."
+        }
       ]
     },
     {
@@ -1350,6 +1673,24 @@
             "renown": -3
           }
         }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "The men's sandals are worn through after the hill roads. There is a dry riverbed for a camp and a farmer's orchard beside it."
+        },
+        {
+          "speaker": "guan-yu",
+          "text": "Two days, and the wounded walk again. Guangzong will be two days stronger too."
+        },
+        {
+          "speaker": "zhang-fei",
+          "text": "Or we push on and let the weak ones fall behind. Fewer mouths."
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "There is a middle way. One day, and the orchard picked bare. The farmer will not thank us."
+        }
       ]
     },
     {
@@ -1390,6 +1731,24 @@
               "zhang-fei": -1
             }
           }
+        }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "For their service the brothers are given a little county, Anxi. The court's inspector arrives, sneers at Liu Bei for bringing no gift, and threatens to report him. (Liberty: the novel sets this after the rising.)"
+        },
+        {
+          "speaker": "zhang-fei",
+          "text": "I found him drunk at the post-house. He is tied to the hitching post now. I have a willow switch."
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "Yide! He is a court official, and this is our post and our granary."
+        },
+        {
+          "speaker": "guan-yu",
+          "text": "Then decide which you want more, brother: the post, or the brother who will not bow to that man."
         }
       ]
     },
@@ -1469,6 +1828,25 @@
             }
           }
         }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "General Zhu Jun's imperial camp is a city of tents. He offers the band a place in his line and a share of his commissary."
+        },
+        {
+          "speaker": "zhu-jun",
+          "name": "Zhu Jun",
+          "text": "Stand in my line for two days of drill and you eat from my wagons. Outlaws need not apply."
+        },
+        {
+          "speaker": "zhang-fei",
+          "text": "Wancheng still holds out to the south. Somebody has to lead the ladders up its wall."
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "Our spare horses would fetch a good price here. Second brother would have fewer riders to lead."
+        }
       ]
     },
     {
@@ -1521,6 +1899,24 @@
           "label": "Leave the sorcerer to the generals",
           "tension": "No days, no rice, no risk; the sorcerer keeps his full strength.",
           "effects": {}
+        }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "Captives from Zhang Bao's camp tell of black wind and paper soldiers falling from the sky. (Liberty: the novel fights this at Yangcheng.)"
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "I remember an old counter-charm: the blood of pigs, goats and dogs poured on the heights. It costs a day and a herd."
+        },
+        {
+          "speaker": "zhang-fei",
+          "text": "Or I go up his altar hill tonight and see how well a sorcerer bleeds."
+        },
+        {
+          "speaker": "guan-yu",
+          "text": "Or we leave the sorcerer to the generals. Paper soldiers have not stopped steel yet."
         }
       ]
     },
@@ -1582,6 +1978,24 @@
           "label": "Cross at dawn",
           "tension": "No days lost, nothing gained.",
           "effects": {}
+        }
+      ],
+      "slips": [
+        {
+          "speaker": "narrator",
+          "text": "Guangzong's palisade rises across the river; mallets ring in the dark. Huangfu Song's column is two days behind."
+        },
+        {
+          "speaker": "guan-yu",
+          "text": "Wait for Huangfu Song and we fight with two of his companies on our wing. Wait, and the palisade grows."
+        },
+        {
+          "speaker": "zhang-fei",
+          "text": "Give me some men and a pot of fire. A stockade burns like any other woodpile."
+        },
+        {
+          "speaker": "liu-bei",
+          "text": "Or we cross at dawn and take what is there. Tomorrow decides the rising either way."
         }
       ]
     }

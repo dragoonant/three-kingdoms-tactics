@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { getBattleDef } from '../../data'
 import { SKIRMISH_ID, useGame } from '../store/game'
 import { useCampaign } from '../store/campaign'
+import { useRun } from '../run/store'
 import { Portrait } from '../hud/parts'
 import { nameOfUnit } from '../names'
 import { SoundButton } from '../audio/SoundControl'
@@ -23,9 +24,14 @@ export function Title() {
   const openNew = useCampaign((c) => c.openNew)
   const cont = useCampaign((c) => c.continueSave)
   const refresh = useCampaign((c) => c.refresh)
+  const runSave = useRun((r) => r.hasSave)
+  const runRefresh = useRun((r) => r.refresh)
+  const runNew = useRun((r) => r.openNew)
+  const runContinue = useRun((r) => r.continueRun)
   useEffect(() => {
     refresh()
-  }, [refresh])
+    runRefresh()
+  }, [refresh, runRefresh])
   const skirmish = getBattleDef(SKIRMISH_ID)
   return (
     <main className="title-screen" data-testid="title-screen">
@@ -50,6 +56,14 @@ export function Title() {
           )}
           <button type="button" className="hang-slip" data-testid="campaign" onClick={openNew}>
             <span>{hasSave ? 'New campaign' : "Campaign: Liu Bei's Rise"}</span>
+          </button>
+          {runSave && (
+            <button type="button" className="hang-slip" data-testid="run-title-continue" onClick={() => runContinue()}>
+              <span>Continue the road</span>
+            </button>
+          )}
+          <button type="button" className="hang-slip" data-testid="run-title" onClick={runNew}>
+            <span>Roads to War: Yellow Turbans</span>
           </button>
           <button type="button" className="hang-slip" data-testid="begin" onClick={() => go('briefing')}>
             <span>Skirmish: {skirmish?.name ?? 'Daxing Hill'}</span>

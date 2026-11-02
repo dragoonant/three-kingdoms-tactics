@@ -1,8 +1,8 @@
-# 16 — Roguelike era 1: "Yellow Turbans" (v0.1, RL0 design pass, 2026-11-01)
+# 16 — Roguelike era 1: "Yellow Turbans" (v0.1, RL0 design pass, 2026-11-01; RL1a as built 2026-11-02)
 
-This is the full design of the first era of "Roads to War", built on the agreed plan in `15-roguelike.md` (v0.4). Nothing here is implemented yet; RL1 builds it.
+This is the full design of the first era of "Roads to War", built on the agreed plan in `15-roguelike.md` (v0.4). RL1a built the road economy, the stops and deploy (see "As built (RL1a)" at the end); the new battles and the engine modifiers are RL1b/RL2.
 
-- **Data:** `docs/spec/data/era1-stops.json` holds every number on this page. It is the seed for `src/data/eras/yellow-turbans.json` and `src/data/stops/*.json` in RL1. Where this page and the JSON disagree, the JSON wins and this page is a bug.
+- **Data:** `src/data/eras/era1.json` holds every number on this page (and each stop's speech slips); the game, the paper sim and these tables share it. Where this page and the JSON disagree, the JSON wins and this page is a bug. (RL1a moved it from `docs/spec/data/era1-stops.json`, renamed the battle ids to the real ones and added the slips.)
 - **Rules:** every mechanic has an `RL-` id in `10-rules.md` §11.
 - **Sim:** the numbers were tuned with `tools/roguelike/paper-sim.mjs`. The report, with a battle model that is only a placeholder, is `16-roguelike-era1-sim.md`.
 - **Wireframes:** `docs/wireframes/roguelike/` (road, stop, deploy, finale briefing; desktop and phone).
@@ -422,3 +422,9 @@ Hunger, tiredness, rest and per-officer Qi echoes (Zhang Fei broods, sulks or bu
 - The new officers' portraits, figures and stratagem lists (Zhou Cang, Liao Hua, Pei Yuanshao and the invented captains) follow the existing pipeline.
 - Scene prose for the peach garden prologue and each stop's two-line scene is drafted above; RL1 turns each into 3–6 speech slips in `src/data/stops/<id>.json`.
 - The battle variants' enemy troop scaling (`tierScale`) is a sim value; RL2 tunes it per battle with the real AI (the RL4 run bench).
+
+## As built (RL1a, 2026-11-02)
+- **Data:** `src/data/eras/era1.json` (v2). Battle ids in the stops are the registry ids: `village-under-siege/break` fights `rl-village-siege`, `bandit-offer/clear` fights `rl-bandit-pass`, `lu-zhi-in-chains/free` fights `rl-prison-cart`, `dong-zhuo-rescue/charge` fights `rl-dong-zhuo-rescue`. Each stop has 3-6 speech slips (`slips`, our own prose; liberties flagged in the narrator's line), and `prologue` holds the peach-garden slips.
+- **Deploy slots** are the era's slots capped by the battle's player starts (RL-DEPLOY-5): Guangzong fields 4 until RL1b adds its fifth start. An officer who is one of the battle's guests (Jian Yong at Daxing Hill) or who has no officer data yet (Zhou Cang, Liao Hua until their data lands) cannot deploy.
+- **Rulings taken while building (for the PLAN log):** a leg's stop modifiers (refugees +1 a leg, a forced push -2) and a forced march apply to the last leg to Guangzong too; the mountain path is never force-marched (RL-ROAD-5; the RL0 sim marched it); a player unit that escapes or retreats off the board counts as whole (the engine's final state drops its troops); Zhang Fei's sulk fires at the next battle he is deployed in; the default deployment is the largest field that is not hungry.
+- **Engine-side gaps (RL1b/RL2):** see `15-roguelike.md` "As built (RL1a)": the finale's map patches, waves, added guests and loyalty changes, tiredness and the sulk are shown, not yet applied.
