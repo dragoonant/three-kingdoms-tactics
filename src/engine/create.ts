@@ -1,11 +1,11 @@
 import { GAME_DATA, getBattleDef } from '../data'
-import type { BattleDef, CreateOptions, DeployEntry, GameData, OfficerDef, PlayerStart, UnitDef } from '../data/types'
+import type { BattleDef, CreateOptions, DeployEntry, GameData, OfficerDef, PlayerStart, RunModifiers, UnitDef } from '../data/types'
 import { PLAYER_SIDE } from '../data/types'
 import { seedRng } from './rng'
 import type { BattleState, Grid, PendingReinforcement, Terrain } from './types'
 import { startPhase } from './turn'
 import { windForRound } from './fire'
-import { unitFromDef } from './ops'
+import { gainQi, unitFromDef } from './ops'
 import { fireTimeline } from './terrain'
 
 /** The player's commander in every campaign battle. */
@@ -59,6 +59,30 @@ function deployedOfficer(base: OfficerDef, d: DeployEntry): OfficerDef | null {
   }
 }
 
+const round10 = (n: number): number => Math.round(n / 10) * 10
+
+/** [RL-MOD-4] Is this unit removed by the run? Commanders never are. */
+function removedByRun(run: RunModifiers | undefined, u: UnitDef): boolean {
+  const ids = run?.removeUnits
+  if (!ids || ids.length === 0 || u.commander) return false
+  return ids.includes(u.id) || ids.includes(u.officer)
+}
+
+/** [RL-MOD-2] Troops of a non-player unit scaled by the run, rounded to 10 (min 10, troops <= max). */
+function scaledByRun(run: RunModifiers | undefined, u: UnitDef): UnitDef {
+  const k = run?.enemyTroopScale
+  if (k === undefined || k === 1 || !(k > 0) || u.side === PLAYER_SIDE) return u
+  const max = Math.max(10, round10((u.maxTroops ?? u.troops) * k))
+  const troops = Math.min(max, Math.max(10, round10(u.troops * k)))
+  return { ...u, troops, maxTroops: max }
+}
+
+/** [RL-MOD-1] Start-Qi bonus of a player-side unit: startQiAll for deployed officers, plus startQi[officer] for anyone listed. */
+function qiBonusOf(run: RunModifiers | undefined, officer: string, deployed: boolean): number {
+  if (!run) return 0
+  return (deployed ? (run.startQiAll ?? 0) : 0) + (run.startQi?.[officer] ?? 0)
+}
+
 /** Build a battle from an explicit definition and data tables (tests use this with hand-made data). */
 export function createBattleFromDef(def: BattleDef, data: GameData, seed: number, options?: CreateOptions): BattleState {
   const height = def.map.length
@@ -72,8 +96,11 @@ export function createBattleFromDef(def: BattleDef, data: GameData, seed: number
   }
 
   // ---- who starts where. With playerStarts the player side is deploy + guests; otherwise `units` is everything.
+  const run = options?.run
   const defs: UnitDef[] = []
   const pending: PendingReinforcement[] = []
+  /** Unit ids of deployed officers (RL-MOD-1 startQiAll applies to them, not to guests). */
+  const deployedIds = new Set<string>()
   let tables = data
   const starts = def.playerStarts
   if (starts) {
@@ -92,25 +119,45 @@ export function createBattleFromDef(def: BattleDef, data: GameData, seed: number
       }
       const st = starts[i]!
       const ud = deployUnit(d, st, data)
+      deployedIds.add(ud.id)
       if (st.arrivesRound !== undefined) {
         pending.push({ round: st.arrivesRound, side: PLAYER_SIDE, units: [ud], entry: [[st.x, st.y]] })
       } else if (!heldBack.has(i)) defs.push(ud)
     })
     if (changed) tables = { ...data, officers }
-    for (const g of def.guests ?? []) defs.push(g)
-    for (const u of def.units) if (u.side !== PLAYER_SIDE) defs.push(u)
+    for (const g of def.guests ?? []) if (!removedByRun(run, g)) defs.push(g)
+    for (const u of def.units) if (u.side !== PLAYER_SIDE && !removedByRun(run, u)) defs.push(scaledByRun(run, u))
     for (const r of def.reinforcements ?? []) {
-      const units = r.units.slice()
+      const units = r.units.filter((u) => !removedByRun(run, u)).map((u) => scaledByRun(run, u))
       if (r.slot !== undefined) {
         const d = deploy[r.slot]
-        if (d) units.unshift(deployUnit(d, { x: r.entry[0]![0], y: r.entry[0]![1], facing: starts[r.slot]?.facing ?? 'E' }, data))
+        if (d) {
+          const ud = deployUnit(d, { x: r.entry[0]![0], y: r.entry[0]![1], facing: starts[r.slot]?.facing ?? 'E' }, data)
+          deployedIds.add(ud.id)
+          units.unshift(ud)
+        }
       }
       pending.push({ round: r.round, side: r.side, units, entry: r.entry.map(([x, y]) => [x, y] as [number, number]) })
     }
   } else {
-    for (const u of def.units) defs.push(u)
+    for (const u of def.units) if (!removedByRun(run, u)) defs.push(scaledByRun(run, u))
     for (const r of def.reinforcements ?? [])
-      pending.push({ round: r.round, side: r.side, units: r.units.slice(), entry: r.entry.map(([x, y]) => [x, y] as [number, number]) })
+      pending.push({
+        round: r.round,
+        side: r.side,
+        units: r.units.filter((u) => !removedByRun(run, u)).map((u) => scaledByRun(run, u)),
+        entry: r.entry.map(([x, y]) => [x, y] as [number, number]),
+      })
+  }
+  // [RL-MOD-1] late-arriving player units carry their start-Qi bonus to the arrival.
+  if (run) {
+    for (const p of pending) {
+      if (p.side !== PLAYER_SIDE) continue
+      for (const u of p.units) {
+        const b = qiBonusOf(run, u.officer, deployedIds.has(u.id))
+        if (b !== 0) p.qiBonus = { ...(p.qiBonus ?? {}), [u.id]: b }
+      }
+    }
   }
   pending.sort((a, b) => a.round - b.round)
 
@@ -155,6 +202,16 @@ export function createBattleFromDef(def: BattleDef, data: GameData, seed: number
   fireTimeline(state, ev, 1, 'start')
   startPhase(state, ev)
   state.opening = ev.filter((e) => e.kind !== 'phaseStarted')
+  if (run) {
+    // [RL-MOD-1] after the battle's own start Qi
+    for (const u of state.units) {
+      if (u.side !== PLAYER_SIDE) continue
+      const b = qiBonusOf(run, u.officer, deployedIds.has(u.id))
+      if (b !== 0) gainQi(u, b)
+    }
+    // [RL-MOD-3]
+    if (run.swayBonus) state.swayBonus = run.swayBonus
+  }
   return state
 }
 

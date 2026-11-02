@@ -67,7 +67,7 @@ interface Obj {
 
 const SAMPLE_OFFICERS = ['jian-yong', 'xiahou-dun', 'zhang-bao', 'gan-ning', 'zhou-yu', 'dian-wei', 'xiahou-yuan']
 const KINDS: TroopKind[] = ['infantry', 'archer', 'cavalry', 'rebel']
-const SIDES: SidePalette[] = ['han', 'yellow', 'cao', 'dong', 'lu']
+const SIDES: SidePalette[] = ['han', 'yellow', 'cao', 'dong', 'lu', 'court']
 
 function items(group: GroupKey, board: boolean): Item[] {
   const out: Item[] = []

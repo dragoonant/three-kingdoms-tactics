@@ -16,7 +16,7 @@
 //   lose timeout {round}             player: hurry                         other side: play for time
 //   lose hold {tiles, round?}        player: never let an enemy end its phase on a tile     other side: do exactly that
 //
-// enemyBehaviour hints (advance / hold / guard / ambush / pursue) bias what non-player units do; when the side's
+// enemyBehaviour hints (advance / hold / guard / ambush / pursue / advance-to / flee) bias what non-player units do; when the side's
 // objectives need action late in the battle they stop mattering (see `behaviour`).
 
 import { getBattleDef } from '../data'
@@ -25,7 +25,7 @@ import { manhattan, type BattleState, type Cond, type Pos, type Unit } from '../
 
 type Loose = Record<string, unknown>
 
-export type BehaviourKind = 'advance' | 'hold' | 'guard' | 'ambush' | 'pursue'
+export type BehaviourKind = 'advance' | 'hold' | 'guard' | 'ambush' | 'pursue' | 'advance-to'
 
 export interface Behaviour {
   kind: BehaviourKind
@@ -33,8 +33,10 @@ export interface Behaviour {
   range?: number
   /** guard/pursue target unit. */
   unit?: string
-  /** guard target tile. */
+  /** guard target tile; advance-to destination [R2-BEH-1]. */
   tile?: Pos
+  /** advance-to a map edge (the `flee:<edge>` hint) [R2-BEH-1]. */
+  edge?: 'west' | 'east' | 'north' | 'south'
   /** The data says so ('advance' / 'pursue' written down), as opposed to no hint at all. */
   explicit?: boolean
 }
@@ -124,6 +126,13 @@ export function parseBehaviour(hint: unknown): Behaviour {
     }
     case 'pursue':
       return arg ? { kind: 'pursue', unit: arg } : { kind: 'advance' }
+    // [R2-BEH-1] walk toward a tile, or toward a map edge
+    case 'advance-to': {
+      const m = /^(\d+)\s*,\s*(\d+)$/.exec(arg)
+      return m ? { kind: 'advance-to', tile: { x: Number(m[1]), y: Number(m[2]) } } : { kind: 'advance' }
+    }
+    case 'flee':
+      return arg === 'west' || arg === 'east' || arg === 'north' || arg === 'south' ? { kind: 'advance-to', edge: arg } : { kind: 'advance' }
     case 'guard': {
       const m = /^(\d+)\s*,\s*(\d+)$/.exec(arg)
       if (m) return { kind: 'guard', tile: { x: Number(m[1]), y: Number(m[2]) }, range: 2 }
@@ -328,8 +337,9 @@ export function deriveGoals(state: BattleState, side: string = state.side): Goal
       const hint = table[u.id]
       const parsed = parseBehaviour(hint)
       // A written-down 'advance' or 'pursue' is an order to be aggressive: it is not slowed by a patient side's patience.
-      const b: Behaviour = hint !== undefined && (parsed.kind === 'pursue' || hint === 'advance') ? { ...parsed, explicit: true } : parsed
-      if (forcePush && b.kind !== 'advance' && b.kind !== 'pursue') return { kind: 'advance' }
+      const b: Behaviour =
+        hint !== undefined && (parsed.kind === 'pursue' || parsed.kind === 'advance-to' || hint === 'advance') ? { ...parsed, explicit: true } : parsed
+      if (forcePush && b.kind !== 'advance' && b.kind !== 'pursue' && b.kind !== 'advance-to') return { kind: 'advance' }
       if (b.kind === 'ambush' && ambushTriggered(state, u, b.range ?? 3)) return { kind: 'advance' }
       return b
     },

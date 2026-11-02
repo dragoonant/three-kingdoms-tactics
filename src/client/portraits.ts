@@ -6,7 +6,7 @@ import { ALL_BATTLES, ALL_OFFICERS } from '../data'
 import type { TroopType } from '../data'
 
 export const PORTRAIT_PX = 256
-export const PORTRAIT_SIDES = ['han', 'yellow', 'cao', 'dong', 'lu'] as const
+export const PORTRAIT_SIDES = ['han', 'yellow', 'cao', 'dong', 'lu', 'court'] as const
 export type PortraitSide = (typeof PORTRAIT_SIDES)[number]
 /** Troop kind of a portrait: the troop rig kinds (Yellow Turban infantry are rebels). */
 export type PortraitKind = 'infantry' | 'archer' | 'cavalry' | 'rebel'

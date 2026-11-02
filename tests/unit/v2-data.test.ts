@@ -85,6 +85,12 @@ describe('v2 data: officers, stratagems, registry', () => {
     // content builders replace stubs one by one: a battle's stub flag and its scene's stub flag always agree
     expect(getBattleDef('daxing-hill')!.stub).toBeUndefined()
     for (const id of ARC) expect(Boolean(SCENES[id]!.stub), id).toBe(Boolean(getBattleDef(id)!.stub))
+    // the roguelike era 1 minor battles (RL1b) are real battles with their own scenes
+    for (const id of ['rl-village-siege', 'rl-bandit-pass', 'rl-prison-cart', 'rl-dong-zhuo-rescue']) {
+      expect(getBattleDef(id)!.stub, id).toBeUndefined()
+      expect(SCENES[id], id).toBeDefined()
+      expect(Boolean(SCENES[id]!.stub), id).toBe(Boolean(getBattleDef(id)!.stub))
+    }
   })
 
   it('R2-DATA-3 the validator is clean on all shipped data', () => {

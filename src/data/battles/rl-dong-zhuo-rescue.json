@@ -2,283 +2,75 @@
   "id": "rl-dong-zhuo-rescue",
   "name": "Dong Zhuo's Rout",
   "year": 184,
+  "title": "Dong Zhuo's Rout",
+  "place": "The plain before Guangzong",
+  "blurb": [
+    "Dust on the plain: an imperial army in full rout with Zhang Jiao's host on its heels. In the middle of the flight rides Dong Zhuo of Hedong, and he is losing. He will not take your orders: he runs for the west edge on his own, and the Taiping Marshal rides after him.",
+    "Charge down from the ridge into the rebels' flank. Keep Dong Zhuo alive until he gets away or the end of round 8, or rout the Marshal while his flank is open."
+  ],
   "map": [
-    "TTT...ff~...TT",
-    "TT...fff~..hTT",
-    "T....fffo.hhh.",
-    "....ffff~.hhh.",
-    "...fffff~..hh.",
-    "....fff.~...h.",
-    "=v============",
-    "....fff.~...h.",
-    "...ffff.~..hh.",
-    "T...fff.~..hhT",
-    "TT...ff.o...TT",
-    "TTT.....~..TTT"
+    "hhhhhhhhhhhhhhhh",
+    "..hhhhhh.hhhh...",
+    ".......oo.......",
+    ".......oo.......",
+    ".......oo.......",
+    ".......oo.......",
+    ".......oo.......",
+    ".......oo.......",
+    ".......oo.......",
+    ".......oo......."
   ],
-  "legend": {
-    ".": "plain",
-    "f": "farm",
-    "T": "forest",
-    "h": "hill",
-    "v": "village",
-    "=": "road",
-    "~": "river",
-    "o": "ford"
-  },
-  "bridges": [
-    {
-      "x": 8,
-      "y": 6
-    }
-  ],
-  "turnLimit": 15,
+  "legend": {".": "plain", "h": "hill", "o": "ford"},
+  "bridges": [],
+  "turnLimit": 8,
   "onTimeout": "yellow",
   "sideOrder": [
     "han",
     "yellow"
   ],
+  "sides": [
+    {"id": "han", "name": "Han", "colourToken": "han"},
+    {"id": "yellow", "name": "Yellow Turban", "colourToken": "yellow"}
+  ],
   "wind": [
-    {
-      "round": 1,
-      "dir": "E",
-      "strength": "breeze"
-    },
-    {
-      "round": 6,
-      "dir": null,
-      "strength": "calm"
-    },
-    {
-      "round": 9,
-      "dir": "W",
-      "strength": "gale"
-    },
-    {
-      "round": 12,
-      "dir": "E",
-      "strength": "breeze"
-    }
+    {"round": 1, "dir": "W", "strength": "breeze"},
+    {"round": 5, "dir": null, "strength": "calm"}
   ],
   "units": [
-    {
-      "id": "liu-bei",
-      "officer": "liu-bei",
-      "side": "han",
-      "type": "infantry",
-      "x": 1,
-      "y": 6,
-      "facing": "E",
-      "troops": 2000,
-      "commander": true
-    },
-    {
-      "id": "guan-yu",
-      "officer": "guan-yu",
-      "side": "han",
-      "type": "cavalry",
-      "x": 3,
-      "y": 4,
-      "facing": "E",
-      "troops": 2000,
-      "commander": false
-    },
-    {
-      "id": "zhang-fei",
-      "officer": "zhang-fei",
-      "side": "han",
-      "type": "infantry",
-      "x": 3,
-      "y": 8,
-      "facing": "E",
-      "troops": 2000,
-      "commander": false
-    },
-    {
-      "id": "zou-jing",
-      "officer": "zou-jing",
-      "side": "han",
-      "type": "archers",
-      "x": 2,
-      "y": 5,
-      "facing": "E",
-      "troops": 2500,
-      "commander": false
-    },
-    {
-      "id": "jian-yong",
-      "officer": "jian-yong",
-      "side": "han",
-      "type": "archers",
-      "x": 2,
-      "y": 7,
-      "facing": "E",
-      "troops": 1500,
-      "commander": false
-    },
-    {
-      "id": "cheng-yuanzhi",
-      "officer": "cheng-yuanzhi",
-      "side": "yellow",
-      "type": "infantry",
-      "x": 11,
-      "y": 4,
-      "facing": "W",
-      "troops": 3000,
-      "commander": true
-    },
-    {
-      "id": "deng-mao",
-      "officer": "deng-mao",
-      "side": "yellow",
-      "type": "infantry",
-      "x": 10,
-      "y": 7,
-      "facing": "W",
-      "troops": 2500,
-      "commander": false
-    },
-    {
-      "id": "captain-gao",
-      "officer": "captain-gao",
-      "side": "yellow",
-      "type": "infantry",
-      "x": 9,
-      "y": 2,
-      "facing": "W",
-      "troops": 1500,
-      "commander": false
-    },
-    {
-      "id": "captain-sun",
-      "officer": "captain-sun",
-      "side": "yellow",
-      "type": "infantry",
-      "x": 9,
-      "y": 9,
-      "facing": "W",
-      "troops": 1500,
-      "commander": false
-    },
-    {
-      "id": "captain-ma",
-      "officer": "captain-ma",
-      "side": "yellow",
-      "type": "cavalry",
-      "x": 10,
-      "y": 6,
-      "facing": "W",
-      "troops": 1500,
-      "commander": false
-    },
-    {
-      "id": "captain-wu",
-      "officer": "captain-wu",
-      "side": "yellow",
-      "type": "archers",
-      "x": 11,
-      "y": 3,
-      "facing": "W",
-      "troops": 1500,
-      "commander": false
-    },
-    {
-      "id": "taiping-adept",
-      "officer": "taiping-adept",
-      "side": "yellow",
-      "type": "archers",
-      "x": 12,
-      "y": 5,
-      "facing": "W",
-      "troops": 1200,
-      "commander": false
-    }
-  ],
-  "sides": [
-    {
-      "id": "han",
-      "name": "Han",
-      "colourToken": "han"
-    },
-    {
-      "id": "yellow",
-      "name": "Yellow Turban",
-      "colourToken": "yellow"
-    }
-  ],
-  "title": "Dong Zhuo's Rout",
-  "place": "Daxing Hill, Youzhou",
-  "blurb": "STUB (roguelike RL1 pre-registered slot): a copy of Daxing Hill until the battle builder replaces this file. Spec: docs/spec/16-roguelike-era1.md section 4.",
-  "deploySlots": 5,
-  "required": [
-    "liu-bei",
-    "guan-yu",
-    "zhang-fei"
-  ],
-  "par": 10,
-  "defaultDeploy": [
-    "liu-bei",
-    "guan-yu",
-    "zhang-fei"
-  ],
-  "playerStarts": [
-    {
-      "x": 1,
-      "y": 6,
-      "facing": "E"
-    },
-    {
-      "x": 3,
-      "y": 4,
-      "facing": "E"
-    },
-    {
-      "x": 3,
-      "y": 8,
-      "facing": "E"
-    },
-    {
-      "x": 2,
-      "y": 4,
-      "facing": "E"
-    },
-    {
-      "x": 2,
-      "y": 8,
-      "facing": "E"
-    }
+    {"id": "dz-marshal", "officer": "dz-marshal", "side": "yellow", "type": "infantry", "x": 15, "y": 5, "facing": "W", "troops": 2600, "commander": true},
+    {"id": "dz-horse-a", "officer": "dz-horse-a", "side": "yellow", "type": "cavalry", "x": 15, "y": 3, "facing": "W", "troops": 2200, "commander": false},
+    {"id": "dz-horse-b", "officer": "dz-horse-b", "side": "yellow", "type": "cavalry", "x": 15, "y": 8, "facing": "W", "troops": 2200, "commander": false},
+    {"id": "dz-spear-a", "officer": "dz-spear-a", "side": "yellow", "type": "infantry", "x": 14, "y": 4, "facing": "W", "troops": 2400, "commander": false},
+    {"id": "dz-spear-b", "officer": "dz-spear-b", "side": "yellow", "type": "infantry", "x": 14, "y": 7, "facing": "W", "troops": 2400, "commander": false},
+    {"id": "dz-bowmen", "officer": "dz-bowmen", "side": "yellow", "type": "archers", "x": 15, "y": 6, "facing": "W", "troops": 2000, "commander": false}
   ],
   "guests": [
-    {
-      "id": "zou-jing",
-      "officer": "zou-jing",
-      "side": "han",
-      "type": "archers",
-      "x": 2,
-      "y": 5,
-      "facing": "E",
-      "troops": 2500,
-      "commander": false
-    },
-    {
-      "id": "jian-yong",
-      "officer": "jian-yong",
-      "side": "han",
-      "type": "archers",
-      "x": 2,
-      "y": 7,
-      "facing": "E",
-      "troops": 1500,
-      "commander": false
-    }
+    {"id": "dong-zhuo", "officer": "dong-zhuo", "side": "han", "type": "cavalry", "x": 12, "y": 6, "facing": "W", "troops": 1600, "commander": false, "maxTroops": 2400, "guestControl": "ai"}
   ],
-  "joins": [
-    {
-      "officer": "jian-yong",
-      "note": "Jian Yong, Liu Bei's boyhood friend, takes a place at his side."
-    }
+  "playerStarts": [
+    {"x": 4, "y": 1, "facing": "S"},
+    {"x": 5, "y": 0, "facing": "S"},
+    {"x": 6, "y": 1, "facing": "S"},
+    {"x": 3, "y": 0, "facing": "S"}
   ],
+  "deploySlots": 4,
+  "required": ["liu-bei"],
+  "defaultDeploy": ["liu-bei", "guan-yu", "zhang-fei", "jian-yong"],
+  "par": 6,
+  "objectives": {"win": [{"type": "routCommander", "label": "Rout the Taiping Marshal"}, {"type": "survive", "round": 8, "label": "Hold until Dong Zhuo is clear"}], "lose": [{"type": "commanderLost"}, {"type": "unitLost", "unit": "dong-zhuo", "label": "Dong Zhuo must not fall"}]},
+  "timeline": [
+    {"round": 1, "phase": "start", "kind": "message", "text": "Dong Zhuo will not take your orders. He rides for the west edge of the plain, and the Taiping Marshal rides after him."},
+    {"round": 4, "phase": "end", "kind": "message", "text": "The rebel host is strung out across the plain. Its flank is open."}
+  ],
+  "enemyBehaviour": {"dong-zhuo": "flee:west", "dz-marshal": "pursue:dong-zhuo", "dz-horse-a": "pursue:dong-zhuo", "dz-horse-b": "advance", "dz-spear-a": "advance", "dz-spear-b": "advance", "dz-bowmen": "guard:dz-marshal"},
+  "joins": [],
   "departs": [],
-  "enemyBehaviour": {},
-  "stub": true
+  "officers": [
+    {"id": "dz-marshal", "name": "Taiping Marshal Gou", "war": 66, "int": 60, "lead": 62, "cha": 40, "loyalty": null, "bonds": [], "stratagems": ["mob-rush", "yellow-sky-hex"], "source": "invented", "type": "infantry", "invented": true},
+    {"id": "dz-horse-a", "name": "Rebel Rider Wen", "war": 58, "int": 26, "lead": 44, "cha": 22, "loyalty": 40, "bonds": [], "stratagems": ["mob-rush"], "source": "invented", "type": "cavalry", "invented": true},
+    {"id": "dz-horse-b", "name": "Rebel Rider Que", "war": 57, "int": 25, "lead": 43, "cha": 20, "loyalty": 42, "bonds": [], "stratagems": ["torch-raid"], "source": "invented", "type": "cavalry", "invented": true},
+    {"id": "dz-spear-a", "name": "Rebel Captain Lin", "war": 54, "int": 30, "lead": 48, "cha": 26, "loyalty": 44, "bonds": [], "stratagems": ["mob-rush"], "source": "invented", "type": "infantry", "invented": true},
+    {"id": "dz-spear-b", "name": "Rebel Captain Zang", "war": 53, "int": 32, "lead": 47, "cha": 24, "loyalty": 46, "bonds": [], "stratagems": ["mob-rush"], "source": "invented", "type": "infantry", "invented": true},
+    {"id": "dz-bowmen", "name": "Rebel Bowman Ying", "war": 46, "int": 38, "lead": 42, "cha": 26, "loyalty": 48, "bonds": [], "stratagems": ["massed-arrows"], "source": "invented", "type": "archers", "invented": true}
+  ]
 }

@@ -71,7 +71,7 @@ const TERRAIN_IDS = [
 const STATS = ['war', 'int', 'lead', 'cha']
 const EFFECTS = ['confuse', 'ignite', 'heal', 'dash', 'wind', 'buff', 'provoke']
 const SOURCE_RE = /^(Romance( ch\.\d+)?|invented)$/
-const BEHAVIOUR_RE = /^(advance|hold|guard:.+|ambush:\d+|pursue:.+)$/
+const BEHAVIOUR_RE = /^(advance|hold|guard:.+|ambush:\d+|pursue:.+|advance-to:\d+,\d+|flee:(west|east|north|south))$/
 
 /** Roster officer ids that can be deployed in the battle at arc index `i` (start roster plus story joins and departs before it). */
 export function rosterBefore(i: number): Set<string> {

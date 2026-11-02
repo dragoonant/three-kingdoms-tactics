@@ -10,6 +10,11 @@ import xiapi from './xiapi.json'
 import bowang from './bowang.json'
 import changban from './changban.json'
 import redCliffs from './red-cliffs.json'
+// Roguelike era 1 minor battles (spec 16 section 4).
+import rlVillageSiege from './rl-village-siege.json'
+import rlBanditPass from './rl-bandit-pass.json'
+import rlPrisonCart from './rl-prison-cart.json'
+import rlDongZhuoRescue from './rl-dong-zhuo-rescue.json'
 
 export interface SceneLine {
   /** An officer id or 'narrator'. */
@@ -34,6 +39,10 @@ export const SCENES: Record<string, SceneDef> = {
   bowang: bowang as SceneDef,
   changban: changban as SceneDef,
   'red-cliffs': redCliffs as SceneDef,
+  'rl-village-siege': rlVillageSiege as SceneDef,
+  'rl-bandit-pass': rlBanditPass as SceneDef,
+  'rl-prison-cart': rlPrisonCart as SceneDef,
+  'rl-dong-zhuo-rescue': rlDongZhuoRescue as SceneDef,
 }
 
 export function getScene(id: string): SceneDef | undefined {

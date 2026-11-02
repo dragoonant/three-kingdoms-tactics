@@ -1,0 +1,38 @@
+{
+  "pre": [
+    {
+      "speaker": "narrator",
+      "text": "Dust on the plain: an imperial army in full rout, with Zhang Jiao's host on its heels. In the middle of the flight rides Dong Zhuo of Hedong, and he is losing."
+    },
+    {
+      "speaker": "dong-zhuo",
+      "text": "Out of my way, whoever you are! I am riding west and I am not stopping."
+    },
+    {
+      "speaker": "guan-yu",
+      "text": "He will not stop for us, brother. The Marshal's men are strung out behind him."
+    },
+    {
+      "speaker": "liu-bei",
+      "text": "Then we hit their flank from the ridge. Keep the rebels off him, and if the Marshal comes within reach, take him."
+    }
+  ],
+  "post": [
+    {
+      "speaker": "narrator",
+      "text": "The rebel host breaks on the plain and streams back toward Guangzong. Dong Zhuo reins in at last, far to the west."
+    },
+    {
+      "speaker": "dong-zhuo",
+      "text": "And what office do you hold? None? A volunteer. I see."
+    },
+    {
+      "speaker": "zhang-fei",
+      "text": "We saved his life and he asks for our rank. Brother, let me go back and talk to him."
+    },
+    {
+      "speaker": "liu-bei",
+      "text": "Leave it. Some of his stragglers will follow a man who stopped for them. That is thanks enough."
+    }
+  ]
+}

@@ -18,6 +18,7 @@ Mallet-42k, Legion Forge (Starbound palette), Xross Forge (esports broadcast, ne
 | Cinnabar (seal, confirm, damage) | `--cinnabar` | #c8372d |
 | Han banner | `--han` | #2f6b5e (jade) |
 | Yellow Turban banner | `--yellow` | #d4a72c (ochre) |
+| Imperial escort banner (side `court`, R2-SIDE-2) | `--court` | #5d5a52 (iron grey) |
 
 Interaction colours come from `legalActions` only. **Actable** is a slow lantern pulse on the figure's ground ring. **Selected** is a bronze ring. **Targetable** is a cinnabar outline drawn on the tile in the sand. All of them are painted flat on the sand around the figure (see Figures). Faction colour lives on banners and pips, never on borders that read as "playable".
 

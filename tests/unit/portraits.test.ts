@@ -21,7 +21,7 @@ describe('portrait helper', () => {
     const ids = new Set(subjects.map((s) => s.id))
     expect(ids.size).toBe(subjects.length)
     for (const o of ALL_OFFICERS) expect(ids.has(o.id), o.id).toBe(true)
-    expect(subjects.filter((s) => s.group === 'generic')).toHaveLength(15)
+    expect(subjects.filter((s) => s.group === 'generic')).toHaveLength(18)
     expect(subjects.filter((s) => s.group === 'hero').map((s) => s.id).sort()).toEqual(['cao-cao', 'guan-yu', 'liu-bei', 'lu-bu', 'zhang-fei', 'zhao-yun', 'zhuge-liang'])
     expect(subjects.some((s) => s.group === 'local' && s.id === 'qz-adept')).toBe(true)
   })
