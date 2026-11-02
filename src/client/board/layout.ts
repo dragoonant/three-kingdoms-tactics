@@ -70,6 +70,7 @@ export const COLORS = {
   dong: '#6b1f2a',
   cao: '#34495e',
   lu: '#5b2c6f',
+  court: '#5d5a52',
 }
 
 /** Side id -> colour token, filled from the battle's `sides` data when a battle loads ([R2-SIDE-1]). */

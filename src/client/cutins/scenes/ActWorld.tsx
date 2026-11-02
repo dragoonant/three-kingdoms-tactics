@@ -543,7 +543,7 @@ export function ActWorld({ scene }: { scene: CutinScene }) {
     })
     const poles = fx.wind?.poles ?? []
     const pole = new MeshStandardMaterial({ color: '#4a2f1c', roughness: 0.8 })
-    const clothCol = new Color(plan.hero ? (plan.hero.palette === 'han' ? '#2f6b5e' : plan.hero.palette === 'yellow' ? '#d4a72c' : plan.hero.palette === 'cao' ? '#34495e' : plan.hero.palette === 'dong' ? '#6b1f2a' : '#5b2c6f') : '#2f6b5e')
+    const clothCol = new Color(plan.hero ? (plan.hero.palette === 'han' ? '#2f6b5e' : plan.hero.palette === 'yellow' ? '#d4a72c' : plan.hero.palette === 'cao' ? '#34495e' : plan.hero.palette === 'dong' ? '#6b1f2a' : plan.hero.palette === 'court' ? '#5d5a52' : '#5b2c6f') : '#2f6b5e')
     const banners: BannerLive[] = poles.map(([x, z], i) => {
       const g = new Group()
       g.position.set(x, 0, z)

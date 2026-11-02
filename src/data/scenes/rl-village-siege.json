@@ -1,0 +1,34 @@
+{
+  "pre": [
+    {
+      "speaker": "narrator",
+      "text": "Smoke over the millet. A rebel band has fired the threshing floor, and the elders have barred the village gap with carts. Women stand on the carts with hoes."
+    },
+    {
+      "speaker": "vs-militia",
+      "text": "Your banner! Whoever you are, the fire is between us and them, and when it burns down they will come through the gap."
+    },
+    {
+      "speaker": "zhang-fei",
+      "text": "Then we go through the smoke first."
+    },
+    {
+      "speaker": "liu-bei",
+      "text": "Keep the elders behind the carts. Their chief is the one to break; the rest will run when he does."
+    }
+  ],
+  "post": [
+    {
+      "speaker": "narrator",
+      "text": "The Raider Chief's men scatter into the stubble. The elders put out what is left of the fire with their own water jars."
+    },
+    {
+      "speaker": "vs-militia",
+      "text": "There is rice in the granary still. Take what your men can carry. It would have been theirs by tonight."
+    },
+    {
+      "speaker": "liu-bei",
+      "text": "Keep enough to sow. Tell the next village who came."
+    }
+  ]
+}

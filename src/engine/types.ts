@@ -69,6 +69,8 @@ export interface Unit {
   buffs?: Buff[]
   /** [R2-STRAT-3] id of the unit this one is provoked by (cleared at the end of its side's phase). */
   provoked?: string
+  /** [R2-GUEST-2] an AI-moved guest: never ordered by the player, acts at the end of the player's phase. */
+  guestControl?: 'ai'
 }
 
 export interface Buff {
@@ -87,6 +89,8 @@ export interface PendingReinforcement {
   side: Side
   units: UnitDef[]
   entry: [number, number][]
+  /** [RL-MOD-1] start-Qi bonus per arriving unit id (deployed officers only); absent = none. */
+  qiBonus?: Record<string, number>
 }
 
 export interface Wind {
@@ -151,6 +155,8 @@ export interface BattleState {
   /** Commander unit id per side (including commanders who have not arrived yet). */
   commanders: Record<string, string>
   enemyBehaviour: Record<string, EnemyBehaviour>
+  /** [RL-MOD-3] Liu Bei's sway bonus in percentage points (roguelike runs only; absent = 0). */
+  swayBonus?: number
 }
 
 // ---------------------------------------------------------------- actions

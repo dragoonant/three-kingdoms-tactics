@@ -22,7 +22,7 @@ import type { Rig } from '../client/figures/rig'
 import { buildTroopRig } from '../client/figures/troops'
 import { PORTRAIT_PX, portraitSubjects, type PortraitSubject } from '../client/portraits'
 
-const SIDE_TINT: Record<string, string> = { han: '#2f6b5e', yellow: '#d4a72c', cao: '#34495e', dong: '#6b1f2a', lu: '#5b2c6f' }
+const SIDE_TINT: Record<string, string> = { han: '#2f6b5e', yellow: '#d4a72c', cao: '#34495e', dong: '#6b1f2a', lu: '#5b2c6f', court: '#5d5a52' }
 const SS = 2 // supersampling of the WebGL canvas
 const YAW = 0.5 // radians the bust turns away from the camera (three-quarter view)
 

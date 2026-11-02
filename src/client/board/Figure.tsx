@@ -44,7 +44,7 @@ function rigMaterials(rig: Rig): MeshStandardMaterial[] {
 }
 const tint = new Color()
 
-const PALETTES = new Set(['han', 'yellow', 'cao', 'dong', 'lu'])
+const PALETTES = new Set(['han', 'yellow', 'cao', 'dong', 'lu', 'court'])
 function hashOf(id: string): number {
   let h = 2166136261
   for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619)

@@ -267,6 +267,15 @@ function approachSources(ctx: Ctx, u: Unit, beh: Behaviour): Source | null {
       if (s) return { key: `pursue:${s.id}`, sources: [{ x: s.x, y: s.y }], weight: 1.2 }
       break
     }
+    // [R2-BEH-1] advance-to a tile, or flee to a map edge
+    case 'advance-to': {
+      const { width, height } = ctx.state.grid
+      const sources: Pos[] = beh.tile ? [beh.tile] : []
+      if (beh.edge === 'west' || beh.edge === 'east') for (let y = 0; y < height; y++) sources.push({ x: beh.edge === 'west' ? 0 : width - 1, y })
+      if (beh.edge === 'north' || beh.edge === 'south') for (let x = 0; x < width; x++) sources.push({ x, y: beh.edge === 'north' ? 0 : height - 1 })
+      if (sources.length > 0) return { key: `to:${beh.tile ? `${beh.tile.x},${beh.tile.y}` : beh.edge}`, sources, weight: 2 }
+      break
+    }
     default:
       break
   }
@@ -302,8 +311,11 @@ export function approachScore(ctx: Ctx, u: Unit, p: Pos): number {
     if (u.type === 'archers' && (src.key === 'foes' || src.key === 'prime')) d = Math.max(0, d - 2)
     const key = isKey(ctx, u)
     // A key unit stays with its army instead of leading the charge; a side that is happy to run out the clock more so.
-    const calm = key && ctx.goals.careful ? CALM_KEY_PATIENT : key && ctx.friends.length > 1 ? 0.1 : 1
-    s -= ADVANCE_WEIGHT * (0.4 + 1.6 * ctx.goals.urgency) * src.weight * calm * d * (beh.explicit ? 1 : ctx.goals.patience)
+    // An advance-to order is walked whatever the unit's rank [R2-BEH-1].
+    const calm = beh.kind === 'advance-to' ? 1 : key && ctx.goals.careful ? CALM_KEY_PATIENT : key && ctx.friends.length > 1 ? 0.1 : 1
+    // An advance-to order is walked at full urgency whatever the side's patience [R2-BEH-1].
+    const urgency = beh.kind === 'advance-to' ? 1 : ctx.goals.urgency
+    s -= ADVANCE_WEIGHT * (0.4 + 1.6 * urgency) * src.weight * calm * d * (beh.explicit ? 1 : ctx.goals.patience)
   } else if (beh.kind === 'hold' || beh.kind === 'ambush') {
     // The hint says stay: leaving the post has a price that a real opportunity must beat.
     const away = manhattan(p, u)
@@ -355,7 +367,9 @@ export function posScore(ctx: Ctx, u: Unit, p: Pos, f: Facing): PosScore {
   const riskOfRout = Math.max(0, Math.min(1, (incoming / Math.max(1, lethal(u)) - 0.7) / 0.6))
   v -= riskOfRout * routValue(ctx, u) * pEng
   v -= fireLoss(ctx, u, p, ctx.fire)
-  v += P_THREATEN * threatenFrom(ctx, u, p) * (key && ctx.goals.careful ? KEY_THREATEN_PATIENT : ctx.goals.surviveRound !== null ? SURVIVOR_THREATEN : 1)
+  // [R2-BEH-1] a unit under an advance-to order walks it rather than lingering to threaten.
+  const ordered = ctx.goals.behaviour(u).kind === 'advance-to' ? ADVANCE_TO_THREATEN : 1
+  v += P_THREATEN * ordered * threatenFrom(ctx, u, p) * (key && ctx.goals.careful ? KEY_THREATEN_PATIENT : ctx.goals.surviveRound !== null ? SURVIVOR_THREATEN : 1)
   v += approachScore(ctx, u, p)
   const t = tileTerrain(ctx, p)
   v += (1 - t.def) * 30 + t.elev * 5
@@ -406,6 +420,8 @@ export function posScore(ctx: Ctx, u: Unit, p: Pos, f: Facing): PosScore {
 }
 
 export const SCREEN_VALUE = 25
+/** Share of the threaten term kept by a unit walking an advance-to order [R2-BEH-1]. */
+export const ADVANCE_TO_THREATEN = 0.1
 /** Cost per tile beyond 3 from the nearest protected unit, for a side that only has to survive. */
 export const SURVIVOR_TETHER = 12
 export const KEY_THREATEN_PATIENT = 0.4

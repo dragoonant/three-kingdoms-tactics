@@ -39,8 +39,8 @@ export interface Rig {
 }
 
 export type TroopKind = 'infantry' | 'archer' | 'cavalry' | 'rebel'
-/** Side palette key, matching the theme tokens (--han, --yellow, --cao, --dong, --lu). */
-export type SidePalette = 'han' | 'yellow' | 'cao' | 'dong' | 'lu'
+/** Side palette key, matching the theme tokens (--han, --yellow, --cao, --dong, --lu, --court). */
+export type SidePalette = 'han' | 'yellow' | 'cao' | 'dong' | 'lu' | 'court'
 
 /** Builders implemented by heroes.ts / troops.ts. Signatures are frozen. */
 export interface FigureFactory {

@@ -25,6 +25,7 @@ export function unitFromDef(d: UnitDef): Unit {
     undo: null,
   }
   if (d.retreatAt !== undefined) u.retreatAt = d.retreatAt
+  if (d.guestControl === 'ai') u.guestControl = 'ai'
   return u
 }
 

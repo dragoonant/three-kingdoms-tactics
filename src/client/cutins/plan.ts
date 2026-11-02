@@ -6,7 +6,7 @@ import type { Arc, BattleState, Facing, GameEvent, Side, StratTag, Terrain as Te
 import { CHAIN_COMPRESS, INTERSTITIAL, SCENE_INFO } from './sceneInfo'
 
 export type SceneId = 'A' | 'Ap' | 'B' | 'C' | 'D' | 'R' | 'W' | 'S-melee' | 'S-cavalry' | 'S-archer'
-export type SidePalette = 'han' | 'yellow' | 'cao' | 'dong' | 'lu'
+export type SidePalette = 'han' | 'yellow' | 'cao' | 'dong' | 'lu' | 'court'
 export type TroopKindName = 'infantry' | 'archer' | 'cavalry' | 'rebel'
 /** How the Strike scene's weapon leaves its mark: twin blades cross in an X, a glaive sweeps an arc, a spear draws a line. */
 export type StrikeTrail = 'x' | 'arc' | 'line'
@@ -114,7 +114,7 @@ export function fallsFor(damage: number, troopsBefore: number, front: number, ro
   return Math.min(front, Math.max(1, Math.round((damage / Math.max(1, troopsBefore)) * front)))
 }
 
-const PALETTES = new Set<string>(['han', 'yellow', 'cao', 'dong', 'lu'])
+const PALETTES = new Set<string>(['han', 'yellow', 'cao', 'dong', 'lu', 'court'])
 
 export function paletteOf(state: BattleState, side: Side): SidePalette {
   const token = state.sides.find((s) => s.id === side)?.colourToken ?? side

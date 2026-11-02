@@ -87,6 +87,10 @@ export const OFFICER_STYLES: Record<string, OfficerStyle> = {
   'huang-gai': { ...WU, head: 'helmet', headColor: '#8a4a3a', plume: '#efe3c4', weapon: 'sword', beard: 'long', beardColor: '#cfcac0', face: F.stern, stout: 1.1 },
   'gan-ning': { armour: '#3a5a8c', trim: '#d4a73e', head: 'bare', headColor: '#17120f', weapon: 'sword', beard: 'none', face: F.fierce, extras: ['bells'], mount: 'chestnut' },
   'cai-mao': { armour: '#4f6a4a', trim: '#d4c88a', head: 'helmet', headColor: '#6a7a62', plume: '#4f6a4a', weapon: 'bow', beard: 'stache', beardColor: INK, face: F.stern },
+  // roguelike era 1 (spec 16 section 4)
+  'zhou-cang': { armour: '#4a3a2a', trim: '#c9a46a', head: 'bare', headColor: '#17120f', weapon: 'axe', beard: 'full', beardColor: INK, face: F.shout, stout: 1.22, skin: '#9a6a48' },
+  'pei-yuanshao': { armour: '#7a5a3a', trim: '#d9c07a', head: 'scarf', headColor: '#a8863a', weapon: 'sword', beard: 'goatee', beardColor: INK, face: F.fierce },
+  'dong-zhuo': { ...DONG, head: 'helmet', headColor: '#3a3a42', plume: '#c9a24a', weapon: 'sword', beard: 'full', beardColor: INK, face: F.stern, stout: 1.25, mount: 'black' },
 }
 export const OFFICER_IDS = Object.keys(OFFICER_STYLES) as readonly string[]
 

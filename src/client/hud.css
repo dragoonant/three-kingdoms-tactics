@@ -33,6 +33,7 @@ ol, ul { list-style: none; }
 .phase-pip.dong, .pip.dong { background: var(--dong); }
 .phase-pip.cao, .pip.cao { background: var(--cao); }
 .phase-pip.lu, .pip.lu { background: var(--lu); }
+.phase-pip.court, .pip.court { background: var(--court); }
 .phase { font-size: 15px; color: var(--silk); }
 .speed, .bar-btns { display: flex; gap: 4px; align-items: center; }
 .speed button, .bar-btns button {
@@ -113,6 +114,7 @@ ol, ul { list-style: none; }
 .ucard.dong { border-left-color: var(--dong); }
 .ucard.cao { border-left-color: var(--cao); }
 .ucard.lu { border-left-color: var(--lu); }
+.ucard.court { border-left-color: var(--court); }
 .uc-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .uc-top { display: flex; align-items: center; gap: 5px; min-width: 0; }
 .uc-top h2 { font-family: var(--font-display); font-size: 21px; font-weight: 400; line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; min-width: 0; }
@@ -139,6 +141,7 @@ ol, ul { list-style: none; }
 .usheet.dong { border-left-color: var(--dong); }
 .usheet.cao { border-left-color: var(--cao); }
 .usheet.lu { border-left-color: var(--lu); }
+.usheet.court { border-left-color: var(--court); }
 @keyframes sheet-up { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes sheet-in { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
 .usheet > header { display: flex; gap: 12px; align-items: center; padding: 12px 12px 10px; background: linear-gradient(180deg, #4a1912, var(--lacquer)); color: var(--silk); border-bottom: 2px solid var(--bronze); }
@@ -168,6 +171,7 @@ ol, ul { list-style: none; }
 .portrait.dong { background: radial-gradient(circle at 35% 30%, #a8465a, var(--dong) 60%, #3b0f17); color: var(--silk); }
 .portrait.cao { background: radial-gradient(circle at 35% 30%, #5f7a94, var(--cao) 60%, #1b2733); color: var(--silk); }
 .portrait.lu { background: radial-gradient(circle at 35% 30%, #8a54a1, var(--lu) 60%, #2f1639); color: var(--silk); }
+.portrait.court { background: radial-gradient(circle at 35% 30%, #8a867c, var(--court) 60%, #24221e); color: var(--silk); }
 .portrait span { text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
 .portrait.has-img { background: #1b130e; overflow: hidden; }
 .portrait img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit; pointer-events: none; user-select: none; }
@@ -180,6 +184,7 @@ ol, ul { list-style: none; }
 .brushfill.dong { background: linear-gradient(180deg, #a8465a, var(--dong)); }
 .brushfill.cao { background: linear-gradient(180deg, #5f7a94, var(--cao)); }
 .brushfill.lu { background: linear-gradient(180deg, #8a54a1, var(--lu)); }
+.brushfill.court { background: linear-gradient(180deg, #8a867c, var(--court)); }
 .brushfill.low { background: linear-gradient(180deg, #e0564a, var(--cinnabar)); }
 .qi { display: flex; align-items: center; gap: 8px; margin: 7px 0; }
 .qi-n { font-size: 13px; color: var(--ink-soft); }
@@ -409,6 +414,7 @@ ol, ul { list-style: none; }
   .usheet.dong { border-top-color: var(--dong); }
   .usheet.cao { border-top-color: var(--cao); }
   .usheet.lu { border-top-color: var(--lu); }
+  .usheet.court { border-top-color: var(--court); }
   .usheet > header { border-radius: 8px 8px 0 0; }
   .usheet .portrait { width: 64px !important; height: 64px !important; }
   .readonly { margin: 0; font-size: 12px; }

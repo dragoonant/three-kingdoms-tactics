@@ -57,7 +57,7 @@ export interface Melee {
   dispose(): void
 }
 
-const CLOTH: Record<SidePalette, string> = { han: '#2f6b5e', yellow: '#d4a72c', cao: '#34495e', dong: '#6b1f2a', lu: '#5b2c6f' }
+const CLOTH: Record<SidePalette, string> = { han: '#2f6b5e', yellow: '#d4a72c', cao: '#34495e', dong: '#6b1f2a', lu: '#5b2c6f', court: '#5d5a52' }
 
 interface Slot {
   x: number
