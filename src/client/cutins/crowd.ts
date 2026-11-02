@@ -11,9 +11,11 @@
 import { Euler, Group, Matrix4, Mesh, Quaternion, Vector3, type Object3D } from 'three'
 import { figures } from '../figures'
 import { applyClip, fallBack, fallForward } from '../figures/clips'
+import { compactRig } from '../figures/compact'
 import type { Rig, SidePalette, TroopKind } from '../figures/rig'
 import { rand, seededOrder } from './rng'
-import { acquireBake, disposeCrowdCaches, releaseBake, type BakedSet, type Detail } from './crowd/bake'
+import { acquireBake, disposeCrowdCaches, lowGeometry, releaseBake, type BakedSet, type Detail } from './crowd/bake'
+import { specNow } from './quality'
 import { defaultCadenceSpread, defaultJitter, layout, type FormationName, type Slot, type Spacing } from './crowd/formations'
 import {
   DEFAULT_CALIB,
@@ -296,6 +298,8 @@ export function createCrowd(o: CrowdOptions): Crowd {
     let rig: Rig | null = null
     if (detailOf(i) === 'rig') {
       rig = figures.buildTroop(kind, o.side, variants[i]!)
+      // one mesh per joint and face side (figures/compact.ts): same picture, a fraction of the draw calls
+      compactRig(rig, specNow().lod === 'lo' ? { reduce: lowGeometry } : {})
       const holder = new Group()
       holder.name = `crowd-full-${i}`
       holder.add(rig.group)

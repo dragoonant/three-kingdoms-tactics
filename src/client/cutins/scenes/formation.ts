@@ -1,6 +1,7 @@
 // Troop formations for the cut-ins. `formationSlots` is pure (where each figure stands in its formation's own frame) and
 // `spawnFormation` turns "N troops of this kind and side" into the rigged FRONT RANK a scene poses by hand (the hero-level
 // actors). The instanced ranks behind them come from ranks.ts `spawnRanks` (crowd.ts; docs/spec/51 "More troops: as built").
+import { cutinRig } from '../casters'
 import { figures, type Rig } from '../../figures'
 import type { SidePalette, TroopKindName } from '../plan'
 import { rand, srand } from '../rng'
@@ -65,7 +66,7 @@ export interface FormationFigure {
 
 /** One troop figure of a kind and side; `variant` picks the headgear and weapon angle so a squad is not cloned. */
 export function spawnTroop(kind: TroopKindName, palette: SidePalette, variant: number): Rig {
-  return figures.buildTroop(kind, palette, variant)
+  return cutinRig(figures.buildTroop(kind, palette, variant))
 }
 
 /** Rigged figures for one front rank of `count` troops; the ranks behind it are a crowd (ranks.ts). */

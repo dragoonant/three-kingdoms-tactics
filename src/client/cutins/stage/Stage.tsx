@@ -1,5 +1,6 @@
 // The miniature stage of docs/spec/51 "Concept": the table's sand, the dark tent for a sky, hanging lanterns as warm
 // bokeh, a warm key light and a rim light. Everything here is a function of the clock (no real-time state).
+import { TIERS, tierNow, useQuality } from '../quality'
 import { useThree } from '@react-three/fiber'
 import { useCutinFrame } from './slot'
 import { createContext, useContext, useEffect, useMemo, useRef, type MutableRefObject } from 'react'
@@ -219,9 +220,20 @@ function Lanterns({ seed, focus }: { seed: number; focus: [number, number] }) {
 
 // ---- lights -----------------------------------------------------------------------------------------------------
 
+const initialMap = TIERS[tierNow()].shadowMap
+
 function Lights({ focus, keyDir, rimDir }: { focus: [number, number]; keyDir: [number, number, number]; rimDir: [number, number, number] }) {
   const key = useRef<DirectionalLight>(null)
   const { scene } = useThree()
+  // the shadow map's size follows the quality tier (no program depends on it): a new size takes a new map
+  const mapSize = useQuality((s) => TIERS[s.tier].shadowMap)
+  useEffect(() => {
+    const k = key.current
+    if (!k || (k.shadow.mapSize.x === mapSize && k.shadow.mapSize.y === mapSize)) return
+    k.shadow.mapSize.set(mapSize, mapSize)
+    k.shadow.map?.dispose()
+    k.shadow.map = null
+  }, [mapSize])
   useEffect(() => {
     const k = key.current
     if (!k) return
@@ -240,7 +252,7 @@ function Lights({ focus, keyDir, rimDir }: { focus: [number, number]; keyDir: [n
         intensity={2.6}
         position={[focus[0] + keyDir[0], keyDir[1], focus[1] + keyDir[2]]}
         castShadow
-        shadow-mapSize={[1536, 1536]}
+        shadow-mapSize={[initialMap, initialMap]}
         shadow-camera-left={-6.5}
         shadow-camera-right={6.5}
         shadow-camera-top={6.5}
@@ -309,9 +321,12 @@ export interface StageProps {
   moteStrength?: number
 }
 
+/** The frame probe's object group (tools/perf/cutin-frame.mjs). */
+const STAGE_TAG = { perf: 'stage' }
+
 export function Stage({ seed, focus, keyDir = [-5, 8, -6], rimDir = [6, 3, 8], motes = 110, moteStrength = 0.5 }: StageProps) {
   return (
-    <group>
+    <group userData={STAGE_TAG}>
       <fogExp2 attach="fog" args={['#1a110b', 0.05]} />
       <Sky />
       <Table />

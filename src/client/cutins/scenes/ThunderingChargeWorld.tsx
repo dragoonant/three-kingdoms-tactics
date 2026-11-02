@@ -6,7 +6,7 @@ import { useDisposeWorld } from '../dispose'
 import { perf } from '../perf'
 import { CylinderGeometry, ConeGeometry, Group, Mesh, MeshStandardMaterial, Vector3, type Object3D } from 'three'
 import { figures, type Rig } from '../../figures'
-import { buildCasterRig } from '../casters'
+import { buildCasterRig, cutinRig } from '../casters'
 import { Ground } from '../stage/Ground'
 import { spawnFormation } from './formation'
 import { CrowdScript, CrowdSet, memberSpots, publishTroops, spawnRanks, toLocal } from './ranks'
@@ -69,7 +69,7 @@ function makeRiders(scene: CutinScene): Rider[] {
   const palette = p?.caster.palette ?? 'han'
   const troop = spawnFormation('cavalry', palette, 3, 'wedge', B_SEED).map((f) => f.rig)
   return [0, 1, 2, 3].map((m) => {
-    const rig = m === 0 ? (p ? buildCasterRig(p.caster, true) : figures.buildHero('guan-yu')) : troop[m - 1]!
+    const rig = m === 0 ? (p ? buildCasterRig(p.caster, true) : cutinRig(figures.buildHero('guan-yu'))) : troop[m - 1]!
     fitFigure(rig)
     return { id: m === 0 ? 'guan-yu' : `cav${m}`, rig, p: new Puppet(rig), m }
   })

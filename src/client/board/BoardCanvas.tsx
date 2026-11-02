@@ -16,7 +16,16 @@ import { computeMarks } from './marks'
 import { Stage } from './Stage'
 import { Terrain } from './Terrain'
 import { gateIsOpenFor, tileTop } from './terrainModel'
+import { hud } from '../cutins/hud'
 
+/** `?preserve=1`: keep the drawing buffer outside tests (a tool reading pixels). */
+const PRESERVE = (() => {
+  try {
+    return new URLSearchParams(window.location.search).get('preserve') === '1'
+  } catch {
+    return false
+  }
+})()
 const NO_BRIDGES: { x: number; y: number }[] = []
 
 function camMode(screen: Screen): CamMode {
@@ -118,7 +127,9 @@ export function BoardCanvas() {
       shadows={SHADOWS ? { type: PCFShadowMap } : false}
       dpr={[1, 1.5]}
       camera={{ fov: 36, near: 0.5, far: 140, position: [0, 14, 14] }}
-      gl={{ antialias: AA, preserveDrawingBuffer: true, toneMapping: ACESFilmicToneMapping, outputColorSpace: SRGBColorSpace }}
+      // the drawing buffer is kept only where tests and tools read pixels back: on phones it costs a copy every frame
+      gl={{ antialias: AA, preserveDrawingBuffer: TEST_MODE || PRESERVE, toneMapping: ACESFilmicToneMapping, outputColorSpace: SRGBColorSpace }}
+      onCreated={({ gl }) => hud.attach('board', gl)}
       style={{ position: 'fixed', inset: 0, background: COLORS.night }}
       onPointerMissed={() => {
         const st = useGame.getState()

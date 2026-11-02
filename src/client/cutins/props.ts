@@ -19,6 +19,7 @@ import {
   Vector3,
 } from 'three'
 import { keep } from './gpu'
+import { bakeMeshes } from '../figures/compact'
 
 const tmpV = new Vector3()
 
@@ -111,25 +112,60 @@ const wrapMat = new MeshStandardMaterial({ color: '#2a170b', roughness: 0.9, emi
 
 export interface ArrowProp {
   group: Group
+  /** The arrow's one mesh (shaft, head and rag merged). */
   wrap: Mesh
+  /** Its material: `emissiveIntensity` is the rag's glow. */
   wrapMat: MeshStandardMaterial
+}
+
+// One draw per arrow (docs/spec/51 "Performance: per-frame budgets"): shaft, head and rag are one geometry per length with the
+// three materials baked into vertex colour / roughness / metalness, and the rag's emissive colour as a per-vertex mask that the
+// arrow's own material scales by its glow (`emissive` white x emissiveIntensity), so every arrow keeps its own glow.
+const arrowGeos = new Map<number, BufferGeometry>()
+function arrowGeometry(length: number): BufferGeometry {
+  let g = arrowGeos.get(length)
+  if (!g) {
+    const root = new Group()
+    const shaft = new Mesh(SHAFT, shaftMat)
+    shaft.scale.set(1, length, 1)
+    const head = new Mesh(HEAD, headMat)
+    head.position.y = length
+    const lit = wrapMat.clone()
+    lit.emissiveIntensity = 1
+    const wrap = new Mesh(WRAP, lit)
+    wrap.position.y = length - 0.012
+    wrap.scale.set(1, 1.5, 1)
+    root.add(shaft, head, wrap)
+    g = keep(bakeMeshes(root, [shaft, head, wrap]))
+    lit.dispose()
+    arrowGeos.set(length, g)
+  }
+  return g
+}
+
+function arrowMaterial(): MeshStandardMaterial {
+  const m = new MeshStandardMaterial({ vertexColors: true, color: '#ffffff', roughness: 0.8, metalness: 0, emissive: '#ffffff', emissiveIntensity: 0 })
+  m.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nattribute vec2 rm;\nattribute vec3 em;\nvarying vec2 vRm;\nvarying vec3 vEm;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvRm = rm;\nvEm = em;')
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nvarying vec2 vRm;\nvarying vec3 vEm;')
+      .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = vRm.x;')
+      .replace('#include <metalnessmap_fragment>', 'float metalnessFactor = vRm.y;')
+      .replace('#include <emissivemap_fragment>', 'totalEmissiveRadiance = vEm * emissive;')
+  }
+  m.customProgramCacheKey = () => 'arrow-rme'
+  return m
 }
 
 /** One arrow: shaft along +Y from the origin (the nock) to y = length, with an iron head and a pitch-soaked rag near the tip. */
 export function makeArrowProp(length = 0.34): ArrowProp {
   const group = new Group()
-  const shaft = new Mesh(SHAFT, shaftMat)
-  shaft.scale.set(1, length, 1)
-  const head = new Mesh(HEAD, headMat)
-  head.position.y = length
-  const mat = wrapMat.clone()
-  const wrap = new Mesh(WRAP, mat)
-  wrap.position.y = length - 0.012
-  wrap.scale.set(1, 1.5, 1)
-  group.add(shaft, head, wrap)
-  group.traverse((o) => {
-    if (o instanceof Mesh) o.castShadow = true
-  })
+  const mat = arrowMaterial()
+  const wrap = new Mesh(arrowGeometry(length), mat)
+  wrap.castShadow = true
+  group.add(wrap)
   return { group, wrap, wrapMat: mat }
 }
 

@@ -11,6 +11,7 @@ import { activateSlot, CutinView } from './CutinView'
 import { bakeStats, pinBakes, pinnedBakes, unpinBakes } from './crowd/bake'
 import { cacheStats } from '../figures/kit'
 import { perf } from './perf'
+import { cutinIdle, measureBoardStart, TIERS, useQuality } from './quality'
 import { player } from './player'
 import { prep, warmItems } from './prep'
 import { FADE_OUT, SCENE_INFO } from './sceneInfo'
@@ -26,7 +27,8 @@ perf.pool(() => {
 })
 
 const TEST = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('test') === '1'
-const DPR = typeof window === 'undefined' ? 1 : TEST ? 1 : Math.min(window.devicePixelRatio, 1.5)
+/** The canvas's pixel ratio: the device's, capped by the quality tier (1 in tests, for exact capture). */
+const dprFor = (cap: number): number => (typeof window === 'undefined' ? 1 : TEST ? 1 : Math.min(window.devicePixelRatio, cap))
 
 export interface CutinLayerProps {
   /** Changes when another battle loads: the warm-up runs again for its units. */
@@ -45,6 +47,11 @@ export default function CutinLayer({ battleKey, battle, note = true }: CutinLaye
   const viewRef = useRef(v)
   viewRef.current = v
   const [gl, setGl] = useState<WebGLRenderer | null>(null)
+  const dpr = dprFor(useQuality((s) => TIERS[s.tier].dpr))
+  // Auto's starting tier also looks at how the board runs once the warm-up is done (cutins/quality.ts)
+  useEffect(() => {
+    if (warm.done) measureBoardStart()
+  }, [warm.done])
 
   // the battle holds its crowd bakes and its compiled programs until it is unloaded
   useEffect(() => {
@@ -108,6 +115,7 @@ export default function CutinLayer({ battleKey, battle, note = true }: CutinLaye
       return
     }
     if (ref.current) ref.current.style.opacity = ''
+    cutinIdle()
     // idle: nothing on show, and a blank canvas for the next cut-in's first moment
     activateSlot(null)
     if (gl) {
@@ -147,7 +155,7 @@ export default function CutinLayer({ battleKey, battle, note = true }: CutinLaye
         <CutinView
           controller={player.controller}
           full
-          dpr={DPR}
+          dpr={dpr}
           sceneKey="game"
           slots={slots}
           activeKey={live ? v.key : null}
