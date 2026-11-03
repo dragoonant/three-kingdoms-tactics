@@ -4,7 +4,7 @@ The owner asked (2026-11-01) for cinematic attack scenes in the spirit of the ea
 
 ## Concept
 When a big action resolves, the camera **dives from the war-council view into the sand table**, and the war pieces come alive at miniature eye level. This is the sand table's own idea (50-presentation), not a cut to a realistic battlefield:
-- The soldiers are MGSD figures **without bases** (owner decision 2026-11-01, reversing v0.1's miniatures on bases): boots and hooves stand on the sand, and every moving troop walks, runs or gallops with the locomotion clips (docs/spec/31 "Locomotion"), the leg cycle driven by the distance covered so the feet never skate.
+- The soldiers are large-head figures **without bases** (owner decision 2026-11-01, reversing v0.1's miniatures on bases): boots and hooves stand on the sand, and every moving troop walks, runs or gallops with the locomotion clips (docs/spec/31 "Locomotion"), the leg cycle driven by the distance covered so the feet never skate.
 - The ground is the table's sand with that tile's terrain modelled on it.
 - The sky is the dark tent, with hanging lanterns as warm bokeh.
 - Calligraphy and the cinnabar seal frame the moment.

@@ -5,7 +5,7 @@ An original 3D grid tactics game set in the Three Kingdoms era, built as a spiri
 ## Decisions (owner, 2026-10-31 — do not re-ask)
 - **D1** Platform: browser, TypeScript, same stack as the owner's sibling games (Vite, React 19, three/R3F, zustand, Vitest, Playwright).
 - **D2** First milestone: one playable battle (vs AI) plus the design doc.
-- **D3** Art direction: from the knowledge base (`dragoonant/tabletop-kb`), so MGSD figures (about 2–2.5 heads).
+- **D3** Art direction: from the knowledge base (`dragoonant/tabletop-kb`), so large-head figures (about 2–2.5 heads); this figure style has since been replaced by the house style in tabletop-kb rule 7 and mallet-42k `docs/FIGURE-STYLE.md` (owner, 2026-10-31).
 - **D4** Presentation concept: **War-council sand table** (`docs/spec/50-presentation.md`).
 - **D5** First battle: **Daxing Hill**, the Yellow Turban rising (`docs/spec/11-battle-daxing-hill.md`).
 - **D6** Git: push to `main` after each stage; GitHub Pages deploys every push.
@@ -48,9 +48,9 @@ An original 3D grid tactics game set in the Three Kingdoms era, built as a spiri
 | M0 | Scaffold, specs 00/10/11/50, PLAN, CLAUDE.md, Pages | cloud | done 2026-10-31 |
 | M1 | Data: terrain, officers, stratagems, Daxing Hill JSON + validator | cloud | done 2026-10-31 |
 | M2 | Engine: pure reducer per 10-rules, seeded RNG, replay, sim with invariants, rule-id tests | cloud | done 2026-10-31 |
-| M3 | Playable slice: sand-table skin, stand-in MGSD figures, HUD/slips/seal, director, greedy bot, briefing + how-to-play | cloud | done 2026-10-31 |
+| M3 | Playable slice: sand-table skin, stand-in large-head figures, HUD/slips/seal, director, greedy bot, briefing + how-to-play | cloud | done 2026-10-31 |
 | M4 | Utility AI in a worker; ai-bench (normal beats random ≥ 95%) | cloud | done 2026-10-31 (objective-aware v2 too) |
-| M5 | Art: MGSD officer concepts → Hunyuan GLBs; sand-table terrain props | owner's PC | |
+| M5 | Art: officer concepts in the house figure style → Hunyuan GLBs; sand-table terrain props | owner's PC | |
 | M6 | Audio: drums/guqin/erhu score, seal stamp, fire, clash SFX | owner's PC | system + brief + audition page done 2026-11-01 (docs/spec/60-audio.md); files pending, not verified by ear |
 | M7 | Polish, phone layout, settings, end screen | cloud | |
 | M8 | Campaign framework: progression, camp, roster, saves, story scenes, Iron Oath | cloud | done 2026-11-01 |
