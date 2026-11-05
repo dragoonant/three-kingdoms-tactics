@@ -162,9 +162,6 @@ export function BoardCanvas() {
           actable={false}
           selected={false}
           targeted={false}
-          onPick={pick}
-          onHover={onHover}
-          onLeave={onLeave}
         />
       )}
       {scene.units.map((u) => (
@@ -176,9 +173,6 @@ export function BoardCanvas() {
           actable={actableIds.has(u.id)}
           selected={interactive && ui.selectedId === u.id}
           targeted={targetIds.has(u.id)}
-          onPick={pick}
-          onHover={onHover}
-          onLeave={onLeave}
         />
       ))}
       <Marks marks={marks} tops={tops} />

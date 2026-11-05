@@ -88,16 +88,13 @@ interface Props {
   actable: boolean
   selected: boolean
   targeted: boolean
-  onPick: (x: number, y: number) => void
-  onHover: (x: number, y: number) => void
-  onLeave: () => void
 }
 
 /** Decal layers sit a hair above the sand so they never z-fight with it. */
 const DECAL = { disc: 0.012, rim: 0.016, notch: 0.02, actable: 0.024, selected: 0.028, target: 0.032 }
 const polygon = { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 } as const
 
-function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, onHover, onLeave }: Props) {
+function FigureImpl({ unit: u, top, tops, actable, selected, targeted }: Props) {
   const root = useRef<Group>(null)
   const spin = useRef<Group>(null)
   const swirl = useRef<Group>(null)
@@ -428,23 +425,8 @@ function FigureImpl({ unit: u, top, tops, actable, selected, targeted, onPick, o
         </group>
       </Billboard>
 
-      {/* pick volume: covers the whole figure so a click on the head or banner selects the unit */}
-      <mesh
-        position={[0, 0.6 + rider / 2, 0]}
-        visible={false}
-        onClick={(e) => {
-          e.stopPropagation()
-          onPick(u.x, u.y)
-        }}
-        onPointerMove={(e) => {
-          e.stopPropagation()
-          onHover(u.x, u.y)
-        }}
-        onPointerOut={onLeave}
-      >
-        <cylinderGeometry args={[0.36, 0.36, 1.3 + rider, 8]} />
-        <meshBasicMaterial />
-      </mesh>
+      {/* no pick volume and no pointer handlers: a unit is picked by its tile (Terrain), so a figure never hides the tile
+          behind it from a tap (tabletop-kb rules.md rule 25, owner 2026-11-04) */}
     </group>
   )
 }

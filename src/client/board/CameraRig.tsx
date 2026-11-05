@@ -120,9 +120,10 @@ export function CameraRig({ mode, width, height, tops, unitPos }: { mode: CamMod
       return { x: r.left + ((v.x + 1) / 2) * r.width, y: r.top + ((1 - v.y) / 2) * r.height }
     }
     viewApi.tileToScreen = (x, y) => project(tileX(x), tops(x, y) + 0.1, tileZ(y))
+    // where to tap to pick a unit: its tile, never its figure (figures take no pointer events, rule 25)
     viewApi.unitToScreen = (id) => {
       const p = unitPos(id)
-      return p ? project(tileX(p.x), tops(p.x, p.y) + 0.45, tileZ(p.y)) : null
+      return p ? project(tileX(p.x), tops(p.x, p.y) + 0.1, tileZ(p.y)) : null
     }
     viewApi.rotate = (dir) => ctl.rotateBy(dir)
     viewApi.reset = () => ctl.flyHome()

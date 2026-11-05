@@ -41,7 +41,7 @@ async function toBattle(page: Page): Promise<void> {
   await expect(page.getByTestId('topbar')).toBeVisible()
 }
 
-/** Click a unit's figure on the canvas; picks a point that is not covered by HUD. */
+/** Pick a unit by clicking its tile (figures take no taps, tabletop-kb rule 25); checks the point is not covered by HUD. */
 async function clickUnit(page: Page, id: string): Promise<void> {
   const pt = await page.evaluate((u) => window.__game!.unitToScreen(u), id)
   expect(pt).not.toBeNull()
@@ -273,5 +273,31 @@ test('phone portrait layout: no scrollbars, the unit card is a slim bar above th
   await page.screenshot({ path: 'e2e-out/phone.png' })
   await noScrollbars(page)
   await houseRules(page)
+  expect(errors).toEqual([])
+})
+
+test('a tap on the tile behind a figure reaches that tile: units are picked by their tile only (KB rule 25)', async ({ page }) => {
+  const errors = await boot(page, 'seed=7')
+  await toBattle(page)
+  await page.evaluate(() => window.__game!.setSpeed('instant'))
+  await page.mouse.click(5, 5)
+  await waitIdle(page)
+  await clickUnit(page, 'liu-bei')
+  await expect(page.getByTestId('officer-panel')).toContainText('Liu Bei')
+  // the move tile drawn on screen just above Liu Bei, where his figure covers it
+  const pick = await page.evaluate(() => {
+    const g = window.__game!
+    const me = g.state().units.find((u) => u.id === 'liu-bei')!
+    const at = g.tileToScreen(me.x, me.y)!
+    const moves = (g.legal() as unknown as { type: string; unit?: string; x: number; y: number }[]).filter((a) => a.type === 'move' && a.unit === 'liu-bei')
+    const options = moves.map((m) => ({ m, p: g.tileToScreen(m.x, m.y)! })).filter((o) => o.p && o.p.y < at.y - 10)
+    options.sort((a, b) => Math.abs(a.p.x - at.x) + (at.y - a.p.y) - (Math.abs(b.p.x - at.x) + (at.y - b.p.y)))
+    return options[0] ? { x: options[0].m.x, y: options[0].m.y, sx: options[0].p.x, sy: options[0].p.y } : null
+  })
+  expect(pick).not.toBeNull()
+  await page.mouse.click(pick!.sx, pick!.sy)
+  await expect
+    .poll(() => page.evaluate(() => { const u = window.__game!.state().units.find((v) => v.id === 'liu-bei')!; return [u.x, u.y] }))
+    .toEqual([pick!.x, pick!.y])
   expect(errors).toEqual([])
 })
